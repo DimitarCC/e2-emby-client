@@ -31,18 +31,27 @@ plugin_dir = path.dirname(modules[__name__].__file__)
 from .EmbyRestClient import EmbyApiClient
 
 class E2EmbyHome(Screen):
-	skin = ["""
-		<screen name="E2EmbyHome" position="fill">
-		 	<ePixmap position="40,15" size="198,60" pixmap="emby-verysmall.png" alphatest="blend"/>
-		 	<widget name="title_logo" position="40,95" size="924,60" alphatest="blend"/>
-		 	<widget name="backdrop" position="e-924,0" size="924,520" alphatest="blend"/>
-		 	<widget name="list_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
-		 	<widget name="list_watching_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
-		 	<widget name="list_recent_movies_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
-			<widget name="list" position="40,480" size="e-80,230" scrollbarMode="showNever" orientation="orHorizontal"/>
-		 	<widget name="list_watching" position="40,770" size="e-80,270" iconWidth="340" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" orientation="orHorizontal"/>
-		 	<widget name="list_recent_movies" position="40,1100" size="e-80,426" iconWidth="246" iconHeight="354" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal"/>
-		</screen>"""]  # noqa: E124
+	skin = ["""<screen name="E2EmbyHome" position="fill">
+					<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
+					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="center" position="e-160,25" render="Label" size="120,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
+					<convert type="ClockToText">Default</convert>
+					</widget>
+					<widget name="title_logo" position="60,140" size="924,60" alphatest="blend"/>
+					<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1"/>
+					<widget name="subtitle" position="65,215" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
+					<widget name="infoline" position="60,220" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
+					<widget name="plot" position="60,290" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
+					<widget name="backdrop" position="e-1062,0" size="1062,600" alphatest="blend"/>
+					<widget name="list_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
+					<widget name="list_watching_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
+					<widget name="list_recent_movies_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
+					<widget name="list" position="35,520" size="e-80,230" scrollbarMode="showNever" orientation="orHorizontal" transparent="1">
+					</widget>
+					<widget name="list_watching" position="35,820" size="e-80,270" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" orientation="orHorizontal" transparent="1">
+					</widget>
+					<widget name="list_recent_movies" position="35,1150" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1">
+					</widget>
+				</screen>"""]  # noqa: E124
 
 	def __init__(self, session):
 		Screen.__init__(self, session)
