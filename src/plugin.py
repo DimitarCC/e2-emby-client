@@ -34,7 +34,7 @@ class E2EmbyHome(Screen):
 	skin = ["""<screen name="E2EmbyHome" position="fill">
 					<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
 					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="center" position="e-160,25" render="Label" size="120,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
-					<convert type="ClockToText">Default</convert>
+						<convert type="ClockToText">Default</convert>
 					</widget>
 					<widget name="title_logo" position="60,140" size="924,60" alphatest="blend"/>
 					<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1"/>
@@ -50,6 +50,9 @@ class E2EmbyHome(Screen):
 					<widget name="list_watching" position="35,820" size="e-80,270" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" orientation="orHorizontal" transparent="1">
 					</widget>
 					<widget name="list_recent_movies" position="35,1150" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1">
+		 			<widget name="list_recent_tvshows_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
+		 			<widget name="list_recent_tvshows" position="35,1600" size="e-80,270" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1">
+					</widget>
 					</widget>
 				</screen>"""]  # noqa: E124
 
@@ -122,11 +125,17 @@ class E2EmbyHome(Screen):
 		# 	}, -1)  # noqa: E123
 
 	def left(self):
-		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
+		if hasattr(self[self.selected_widget].instance, "prevItem"):
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
+		else:
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
 		threads.deferToThread(self.loadSelectedItemDetails)
 
 	def right(self):
-		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
+		if hasattr(self[self.selected_widget].instance, "nextItem"):
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
+		else:
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
 		threads.deferToThread(self.loadSelectedItemDetails)
 
 	def up(self):
@@ -304,27 +313,40 @@ class E2EmbyHome(Screen):
 		
 		libs = EmbyApiClient.getLibraries()
 		libs_list = []
+		movie_libs_ids = []
+		tvshow_libs_ids = []
+		music_libs_ids = []
 		i = 0
 		if libs:
 			for lib in libs:
+				colType = lib.get("CollectionType")
+				if colType and colType == "movies":
+					movie_libs_ids.append(int(lib.get("Id")))
+
+				if colType and colType == "tvshows":
+					tvshow_libs_ids.append(int(lib.get("Id")))
+
+				if colType and colType == "music":
+					music_libs_ids.append(int(lib.get("Id")))
+				
+
 				libs_list.append((i, lib, lib.get('Name'), None, "0", False))
 				i += 1
 			self["list"].loadData(libs_list)
 		
 
 		self.loadEmbyList(self["list_watching"], "Resume")
-		self.loadEmbyList(self["list_recent_movies"], "LastMovies", 5)
+		self.loadEmbyList(self["list_recent_movies"], "LastMovies", movie_libs_ids)
 			
 		self.home_loaded = True
 
 	def __onClose(self):
 		pass
 	
-	def loadEmbyList(self, widget, type, parent_id=None):
+	def loadEmbyList(self, widget, type, parent_ids=[]):
+		items = []
 		type_part = ""
 		parent_part = ""
-		if parent_id:
-			parent_part = f"&ParentId={parent_id}"
 		sortBy = "DatePlayed"
 		includeItems = "Movie"
 		if type == "Resume":
@@ -334,8 +356,12 @@ class E2EmbyHome(Screen):
 		elif type == "LastMovies":
 			sortBy = "DateCreated"
 			includeItems = "Movie&IsMovie=true&Recursive=true&Filters=IsNotFolder"
-
-		items = EmbyApiClient.getItems(type_part, sortBy, includeItems, parent_part)
+		if not parent_ids:
+			items.extend(EmbyApiClient.getItems(type_part, sortBy, includeItems, parent_part))
+		else:
+			for parent_id in parent_ids:
+				parent_part = f"&ParentId={parent_id}"
+				items.extend(EmbyApiClient.getItems(type_part, sortBy, includeItems, parent_part))
 		list = []
 		if items:
 			i = 0

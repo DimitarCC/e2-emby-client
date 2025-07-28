@@ -159,7 +159,7 @@ class EmbyList(GUIComponent):
 							size=(self.iconWidth, self.iconHeight),
 							png=item_icon,
 							backcolor=None, backcolor_sel=None, 
-							corner_radius=6,
+							cornerRadius=6,
 							flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
 		else:
 			found = any(item_index in tup for tup in self.itemsForThumbs)
@@ -174,19 +174,19 @@ class EmbyList(GUIComponent):
 					backgroundColor=0x22222222))
 			
 		played_perc = int(played_perc)
-		corner_edges = 12
+		cornerEdges = 12
 		if played_perc < 90:
-			corner_edges = 4
+			cornerEdges = 4
 		if played_perc > 0:
 			res.append(MultiContentEntryProgress(
 				pos=(self.spacing_sides, self.spacing_sides + self.iconHeight - 6), size=(self.iconWidth, 6),
-				percent= played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=corner_edges
+				percent= played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=cornerEdges
 			))
 			
 		res.append(MultiContentEntryText(
 							pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 60),
 							font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_WRAP,
-							corner_radius=6,
+							cornerRadius=6,
 							text=item_name, 
 							color=0xffffff, color_sel=0xffffff))
 		
