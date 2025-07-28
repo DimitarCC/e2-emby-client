@@ -1,3 +1,4 @@
+from . import _, PluginLanguageDomain
 from Components.GUIComponent import GUIComponent
 from enigma import eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_LEFT, RT_VALIGN_CENTER, RT_VALIGN_TOP, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
@@ -164,14 +165,14 @@ class EmbyInfoLine(GUIComponent):
 			return ""
 		
 		if height > 1080 and width > 1920:
-			return _("UHD")
+			return "UHD"
 		
 		if height > 720 and width > 1280:
-			return _("FHD")
+			return "FHD"
 		
 		if height == 720 and width == 1280:
-			return _("HD")
-		return _("SD")
+			return "HD"
+		return "SD"
 	
 	def constructAudioLabel(self, streams):
 		dts_list = list(filter(lambda track: track.get("Codec") == "dts", streams))
@@ -210,7 +211,7 @@ class EmbyInfoLine(GUIComponent):
 		v_width = int(item.get("Width", "0"))
 		v_height = int(item.get("Height", "0"))
 		resString = self.constructResolutionLabel(v_width, v_height)
-		streams = item.get("MediaSources")[0].get("MediaStreams", [])
+		streams = item.get("MediaSources", [{}])[0].get("MediaStreams", [])
 
 		audioCodec, audioCh = self.constructAudioLabel(streams)
 
@@ -313,53 +314,6 @@ class EmbyInfoLine(GUIComponent):
 				text=ends_at, 
 				color=0xffffff, color_sel=0xffffff))
 			xPos += self.spacing + textWidth
-
-		
-
-		
-		# selected = self.selectedItem and self.selectedItem[1] == item
-		# if selected and self.selectionEnabled:
-		# 	res.append(MultiContentEntryRectangle(
-		# 			pos=(self.spacing_sides - 3, self.spacing_sides - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
-		# 			cornerRadius=8,
-		# 			backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
-		# is_icon = not isinstance(item_icon, bool)
-		# if item_icon and is_icon:
-		# 	res.append(MultiContentEntryPixmapAlphaBlend(
-		# 					pos=(self.spacing_sides, self.spacing_sides),
-		# 					size=(self.iconWidth, self.iconHeight),
-		# 					png=item_icon,
-		# 					backcolor=None, backcolor_sel=None, 
-		# 					cornerRadius=6,
-		# 					flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
-		# else:
-		# 	found = any(item_index in tup for tup in self.itemsForThumbs)
-		# 	if is_icon and not found:
-		# 		self.itemsForThumbs.append((item_index, item))
-		# 	if len(self.itemsForThumbs) > 0 and not self.running:
-		# 		threads.deferToThread(self.runQueueProcess)
-		# 	res.append(MultiContentEntryRectangle(
-		# 			pos=(self.spacing_sides, self.spacing_sides),
-		# 			size=(self.iconWidth, self.iconHeight),
-		# 			cornerRadius=6,
-		# 			backgroundColor=0x22222222))
-			
-		# played_perc = int(played_perc)
-		# cornerEdges = 12
-		# if played_perc < 90:
-		# 	cornerEdges = 4
-		# if played_perc > 0:
-		# 	res.append(MultiContentEntryProgress(
-		# 		pos=(self.spacing_sides, self.spacing_sides + self.iconHeight - 6), size=(self.iconWidth, 6),
-		# 		percent= played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=cornerEdges
-		# 	))
-			
-		# res.append(MultiContentEntryText(
-		# 					pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 60),
-		# 					font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_WRAP,
-		# 					cornerRadius=6,
-		# 					text=item_name, 
-		# 					color=0xffffff, color_sel=0xffffff))
 		
 		return res
 	

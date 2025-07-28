@@ -1,3 +1,4 @@
+from . import _, PluginLanguageDomain
 from Components.GUIComponent import GUIComponent
 from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_LEFT, RT_VALIGN_CENTER, RT_VALIGN_TOP, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP
 from skin import parseColor, parseFont

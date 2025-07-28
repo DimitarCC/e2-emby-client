@@ -49,11 +49,9 @@ class E2EmbyHome(Screen):
 					</widget>
 					<widget name="list_watching" position="35,820" size="e-80,270" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" orientation="orHorizontal" transparent="1">
 					</widget>
-					<widget name="list_recent_movies" position="35,1150" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1">
-		 			<widget name="list_recent_tvshows_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
-		 			<widget name="list_recent_tvshows" position="35,1600" size="e-80,270" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1">
-					</widget>
-					</widget>
+					<widget name="list_recent_movies" position="35,1150" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
+					<widget name="list_recent_tvshows_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
+					<widget name="list_recent_tvshows" position="35,1600" size="e-80,270" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
 				</screen>"""]  # noqa: E124
 
 	def __init__(self, session):
@@ -85,6 +83,7 @@ class E2EmbyHome(Screen):
 		self.lists["list"] = EmbyListController(self["list"],self["list_header"])
 		self.lists["list_watching"] = EmbyListController(self["list_watching"],self["list_watching_header"])
 		self.lists["list_recent_movies"] = EmbyListController(self["list_recent_movies"],self["list_recent_movies_header"])
+		self.lists["list_recent_tvshows"] = EmbyListController(self["list_recent_tvshows"],self["list_recent_tvshows_header"])
 		self.access_token = None
 		self.mbpTimer = eTimer()
 		self.processing_cover = False
@@ -140,27 +139,35 @@ class E2EmbyHome(Screen):
 
 	def up(self):
 		if self.selected_widget == "list_watching":
-			self.lists["list_recent_movies"].move(40, 1230)
-			self.lists["list_watching"].move(40, 850).enableSelection(False)
+			self.lists["list_recent_movies"].move(40, 1240)
+			self.lists["list_watching"].move(40, 860).enableSelection(False)
 			self.lists["list"].visible(True).enableSelection(True)
 			self.selected_widget = "list"
 		elif self.selected_widget == "list_recent_movies":
-			self.lists["list_watching"].move(40, 520).enableSelection(True).visible(True)
-			self.lists["list_recent_movies"].move(40, 920).enableSelection(False)
+			self.lists["list_watching"].move(40, 570).enableSelection(True).visible(True)
+			self.lists["list_recent_movies"].move(40, 930).enableSelection(False)
 			self.selected_widget = "list_watching"
+		elif self.selected_widget == "list_recent_tvshows":
+			self.lists["list_recent_movies"].move(40, 570).enableSelection(True).visible(True)
+			self.lists["list_recent_tvshows"].move(40, 1620).enableSelection(False)
+			self.selected_widget = "list_recent_movies"
 
 		threads.deferToThread(self.loadSelectedItemDetails)
 
 	def down(self):
 		if self.selected_widget == "list":
 			self.lists["list"].visible(False).enableSelection(False)
-			self.lists["list_watching"].move(40, 520).enableSelection(True)
-			self.lists["list_recent_movies"].move(40, 920)
+			self.lists["list_watching"].move(40, 570).enableSelection(True)
+			self.lists["list_recent_movies"].move(40, 930)
 			self.selected_widget = "list_watching"
 		elif self.selected_widget == "list_watching":
-			self.lists["list_recent_movies"].move(40, 520).enableSelection(True)
+			self.lists["list_recent_movies"].move(40, 570).enableSelection(True)
 			self.lists["list_watching"].visible(False).enableSelection(False)
 			self.selected_widget = "list_recent_movies"
+		elif self.selected_widget == "list_recent_movies":
+			self.lists["list_recent_movies"].visible(False).enableSelection(False)
+			self.lists["list_recent_tvshows"].move(40, 570).enableSelection(True)
+			self.selected_widget = "list_recent_tvshows"
 
 		threads.deferToThread(self.loadSelectedItemDetails)
 
@@ -185,12 +192,14 @@ class E2EmbyHome(Screen):
 	def __onShown(self):
 		self.lists["list_watching"].enableSelection(self.selected_widget == "list_watching")
 		self.lists["list_recent_movies"].enableSelection(self.selected_widget == "list_recent_movies")
+		self.lists["list_recent_tvshows"].enableSelection(self.selected_widget == "list_recent_tvshows")
 		if not self.home_loaded:
 			threads.deferToThread(self.loadHome)
 			try:
-				self.lists["list"].move(40, 520).visible(True)
-				self.lists["list_watching"].move(40, 850).visible(True).enableSelection(self.selected_widget == "list_watching")
-				self.lists["list_recent_movies"].move(40, 1230).visible(True).enableSelection(self.selected_widget == "list_recent_movies")
+				self.lists["list"].move(40, 570).visible(True)
+				self.lists["list_watching"].move(40, 860).visible(True).enableSelection(self.selected_widget == "list_watching")
+				self.lists["list_recent_movies"].move(40, 1240).visible(True).enableSelection(self.selected_widget == "list_recent_movies")
+				self.lists["list_recent_tvshows"].move(40, 1620).visible(True).enableSelection(self.selected_widget == "list_recent_tvshows")
 			except:
 				pass
 
@@ -337,6 +346,7 @@ class E2EmbyHome(Screen):
 
 		self.loadEmbyList(self["list_watching"], "Resume")
 		self.loadEmbyList(self["list_recent_movies"], "LastMovies", movie_libs_ids)
+		self.loadEmbyList(self["list_recent_tvshows"], "LastSeries", tvshow_libs_ids)
 			
 		self.home_loaded = True
 
@@ -356,12 +366,16 @@ class E2EmbyHome(Screen):
 		elif type == "LastMovies":
 			sortBy = "DateCreated"
 			includeItems = "Movie&IsMovie=true&Recursive=true&Filters=IsNotFolder"
+		elif type == "LastSeries":
+			sortBy = "DateCreated"
+			includeItems = "Series&IsFolder=true&Recursive=true"
 		if not parent_ids:
 			items.extend(EmbyApiClient.getItems(type_part, sortBy, includeItems, parent_part))
 		else:
 			for parent_id in parent_ids:
 				parent_part = f"&ParentId={parent_id}"
-				items.extend(EmbyApiClient.getItems(type_part, sortBy, includeItems, parent_part))
+				part_items = EmbyApiClient.getItems(type_part, sortBy, includeItems, parent_part)
+				items.extend(part_items)
 		list = []
 		if items:
 			i = 0
