@@ -1,0 +1,14 @@
+<setupxml>
+	<setup key="e2embyclient" title="e2EmbyClient Setup">
+		<item level="0" text="TEXT" description="Desc">config.plugins.e2embyclient.dummy</item>
+		<item level="0" text="Connections"></item>
+	</setup>
+
+	<setup key="e2embyclientconnection" title="e2EmbyClient Connection">
+		<item level="0" text="Name" description="Name of the Remote Box (freely selectable).">self.entry.name</item>
+		<item level="0" text="IP" description="IP address of the Connection.">self.entry.ip</item>
+		<item level="0" text="Port" description="Port of the Connection.">self.entry.port</item>
+		<item level="0" text="User" description="User for the Connection.">self.entry.user</item>
+		<item level="0" text="Password" description="Password for the Connection.">self.entry.password</item>
+	</setup>
+</setupxml>

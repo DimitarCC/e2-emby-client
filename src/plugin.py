@@ -16,7 +16,7 @@ from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyPlayer import EmbyPlayer
-
+from .EmbySetup import initConfig
 from os import path, fsync, rename, makedirs, remove
 
 import threading
@@ -27,6 +27,8 @@ from PIL import Image
 
 write_lock = threading.Lock()
 plugin_dir = path.dirname(modules[__name__].__file__)
+
+initConfig()
 
 from .EmbyRestClient import EmbyApiClient
 
@@ -145,7 +147,7 @@ class E2EmbyHome(Screen):
 			self.lists["list_recent_movies"].visible(False)
 			self.lists["list_recent_tvshows"].visible(False)
 			threads.deferToThread(self.loadHome)
-			
+
 	def left(self):
 		if hasattr(self[self.selected_widget].instance, "prevItem"):
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
@@ -339,7 +341,7 @@ class E2EmbyHome(Screen):
 	def loadHome(self):
 		# for now hardcode username and password here
 		EmbyApiClient.authorizeUser("dimitarcc", "Japanese1")
-		
+
 		libs = EmbyApiClient.getLibraries()
 		libs_list = []
 		movie_libs_ids = []
@@ -391,7 +393,6 @@ class E2EmbyHome(Screen):
 		except:
 			pass
 
-			
 		self.home_loaded = True
 
 	def __onClose(self):

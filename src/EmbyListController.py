@@ -20,6 +20,6 @@ class EmbyListController():
     def enableSelection(self, enable):
         self.list.toggleSelection(enable)
         return self
-    
+
     def getHeight(self):
         return self.list.instance.size().height() + 40
