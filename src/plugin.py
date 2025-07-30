@@ -30,6 +30,7 @@ plugin_dir = path.dirname(modules[__name__].__file__)
 
 from .EmbyRestClient import EmbyApiClient
 
+
 class E2EmbyHome(Screen):
 	skin = ["""<screen name="E2EmbyHome" position="fill">
 					<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
@@ -79,11 +80,11 @@ class E2EmbyHome(Screen):
 		self["key_blue"] = StaticText(_("Clear all data"))
 		self["key_info"] = StaticText()
 		self["description"] = StaticText(_("Press OK to edit the currently selected provider"))
-		self.lists =  {}
-		self.lists["list"] = EmbyListController(self["list"],self["list_header"])
-		self.lists["list_watching"] = EmbyListController(self["list_watching"],self["list_watching_header"])
-		self.lists["list_recent_movies"] = EmbyListController(self["list_recent_movies"],self["list_recent_movies_header"])
-		self.lists["list_recent_tvshows"] = EmbyListController(self["list_recent_tvshows"],self["list_recent_tvshows_header"])
+		self.lists = {}
+		self.lists["list"] = EmbyListController(self["list"], self["list_header"])
+		self.lists["list_watching"] = EmbyListController(self["list_watching"], self["list_watching_header"])
+		self.lists["list_recent_movies"] = EmbyListController(self["list_recent_movies"], self["list_recent_movies_header"])
+		self.lists["list_recent_tvshows"] = EmbyListController(self["list_recent_tvshows"], self["list_recent_tvshows_header"])
 		self.access_token = None
 		self.mbpTimer = eTimer()
 		self.processing_cover = False
@@ -108,10 +109,10 @@ class E2EmbyHome(Screen):
 				# "yellow": self.keyYellow,
 				# "blue": self.clearData,
 			}, -1)  # noqa: E123
-		
+
 		self["nav_actions"] = ActionMap(["NavigationActions",],
 			{
-				"up": self.up, 
+				"up": self.up,
 				"down": self.down,
 				"left": self.left,
 				"right": self.right,
@@ -203,7 +204,7 @@ class E2EmbyHome(Screen):
 			except:
 				pass
 
-	def downloadCover(self, item_id, icon_img, selected_item = None):
+	def downloadCover(self, item_id, icon_img, selected_item=None):
 		url = (item_id, icon_img)
 		if self.deferred_cover_url and self.deferred_cover_url == url:
 			return
@@ -276,7 +277,6 @@ class E2EmbyHome(Screen):
 				self["title"].text = item.get("Name", "")
 			self["title_logo"].setPixmap(None)
 
-
 		if itemType == "Episode":
 			sub_title = f"S{item.get("ParentIndexNumber", 0)}:E{item.get("IndexNumber", 0)} - {item.get("Name", "")}"
 			self["subtitle"].text = sub_title
@@ -304,7 +304,7 @@ class E2EmbyHome(Screen):
 		parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
 		if parent_backdrop_image_tags:
 			backdrop_image_tags = parent_backdrop_image_tags
-		
+
 		if not backdrop_image_tags or len(backdrop_image_tags) == 0:
 			return
 
@@ -314,7 +314,6 @@ class E2EmbyHome(Screen):
 			item_id = parent_b_item_id
 
 		self.downloadCover(item_id, icon_img, sel_item)
-			
 
 	def loadHome(self):
 		# for now hardcode username and password here
@@ -337,22 +336,20 @@ class E2EmbyHome(Screen):
 
 				if colType and colType == "music":
 					music_libs_ids.append(int(lib.get("Id")))
-				
 
 				libs_list.append((i, lib, lib.get('Name'), None, "0", False))
 				i += 1
 			self["list"].loadData(libs_list)
-		
 
 		self.loadEmbyList(self["list_watching"], "Resume")
 		self.loadEmbyList(self["list_recent_movies"], "LastMovies", movie_libs_ids)
 		self.loadEmbyList(self["list_recent_tvshows"], "LastSeries", tvshow_libs_ids)
-			
+
 		self.home_loaded = True
 
 	def __onClose(self):
 		pass
-	
+
 	def loadEmbyList(self, widget, type, parent_ids=[]):
 		items = []
 		type_part = ""
@@ -389,6 +386,7 @@ class E2EmbyHome(Screen):
 def main(session, **kwargs):
 	session.open(E2EmbyHome)
 
+
 def startHome(menuid):
 	if menuid != "mainmenu":
 		return []
@@ -396,7 +394,7 @@ def startHome(menuid):
 
 
 def sessionstart(reason, session, **kwargs):
-	makedirs("/tmp/emby/", exist_ok=True) 
+	makedirs("/tmp/emby/", exist_ok=True)
 
 
 def Plugins(path, **kwargs):

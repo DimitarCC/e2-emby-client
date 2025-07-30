@@ -24,7 +24,7 @@ class EmbyList(GUIComponent):
 		self.orientation = eListbox.orHorizontal
 		self.iconWidth = 270
 		self.iconHeight = 152
-		self.itemWidth = self.iconWidth + self.spacing_sides*2
+		self.itemWidth = self.iconWidth + self.spacing_sides * 2
 		self.itemHeight = self.iconHeight + 72
 		self.l.setItemHeight(self.itemHeight)
 		self.l.setItemWidth(self.itemWidth)
@@ -44,7 +44,6 @@ class EmbyList(GUIComponent):
 
 	def preWidgetRemove(self, instance):
 		instance.selectionChanged.get().remove(self.selectionChanged)
-		
 
 	def selectionChanged(self):
 		self.selectedItem = self.l.getCurrentSelection()
@@ -68,14 +67,14 @@ class EmbyList(GUIComponent):
 				attribs.append((attrib, value))
 		self.skinAttributes = attribs
 		self.l.setFont(0, self.font)
-		self.itemWidth = self.iconWidth + self.spacing_sides*2
+		self.itemWidth = self.iconWidth + self.spacing_sides * 2
 		self.itemHeight = self.iconHeight + 72
 		self.l.setItemHeight(self.itemHeight)
 		self.l.setItemWidth(self.itemWidth)
 		self.instance.setOrientation(self.orientation)
 		self.l.setOrientation(self.orientation)
 		return GUIComponent.applySkin(self, desktop, parent)
-	
+
 	def toggleSelection(self, enabled):
 		self.selectionEnabled = enabled
 		self.instance.setSelectionEnable(enabled)
@@ -102,12 +101,11 @@ class EmbyList(GUIComponent):
 				item_id = parent_id
 				icon_img = parent_icon_img
 				self.icon_type = "Thumb"
-			
+
 			if item_index not in self.updatingIndexesInProgress:
 				threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img, False)
 
 		self.running = False
-			
 
 	def updateThumbnail(self, item_id, item_index, item, icon_img, fromRecursion):
 		icon_pix = None
@@ -121,7 +119,7 @@ class EmbyList(GUIComponent):
 			parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
 			if parent_backdrop_image_tags:
 				backdrop_image_tags = parent_backdrop_image_tags
-			
+
 			if not backdrop_image_tags or len(backdrop_image_tags) == 0:
 				return False
 
@@ -136,7 +134,7 @@ class EmbyList(GUIComponent):
 			return False
 		if not self.data[item_index][3]:
 			self.data[item_index] = (item_index, item, self.data[item_index][2], icon_pix or True, self.data[item_index][4], self.data[item_index][5])
-			
+
 		if item_index in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.remove(item_index)
 
@@ -159,7 +157,7 @@ class EmbyList(GUIComponent):
 							pos=(self.spacing_sides, self.spacing_sides),
 							size=(self.iconWidth, self.iconHeight),
 							png=item_icon,
-							backcolor=None, backcolor_sel=None, 
+							backcolor=None, backcolor_sel=None,
 							cornerRadius=6,
 							flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
 		else:
@@ -173,7 +171,7 @@ class EmbyList(GUIComponent):
 					size=(self.iconWidth, self.iconHeight),
 					cornerRadius=6,
 					backgroundColor=0x22222222))
-			
+
 		played_perc = int(played_perc)
 		cornerEdges = 12
 		if played_perc < 90:
@@ -181,22 +179,14 @@ class EmbyList(GUIComponent):
 		if played_perc > 0:
 			res.append(MultiContentEntryProgress(
 				pos=(self.spacing_sides, self.spacing_sides + self.iconHeight - 6), size=(self.iconWidth, 6),
-				percent= played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=cornerEdges
+				percent=played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=cornerEdges
 			))
-			
+
 		res.append(MultiContentEntryText(
 							pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 60),
 							font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_WRAP,
 							cornerRadius=6,
-							text=item_name, 
+							text=item_name,
 							color=0xffffff, color_sel=0xffffff))
-		
+
 		return res
-	
-		
-
-		
-
-
-
-
