@@ -7,6 +7,7 @@ from Components.Label import Label
 from Components.Sources.Progress import Progress
 from Components.config import config
 
+
 class EmbyPlayer(MoviePlayer):
 	def __init__(self, session, service, startPos=None, slist=None, lastservice=None):
 		MoviePlayer.__init__(self, session, service=service, slist=slist, lastservice=lastservice)
@@ -44,8 +45,8 @@ class EmbyPlayer(MoviePlayer):
 		}, -10)  # noqa: E123
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
 			iPlayableService.evStart: self.__evServiceStart,
-			iPlayableService.evEnd: self.__evServiceEnd,})
-		
+			iPlayableService.evEnd: self.__evServiceEnd, })
+
 	def getLength(self):
 		seek = self.getSeek()
 		if seek is None:
@@ -54,7 +55,7 @@ class EmbyPlayer(MoviePlayer):
 		if length[0]:
 			return 0
 		return length[1] / 90000
-	
+
 	def getPosition(self):
 		seek = self.getSeek()
 		if seek is None:

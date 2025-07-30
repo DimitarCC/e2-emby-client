@@ -1,7 +1,11 @@
 from .Variables import REQUEST_USER_AGENT
 from Tools.LoadPixmap import LoadPixmap
-import urllib, json, requests, os
+import urllib
+import json
+import requests
+import os
 from PIL import Image
+
 
 class EmbyRestClient():
     def __init__(self, server_root_url, device_name, device_id):
@@ -52,7 +56,7 @@ class EmbyRestClient():
             except:
                 pass
         return libs
-    
+
     def getItems(self, type_part, sortBy, includeItems, parent_part):
         items = {}
         req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit=40&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate&IncludeItemTypes={includeItems}{parent_part}")
@@ -64,7 +68,7 @@ class EmbyRestClient():
         except:
             pass
         return items
-    
+
     def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None):
         addon = ""
         if width > 0:
@@ -95,7 +99,7 @@ class EmbyRestClient():
                 im.putalpha(alpha_channel)
                 im.save("/tmp/emby/backdrop.png", compress_type=3)
                 pix = LoadPixmap("/tmp/emby/backdrop.png")
-            else:    
+            else:
                 pix = LoadPixmap(im_tmp_path)
             try:
                 os.remove(im_tmp_path)
@@ -103,6 +107,7 @@ class EmbyRestClient():
                 pass
             return pix
         return None
-    
+
+
 # here enter the server URL, Device name and device id
 EmbyApiClient = EmbyRestClient("http://192.168.1.121:8096", "GBQuad4KPro", "gbquad4kpro")

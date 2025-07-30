@@ -16,7 +16,7 @@ class EmbyListController():
             self.header.instance.hide()
             self.list.instance.hide()
         return self
-    
+
     def enableSelection(self, enable):
         self.list.toggleSelection(enable)
         return self

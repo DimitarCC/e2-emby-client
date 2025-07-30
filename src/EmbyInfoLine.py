@@ -42,8 +42,6 @@ class EmbyInfoLine(GUIComponent):
 		self.orientation = eListbox.orHorizontal
 		self.l.setItemHeight(35)
 		self.l.setItemWidth(35)
-		
-
 
 	GUI_WIDGET = eListbox
 
@@ -56,7 +54,6 @@ class EmbyInfoLine(GUIComponent):
 		self.l.setItemHeight(self.instance.size().height())
 		self.l.setItemWidth(self.instance.size().width())
 		self.textRenderer.GUIcreate(self.screen.instance)
-		
 
 	def applySkin(self, desktop, parent):
 		attribs = []
@@ -87,7 +84,7 @@ class EmbyInfoLine(GUIComponent):
 		self.instance.setOrientation(self.orientation)
 		self.l.setOrientation(self.orientation)
 		return GUIComponent.applySkin(self, desktop, parent)
-	
+
 	def updateInfo(self, item):
 		l_list = []
 		l_list.append((item,))
@@ -101,7 +98,7 @@ class EmbyInfoLine(GUIComponent):
 		if hours == 0:
 			return f"{minutes}min"
 		return f"{hours}h {minutes}min"
-	
+
 	def _calcTextWidth(self, text, font=None, size=None):
 		self.textRenderer.instance.setNoWrap(1)
 		if size:
@@ -117,11 +114,11 @@ class EmbyInfoLine(GUIComponent):
 
 	def getDesktopWith(self):
 		return getDesktop(0).size().width()
-	
+
 	def getSize(self):
 		s = self.instance.size()
 		return s.width(), s.height()
-	
+
 	def embyDateToString(self, dateString, type):
 		cleaned_date = dateString.rstrip('Z')[:26]
 		dt = datetime.fromisoformat(cleaned_date)
@@ -129,14 +126,14 @@ class EmbyInfoLine(GUIComponent):
 		if type == "Episode":
 			return dt.strftime("%d.%m.%Y")
 		return dt.strftime("%Y")
-	
+
 	def embyEndsAtToString(self, totalTicks, positionTicks):
 		if not totalTicks:
 			return ""
 		remainingSecs = (totalTicks - positionTicks) / 10_000_000
 		end_time = datetime.now() + timedelta(seconds=remainingSecs)
 		return _("Ends at") + " " + end_time.strftime("%H:%M")
-	
+
 	def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0xadacaa, backColor=0x02111111, textColor=0xffffff):
 		if not spacing:
 			spacing = self.spacing
@@ -144,18 +141,18 @@ class EmbyInfoLine(GUIComponent):
 		textWidth, textHeight = self._calcTextWidth(text, font=self.fontAdditional, size=eSize(self.getDesktopWith() // 3, 0))
 		rec_height = textHeight + 1
 		res.append(MultiContentEntryRectangle(
-				pos=(xPos, yPos - 1 + (height - rec_height)//2), size=(textWidth + 20, rec_height),
+				pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(textWidth + 20, rec_height),
 				cornerRadius=6,
 				backgroundColor=borderColor, backgroundColorSelected=borderColor))
 		res.append(MultiContentEntryRectangle(
-				pos=(xPos + 2, yPos - 1 + (height - rec_height)//2 + 2), size=(textWidth + 16, rec_height - 4),
+				pos=(xPos + 2, yPos - 1 + (height - rec_height) // 2 + 2), size=(textWidth + 16, rec_height - 4),
 				cornerRadius=4,
 				backgroundColor=backColor, backgroundColorSelected=backColor))
 
 		res.append(MultiContentEntryText(
-			pos=(xPos + 2, yPos - 2 + (height - rec_height)//2 + 2), size=(textWidth + 16, rec_height - 4),
+			pos=(xPos + 2, yPos - 2 + (height - rec_height) // 2 + 2), size=(textWidth + 16, rec_height - 4),
 			font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-			text=text, 
+			text=text,
 			color=textColor, color_sel=textColor))
 		xPos += spacing + textWidth + 20
 		return xPos
@@ -163,17 +160,17 @@ class EmbyInfoLine(GUIComponent):
 	def constructResolutionLabel(self, width, height):
 		if width == 0 or height == 0:
 			return ""
-		
+
 		if height > 1080 and width > 1920:
 			return "UHD"
-		
+
 		if height > 720 and width > 1280:
 			return "FHD"
-		
+
 		if height == 720 and width == 1280:
 			return "HD"
 		return "SD"
-	
+
 	def constructAudioLabel(self, streams):
 		dts_list = list(filter(lambda track: track.get("Codec") == "dts", streams))
 
@@ -181,7 +178,7 @@ class EmbyInfoLine(GUIComponent):
 			sorted_dts_list = sorted(dts_list, key=lambda track: track.get("ChannelLayout"))
 			dts_track = sorted_dts_list[-1]
 			return dts_track.get("Profile"), dts_track.get("ChannelLayout")
-		
+
 		dolby_list = list(filter(lambda track: track.get("Codec") in ["eac3", "ac3"], streams))
 
 		if dolby_list:
@@ -189,7 +186,6 @@ class EmbyInfoLine(GUIComponent):
 			dolby_track = sorted_dolby_list[-1]
 			return "DOLBY", dolby_track.get("ChannelLayout", "").replace("stereo", "2.0")
 		return None, None
-		
 
 	def buildEntry(self, item):
 		xPos = 0
@@ -198,14 +194,14 @@ class EmbyInfoLine(GUIComponent):
 		res = [None]
 
 		type = item.get("Type", None)
-		
+
 		premiereDate_str = item.get("PremiereDate", None)
 		premiereDate = premiereDate_str and self.embyDateToString(premiereDate_str, type)
 		user_rating = int(item.get("CommunityRating", "0"))
 		critics_rating = int(item.get("CriticRating", "0"))
 		mpaa = item.get("OfficialRating", None)
 		runtime_ticks = int(item.get("RunTimeTicks", "0"))
-		runtime = runtime_ticks and self.convert_ticks_to_time(runtime_ticks) 
+		runtime = runtime_ticks and self.convert_ticks_to_time(runtime_ticks)
 		position_ticks = int(item.get("UserData", {}).get("PlaybackPositionTicks", "0"))
 		ends_at = self.embyEndsAtToString(runtime_ticks, position_ticks)
 		v_width = int(item.get("Width", "0"))
@@ -222,7 +218,7 @@ class EmbyInfoLine(GUIComponent):
 			pixd_width = pixd_size.width()
 			pixd_height = pixd_size.height()
 			res.append(MultiContentEntryPixmapAlphaBlend(
-				pos=(xPos, yPos - 2 + (height - pixd_height)//2),
+				pos=(xPos, yPos - 2 + (height - pixd_height) // 2),
 				size=(pixd_width, height),
 				png=self.star24,
 				backcolor=None, backcolor_sel=None,
@@ -236,10 +232,9 @@ class EmbyInfoLine(GUIComponent):
 			res.append(MultiContentEntryText(
 				pos=(xPos, yPos), size=(textWidth, height),
 				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-				text=user_rating_str, 
+				text=user_rating_str,
 				color=0xffffff, color_sel=0xffffff))
 			xPos += self.spacing + textWidth
-
 
 		if critics_rating:
 			rt_icon = self.rt_gt_60
@@ -249,7 +244,7 @@ class EmbyInfoLine(GUIComponent):
 			pixd_width = pixd_size.width()
 			pixd_height = pixd_size.height()
 			res.append(MultiContentEntryPixmapAlphaBlend(
-				pos=(xPos, yPos - 2 + (height - pixd_height)//2),
+				pos=(xPos, yPos - 2 + (height - pixd_height) // 2),
 				size=(pixd_width, height),
 				png=rt_icon,
 				backcolor=None, backcolor_sel=None,
@@ -263,10 +258,9 @@ class EmbyInfoLine(GUIComponent):
 			res.append(MultiContentEntryText(
 				pos=(xPos, yPos), size=(textWidth, height),
 				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-				text=critics_rating_str, 
+				text=critics_rating_str,
 				color=0xffffff, color_sel=0xffffff))
 			xPos += self.spacing + textWidth
-
 
 		if premiereDate:
 			textWidth = self._calcTextWidth(premiereDate, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
@@ -274,10 +268,9 @@ class EmbyInfoLine(GUIComponent):
 			res.append(MultiContentEntryText(
 				pos=(xPos, yPos), size=(textWidth, height),
 				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-				text=premiereDate, 
+				text=premiereDate,
 				color=0xffffff, color_sel=0xffffff))
 			xPos += self.spacing + textWidth
-
 
 		if runtime:
 			textWidth = self._calcTextWidth(runtime, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
@@ -285,10 +278,9 @@ class EmbyInfoLine(GUIComponent):
 			res.append(MultiContentEntryText(
 				pos=(xPos, yPos), size=(textWidth, height),
 				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-				text=runtime, 
+				text=runtime,
 				color=0xffffff, color_sel=0xffffff))
 			xPos += self.spacing + textWidth
-
 
 		if mpaa:
 			xPos = self.constructLabelBox(res, mpaa, height, xPos, yPos, 10 if resString or audioCodec or audioCh or has_subtitles else None)
@@ -311,16 +303,8 @@ class EmbyInfoLine(GUIComponent):
 			res.append(MultiContentEntryText(
 				pos=(xPos, yPos), size=(textWidth, height),
 				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-				text=ends_at, 
+				text=ends_at,
 				color=0xffffff, color_sel=0xffffff))
 			xPos += self.spacing + textWidth
-		
+
 		return res
-	
-		
-
-		
-
-
-
-
