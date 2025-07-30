@@ -10,8 +10,9 @@ from twisted.internet import threads
 
 
 class EmbyList(GUIComponent):
-	def __init__(self):
+	def __init__(self, isLibrary=False):
 		GUIComponent.__init__(self)
+		self.isLibrary = isLibrary
 		self.data = []
 		self.itemsForThumbs = []
 		self.selectionEnabled = True
@@ -32,8 +33,6 @@ class EmbyList(GUIComponent):
 		self.refreshing = False
 		self.running = False
 		self.updatingIndexesInProgress = []
-		# self.l.setOrientation(self.orientation)
-		threads.deferToThread(self.runQueueProcess)
 
 	GUI_WIDGET = eListbox
 
@@ -41,6 +40,7 @@ class EmbyList(GUIComponent):
 		instance.setContent(self.l)
 		instance.selectionChanged.get().append(self.selectionChanged)
 		self.l.setSelectionClip(eRect(0, 0, 0, 0), False)
+		threads.deferToThread(self.runQueueProcess)
 
 	def preWidgetRemove(self, instance):
 		instance.selectionChanged.get().remove(self.selectionChanged)

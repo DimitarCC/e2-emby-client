@@ -34,19 +34,19 @@ from .EmbyRestClient import EmbyApiClient
 class E2EmbyHome(Screen):
 	skin = ["""<screen name="E2EmbyHome" position="fill">
 					<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
-					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="center" position="e-160,25" render="Label" size="120,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
+					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-220,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
 						<convert type="ClockToText">Default</convert>
 					</widget>
 					<widget name="title_logo" position="60,140" size="924,60" alphatest="blend"/>
-					<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1"/>
+					<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
 					<widget name="subtitle" position="65,215" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
 					<widget name="infoline" position="60,220" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 					<widget name="plot" position="60,290" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="backdrop" position="e-1062,0" size="1062,600" alphatest="blend"/>
-					<widget name="list_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
+					<widget name="list_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
 					<widget name="list_watching_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
 					<widget name="list_recent_movies_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
-					<widget name="list" position="35,520" size="e-80,230" scrollbarMode="showNever" orientation="orHorizontal" transparent="1">
+					<widget name="list" position="40,610" size="e-80,230" scrollbarMode="showNever" orientation="orHorizontal" transparent="1">
 					</widget>
 					<widget name="list_watching" position="35,820" size="e-80,270" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" orientation="orHorizontal" transparent="1">
 					</widget>
@@ -60,6 +60,14 @@ class E2EmbyHome(Screen):
 		self.setTitle(_("Emby"))
 		self.selected_widget = "list"
 		self.home_loaded = False
+		self.availableWidgets = ["list"]
+
+		self.slots_layout = {}
+		self.slots_layout[0] = 570
+		self.slots_layout[1] = 860
+		self.slots_layout[2] = 1240
+		self.slots_layout[3] = 1620
+
 		self["title_logo"] = Pixmap()
 		self["title"] = Label()
 		self["subtitle"] = Label()
@@ -67,7 +75,7 @@ class E2EmbyHome(Screen):
 		self["plot"] = Label()
 		self["backdrop"] = Pixmap()
 		self["list_header"] = Label(_("My Media"))
-		self["list"] = EmbyList()
+		self["list"] = EmbyList(True)
 		self["list_watching_header"] = Label(_("Continue watching"))
 		self["list_watching"] = EmbyList()
 		self["list_recent_movies_header"] = Label(_("Recently released movies"))
@@ -90,6 +98,7 @@ class E2EmbyHome(Screen):
 		self.processing_cover = False
 		self.deferred_cover_url = None
 		self.deferred_image_tag = None
+		self.last_item_id = None
 		self.last_cover = ""
 		self.mask_alpha = Image.open(os.path.join(plugin_dir, "mask.png")).split()[3]
 		if self.mask_alpha.mode != "L":
@@ -124,69 +133,6 @@ class E2EmbyHome(Screen):
 		# 		"info": self.info,
 		# 	}, -1)  # noqa: E123
 
-	def left(self):
-		if hasattr(self[self.selected_widget].instance, "prevItem"):
-			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
-		else:
-			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
-		threads.deferToThread(self.loadSelectedItemDetails)
-
-	def right(self):
-		if hasattr(self[self.selected_widget].instance, "nextItem"):
-			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
-		else:
-			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
-		threads.deferToThread(self.loadSelectedItemDetails)
-
-	def up(self):
-		if self.selected_widget == "list_watching":
-			self.lists["list_recent_movies"].move(40, 1240)
-			self.lists["list_watching"].move(40, 860).enableSelection(False)
-			self.lists["list"].visible(True).enableSelection(True)
-			self.selected_widget = "list"
-		elif self.selected_widget == "list_recent_movies":
-			self.lists["list_watching"].move(40, 570).enableSelection(True).visible(True)
-			self.lists["list_recent_movies"].move(40, 930).enableSelection(False)
-			self.selected_widget = "list_watching"
-		elif self.selected_widget == "list_recent_tvshows":
-			self.lists["list_recent_movies"].move(40, 570).enableSelection(True).visible(True)
-			self.lists["list_recent_tvshows"].move(40, 1620).enableSelection(False)
-			self.selected_widget = "list_recent_movies"
-
-		threads.deferToThread(self.loadSelectedItemDetails)
-
-	def down(self):
-		if self.selected_widget == "list":
-			self.lists["list"].visible(False).enableSelection(False)
-			self.lists["list_watching"].move(40, 570).enableSelection(True)
-			self.lists["list_recent_movies"].move(40, 930)
-			self.selected_widget = "list_watching"
-		elif self.selected_widget == "list_watching":
-			self.lists["list_recent_movies"].move(40, 570).enableSelection(True)
-			self.lists["list_watching"].visible(False).enableSelection(False)
-			self.selected_widget = "list_recent_movies"
-		elif self.selected_widget == "list_recent_movies":
-			self.lists["list_recent_movies"].visible(False).enableSelection(False)
-			self.lists["list_recent_tvshows"].move(40, 570).enableSelection(True)
-			self.selected_widget = "list_recent_tvshows"
-
-		threads.deferToThread(self.loadSelectedItemDetails)
-
-	def processItem(self):
-		widget = self[self.selected_widget]
-		selected_item = widget.getCurrentItem()
-		infobar = InfoBar.instance
-		if infobar:
-			LastService = self.session.nav.getCurrentServiceReferenceOriginal()
-			item_id = int(selected_item.get("Id", "0"))
-			item_name = selected_item.get("Name", "Stream")
-			play_session_id = str(uuid.uuid4())
-			startTimeTicks = int(selected_item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
-			# subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/mediasource_80606/Subtitles/21/stream.srt?api_key={EmbyApiClient.access_token}"
-			url = f"{EmbyApiClient.server_root}/emby/Videos/{item_id}/stream?api_key={EmbyApiClient.access_token}&PlaySessionId={play_session_id}&DeviceId={EmbyApiClient.device_id}&static=true&EnableAutoStreamCopy=false"
-			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
-			self.session.open(EmbyPlayer, ref, startPos=startTimeTicks, slist=infobar.servicelist, lastservice=LastService)
-
 	def __onLayoutFinished(self):
 		pass
 
@@ -195,14 +141,81 @@ class E2EmbyHome(Screen):
 		self.lists["list_recent_movies"].enableSelection(self.selected_widget == "list_recent_movies")
 		self.lists["list_recent_tvshows"].enableSelection(self.selected_widget == "list_recent_tvshows")
 		if not self.home_loaded:
+			self.lists["list_watching"].visible(False)
+			self.lists["list_recent_movies"].visible(False)
+			self.lists["list_recent_tvshows"].visible(False)
 			threads.deferToThread(self.loadHome)
-			try:
-				self.lists["list"].move(40, 570).visible(True)
-				self.lists["list_watching"].move(40, 860).visible(True).enableSelection(self.selected_widget == "list_watching")
-				self.lists["list_recent_movies"].move(40, 1240).visible(True).enableSelection(self.selected_widget == "list_recent_movies")
-				self.lists["list_recent_tvshows"].move(40, 1620).visible(True).enableSelection(self.selected_widget == "list_recent_tvshows")
-			except:
-				pass
+			
+	def left(self):
+		if hasattr(self[self.selected_widget].instance, "prevItem"):
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
+		else:
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
+
+		threads.deferToThread(self.loadSelectedItemDetails)
+
+	def right(self):
+		if hasattr(self[self.selected_widget].instance, "nextItem"):
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
+		else:
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
+
+		threads.deferToThread(self.loadSelectedItemDetails)
+
+	def up(self):
+		current_widget_index = self.availableWidgets.index(self.selected_widget)
+		if current_widget_index == 0:
+			return
+		y = self.slots_layout[0]
+
+		prevWidgetName = self.availableWidgets[current_widget_index - 1]
+		prevItem = self.lists[prevWidgetName]
+		prevItem.move(40, y).visible(True).enableSelection(True)
+		y += prevItem.getHeight() + 40
+		self.selected_widget = prevWidgetName
+
+		for item in self.availableWidgets[current_widget_index:]:
+			self.lists[item].move(40, y).enableSelection(False)
+			y += self.lists[item].getHeight() + 40
+
+		threads.deferToThread(self.loadSelectedItemDetails)
+
+	def down(self):
+		current_widget_index = self.availableWidgets.index(self.selected_widget)
+		if current_widget_index == len(self.availableWidgets) - 1:
+			return
+		safe_index = min(current_widget_index + 1, len(self.availableWidgets))
+		for item in self.availableWidgets[:safe_index]:
+			self.lists[item].visible(False).enableSelection(False)
+
+		y = self.slots_layout[0]
+		selEnabled = True
+		for item in self.availableWidgets[safe_index:]:
+			self.lists[item].move(40, y).enableSelection(selEnabled)
+			y += self.lists[item].getHeight() + 40
+			if selEnabled:
+				self.selected_widget = item
+			selEnabled = False
+
+		threads.deferToThread(self.loadSelectedItemDetails)
+
+	def processItem(self):
+		widget = self[self.selected_widget]
+		selected_item = widget.getCurrentItem()
+		if widget.isLibrary:
+			pass
+		else:
+			infobar = InfoBar.instance
+			if infobar:
+				LastService = self.session.nav.getCurrentServiceReferenceOriginal()
+				item_id = int(selected_item.get("Id", "0"))
+				item_name = selected_item.get("Name", "Stream")
+				play_session_id = str(uuid.uuid4())
+				startTimeTicks = int(selected_item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
+				# subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/mediasource_80606/Subtitles/21/stream.srt?api_key={EmbyApiClient.access_token}"
+				url = f"{EmbyApiClient.server_root}/emby/Videos/{item_id}/stream?api_key={EmbyApiClient.access_token}&PlaySessionId={play_session_id}&DeviceId={EmbyApiClient.device_id}&static=true&EnableAutoStreamCopy=false"
+				ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
+				self.session.open(EmbyPlayer, ref, startPos=startTimeTicks, slist=infobar.servicelist, lastservice=LastService)
 
 	def downloadCover(self, item_id, icon_img, selected_item=None):
 		url = (item_id, icon_img)
@@ -214,10 +227,10 @@ class E2EmbyHome(Screen):
 			return
 		self.processing_cover = True
 		if not self.deferred_cover_url:
-			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, max_height=600, image_type="Backdrop", alpha_channel=self.mask_alpha)
+			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1062, height=600, image_type="Backdrop", alpha_channel=self.mask_alpha)
 			if backdrop_pix:
 				sel_item = self[self.selected_widget].selectedItem
-				if not self.deferred_cover_url and sel_item and sel_item[5]:
+				if not self.deferred_cover_url and sel_item and sel_item[5] and (not self.last_item_id or item_id == self.last_item_id):
 					self["backdrop"].setPixmap(backdrop_pix)
 				else:
 					self.deferred_image_tag = None
@@ -241,13 +254,17 @@ class E2EmbyHome(Screen):
 		threads.deferToThread(self.downloadCover, url, icon_img)
 
 	def loadSelectedItemDetails(self):
-		self["backdrop"].setPixmap(None)
-		sel_item = self[self.selected_widget].selectedItem
+		widget = self[self.selected_widget]
+		sel_item = widget.selectedItem
 		if not sel_item:
 			return
 
 		item = sel_item and sel_item[1] or {}
 		item_id = item.get("Id")
+		if widget.isLibrary:
+			item = EmbyApiClient.getRandomItemFromLibrary(item_id, item.get("CollectionType"))
+			item_id = item.get("Id")
+
 		parent_b_item_id = item.get("ParentLogoItemId")
 		if parent_b_item_id:
 			item_id = parent_b_item_id
@@ -266,19 +283,19 @@ class E2EmbyHome(Screen):
 				self["title"].text = ""
 			else:
 				if itemType == "Episode":
-					self["title"].text = item.get("SeriesName", "")
+					self["title"].text = " ".join(item.get("SeriesName", "").splitlines())
 				else:
-					self["title"].text = item.get("Name", "")
+					self["title"].text = " ".join(item.get("Name", "").splitlines())
 				self["title_logo"].setPixmap(None)
 		else:
 			if itemType == "Episode":
-				self["title"].text = item.get("SeriesName", "")
+				self["title"].text = " ".join(item.get("SeriesName", "").splitlines())
 			else:
-				self["title"].text = item.get("Name", "")
+				self["title"].text = " ".join(item.get("Name", "").splitlines())
 			self["title_logo"].setPixmap(None)
 
 		if itemType == "Episode":
-			sub_title = f"S{item.get("ParentIndexNumber", 0)}:E{item.get("IndexNumber", 0)} - {item.get("Name", "")}"
+			sub_title = f"S{item.get("ParentIndexNumber", 0)}:E{item.get("IndexNumber", 0)} - {" ".join(item.get("Name", "").splitlines())}"
 			self["subtitle"].text = sub_title
 			subtitlesize = self["subtitle"].getSize()
 			plotpos = self["plot"].instance.position()
@@ -300,24 +317,28 @@ class E2EmbyHome(Screen):
 
 		self["plot"].text = item.get("Overview", "")
 
+		self.last_item_id = item_id
+
 		backdrop_image_tags = item.get("BackdropImageTags")
 		parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
 		if parent_backdrop_image_tags:
 			backdrop_image_tags = parent_backdrop_image_tags
 
 		if not backdrop_image_tags or len(backdrop_image_tags) == 0:
+			self["backdrop"].setPixmap(None)
 			return
 
 		icon_img = backdrop_image_tags[0]
 		parent_b_item_id = item.get("ParentBackdropItemId")
 		if parent_b_item_id:
 			item_id = parent_b_item_id
+			self.last_item_id = item_id
 
 		self.downloadCover(item_id, icon_img, sel_item)
 
 	def loadHome(self):
 		# for now hardcode username and password here
-		EmbyApiClient.authorizeUser("username", "password")
+		EmbyApiClient.authorizeUser("dimitarcc", "Japanese1")
 		
 		libs = EmbyApiClient.getLibraries()
 		libs_list = []
@@ -337,14 +358,40 @@ class E2EmbyHome(Screen):
 				if colType and colType == "music":
 					music_libs_ids.append(int(lib.get("Id")))
 
-				libs_list.append((i, lib, lib.get('Name'), None, "0", False))
+				libs_list.append((i, lib, lib.get('Name'), None, "0", True))
 				i += 1
 			self["list"].loadData(libs_list)
 
-		self.loadEmbyList(self["list_watching"], "Resume")
-		self.loadEmbyList(self["list_recent_movies"], "LastMovies", movie_libs_ids)
-		self.loadEmbyList(self["list_recent_tvshows"], "LastSeries", tvshow_libs_ids)
+		if self.loadEmbyList(self["list_watching"], "Resume"):
+			if "list_watching" not in self.availableWidgets:
+				self.availableWidgets.append("list_watching")
+		if movie_libs_ids:
+			if self.loadEmbyList(self["list_recent_movies"], "LastMovies", movie_libs_ids):
+				if "list_recent_movies" not in self.availableWidgets:
+					self.availableWidgets.append("list_recent_movies")
+		if tvshow_libs_ids:
+			if self.loadEmbyList(self["list_recent_tvshows"], "LastSeries", tvshow_libs_ids):
+				if "list_recent_tvshows" not in self.availableWidgets:
+					self.availableWidgets.append("list_recent_tvshows")
 
+		try:
+			slot = 0
+			self.lists["list"].move(40, self.slots_layout[slot]).visible(True)
+			slot += 1
+			if "list_watching" in self.availableWidgets:
+				self.lists["list_watching"].move(40, self.slots_layout[slot]).visible(True).enableSelection(self.selected_widget == "list_watching")
+				slot += 1
+			if "list_recent_movies" in self.availableWidgets:
+				self.lists["list_recent_movies"].move(40, self.slots_layout[slot]).visible(True).enableSelection(self.selected_widget == "list_recent_movies")
+				slot += 1
+			if "list_recent_tvshows" in self.availableWidgets:
+				self.lists["list_recent_tvshows"].move(40, self.slots_layout[slot]).visible(True).enableSelection(self.selected_widget == "list_recent_tvshows")
+				slot += 1
+			self.loadSelectedItemDetails()
+		except:
+			pass
+
+			
 		self.home_loaded = True
 
 	def __onClose(self):
@@ -381,6 +428,7 @@ class E2EmbyHome(Screen):
 				list.append((i, item, item.get('Name'), None, played_perc, True))
 				i += 1
 			widget.loadData(list)
+		return len(list) > 0
 
 
 def main(session, **kwargs):

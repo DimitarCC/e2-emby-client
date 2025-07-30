@@ -4,6 +4,7 @@ import urllib
 import json
 import requests
 import os
+import random
 from PIL import Image
 
 
@@ -57,9 +58,9 @@ class EmbyRestClient():
                 pass
         return libs
 
-    def getItems(self, type_part, sortBy, includeItems, parent_part):
+    def getItems(self, type_part, sortBy, includeItems, parent_part, limit=40):
         items = {}
-        req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit=40&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate&IncludeItemTypes={includeItems}{parent_part}")
+        req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate&IncludeItemTypes={includeItems}{parent_part}")
         try:
             response = urllib.request.urlopen(req, timeout=10)  # set a timeout to prevent blocking
             response_obj = response.read()
@@ -68,6 +69,16 @@ class EmbyRestClient():
         except:
             pass
         return items
+    
+    def getRandomItemFromLibrary(self, parent_id, type, limit=200):
+        includeItems = "Movie"
+        if type == "movies":
+            includeItems = "Movie&IsMovie=true&Recursive=true&Filters=IsNotFolder"
+        elif type == "tvshows":
+            includeItems = "Series&IsFolder=true&Recursive=true"
+        items = self.getItems("", "DateCreated", includeItems, f"&ParentId={parent_id}", limit)
+        return random.choice(items)
+
 
     def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None):
         addon = ""
@@ -94,6 +105,9 @@ class EmbyRestClient():
 
             if alpha_channel:
                 im = Image.open(im_tmp_path).convert("RGBA")
+                im_width, im_height = im.size
+                if im_height > height:
+                    im = im.crop((0, 0, im_width, height))
                 if alpha_channel.size != im.size:
                     alpha_channel = alpha_channel.resize(im.size, Image.BOX)
                 im.putalpha(alpha_channel)
