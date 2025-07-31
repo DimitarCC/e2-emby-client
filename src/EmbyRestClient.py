@@ -69,7 +69,7 @@ class EmbyRestClient():
         except:
             pass
         return items
-    
+
     def getRandomItemFromLibrary(self, parent_id, type, limit=200):
         includeItems = "Movie"
         if type == "movies":
@@ -78,7 +78,6 @@ class EmbyRestClient():
             includeItems = "Series&IsFolder=true&Recursive=true"
         items = self.getItems("", "DateCreated", includeItems, f"&ParentId={parent_id}", limit)
         return random.choice(items)
-
 
     def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None):
         addon = ""
