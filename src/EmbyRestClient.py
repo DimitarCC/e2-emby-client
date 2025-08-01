@@ -1,16 +1,17 @@
-from .Variables import REQUEST_USER_AGENT
-from Tools.LoadPixmap import LoadPixmap
 import urllib
 import json
 import requests
 import os
 import random
+from .Variables import REQUEST_USER_AGENT
+from Tools.LoadPixmap import LoadPixmap
+from Components.SystemInfo import BOXTYPE, getMachineName
 from PIL import Image
 
 
 class EmbyRestClient():
-    def __init__(self, server_root_url, device_name, device_id):
-        self.server_root = server_root_url
+    def __init__(self, device_name, device_id):
+        self.server_root = ""
         self.access_token = None
         self.user_id = None
         self.device_name = device_name
@@ -24,7 +25,8 @@ class EmbyRestClient():
         req = urllib.request.Request(url, headers=headers, data=data)
         return req
 
-    def authorizeUser(self, username, password):
+    def authorizeUser(self, server_url, server_port, username, password):
+        self.server_root = f"{server_url}:{server_port}"
         if self.access_token:
             return
 
@@ -69,6 +71,44 @@ class EmbyRestClient():
         except:
             pass
         return items
+    
+    def getBoxsetsFromLibrary(self, library_id):
+        items = []
+        req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=BoxSet&CollapseBoxSetItems=true&ParentId={library_id}&Fields=Genres,SortName,Path,Overview,RunTimeTicks,ProviderIds,DateCreated&Filter=IsFolder")
+        try:
+            response = urllib.request.urlopen(req, timeout=10)  # set a timeout to prevent blocking
+            response_obj = response.read()
+            res_json_obj = json.loads(response_obj)
+            items.extend(res_json_obj.get('Items'))
+        except:
+            pass
+        return items
+    
+    def getBoxsetsChildren(self, boxset_id):
+        items = []
+        req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&ParentId={boxset_id}")
+        try:
+            response = urllib.request.urlopen(req, timeout=10)  # set a timeout to prevent blocking
+            response_obj = response.read()
+            res_json_obj = json.loads(response_obj)
+            items.extend(res_json_obj.get('Items'))
+        except:
+            pass
+        return items
+
+    def getItemsFromLibrary(self, library_id, shouldShowBoxsets = True):
+        items = []
+        req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series&ParentId={library_id}&GroupItemsIntoCollections={'true' if shouldShowBoxsets else 'false'}&Fields=SortName,RunTimeTicks,DateCreated,ParentId")
+        try:
+            response = urllib.request.urlopen(req, timeout=10)  # set a timeout to prevent blocking
+            response_obj = response.read()
+            res_json_obj = json.loads(response_obj)
+            items.extend(res_json_obj.get('Items'))
+        except:
+            pass
+        
+        sorted_items = sorted(items, key=lambda x: x.get("SortName"))
+        return sorted_items
 
     def getRandomItemFromLibrary(self, parent_id, type, limit=200):
         includeItems = "Movie"
@@ -77,7 +117,7 @@ class EmbyRestClient():
         elif type == "tvshows":
             includeItems = "Series&IsFolder=true&Recursive=true"
         items = self.getItems("", "DateCreated", includeItems, f"&ParentId={parent_id}", limit)
-        return random.choice(items)
+        return items and random.choice(items) or {}
 
     def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None):
         addon = ""
@@ -105,8 +145,9 @@ class EmbyRestClient():
             if alpha_channel:
                 im = Image.open(im_tmp_path).convert("RGBA")
                 im_width, im_height = im.size
-                if im_height > height:
-                    im = im.crop((0, 0, im_width, height))
+                required_height = im_width // 1.77
+                if im_height > required_height:
+                    im = im.crop((0, 0, im_width, required_height))
                 if alpha_channel.size != im.size:
                     alpha_channel = alpha_channel.resize(im.size, Image.BOX)
                 im.putalpha(alpha_channel)
@@ -123,4 +164,4 @@ class EmbyRestClient():
 
 
 # here enter the server URL, Device name and device id
-EmbyApiClient = EmbyRestClient("http://192.168.1.121:8096", "GBQuad4KPro", "gbquad4kpro")
+EmbyApiClient = EmbyRestClient(getMachineName(), BOXTYPE)

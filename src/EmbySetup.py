@@ -3,12 +3,13 @@ from Components.config import config, ConfigSelection, ConfigSubsection, ConfigS
 
 from Components.Sources.StaticText import StaticText
 from Screens.Setup import Setup
+from Tools.BoundFunction import boundFunction
 
 
 def initConnection(index):
 	config.plugins.e2embyclient.connections.append(ConfigSubsection())
 	config.plugins.e2embyclient.connections[index].name = ConfigText(default="Server", visible_width=50, fixed_size=False)
-	config.plugins.e2embyclient.connections[index].ip = ConfigIP(default=[192, 168, 1, 1])
+	config.plugins.e2embyclient.connections[index].ip = ConfigText(default="https://ip")
 	config.plugins.e2embyclient.connections[index].port = ConfigInteger(default=8096, limits=(1, 65555))
 	config.plugins.e2embyclient.connections[index].user = ConfigText(default="user", visible_width=50, fixed_size=False)
 	config.plugins.e2embyclient.connections[index].password = ConfigText(default="password", visible_width=50, fixed_size=False)
@@ -23,6 +24,18 @@ def initConfig():
 	config.plugins.e2embyclient.connections = ConfigSubList()
 	for idx in range(config.plugins.e2embyclient.connectioncount.value):
 		initConnection(idx)
+
+
+def getActiveConnection():
+	try:
+		name = config.plugins.e2embyclient.connections[config.plugins.e2embyclient.activeconnection.value].name.value
+		url = config.plugins.e2embyclient.connections[config.plugins.e2embyclient.activeconnection.value].ip.value
+		port = config.plugins.e2embyclient.connections[config.plugins.e2embyclient.activeconnection.value].port.value
+		username = config.plugins.e2embyclient.connections[config.plugins.e2embyclient.activeconnection.value].user.value
+		password = config.plugins.e2embyclient.connections[config.plugins.e2embyclient.activeconnection.value].password.value
+		return (name, url, port, username, password)
+	except:
+		return ("", "", 0, "", "")
 
 
 class EmbySetup(Setup):
@@ -93,7 +106,7 @@ class EmbySetup(Setup):
 			self.calculateActive(0, True)
 
 	def keyYellow(self):
-		def connectionCallback(result=None):
+		def connectionCallback(index, result=None):
 			if result:
 				config.plugins.e2embyclient.connections[index] = result
 				config.plugins.e2embyclient.connections.save()
@@ -104,10 +117,11 @@ class EmbySetup(Setup):
 		current = self["config"].getCurrent()
 		if current and len(current) == 5:  # Edit
 			currentItem = current[4]
+			index = config.plugins.e2embyclient.connections.index(currentItem)
 		else:  # Add
 			index = len(config.plugins.e2embyclient.connections)
 			currentItem = initConnection(index)
-		self.session.openWithCallback(connectionCallback, EmbyConnections, currentItem)
+		self.session.openWithCallback(boundFunction(connectionCallback, index), EmbyConnections, currentItem)
 
 
 class EmbyConnections(Setup):

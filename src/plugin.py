@@ -16,7 +16,7 @@ from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyPlayer import EmbyPlayer
-from .EmbySetup import initConfig
+from .EmbySetup import initConfig, EmbySetup, getActiveConnection
 from os import path, fsync, rename, makedirs, remove
 
 import threading
@@ -31,7 +31,77 @@ plugin_dir = path.dirname(modules[__name__].__file__)
 initConfig()
 
 from .EmbyRestClient import EmbyApiClient
+from .EmbyGridList import EmbyGridList
+from twisted.internet.defer import DeferredList
 
+
+class E2EmbyLibrary(Screen):
+	skin = ["""<screen name="E2EmbyLibrary" position="fill">
+					<widget name="list" position="40,0" size="e-80,e" iconWidth="270" iconHeight="220" scrollbarMode="showNever" transparent="1" />
+				</screen>"""]  # noqa: E124
+
+	def __init__(self, session, library_id):
+		Screen.__init__(self, session)
+		self.library_id = library_id
+		self.boxsets = []
+		self.movies = []
+		self.setTitle(_("Emby Library"))
+		self["list"] = EmbyGridList()
+		self.onShown.append(self.__onShown)
+
+		self["actions"] = ActionMap(["E2EmbyActions",],
+			{
+				"cancel": self.close,  # KEY_RED / KEY_EXIT
+				# "save": self.addProvider,  # KEY_GREEN
+				#"ok": self.processItem,
+				# "yellow": self.keyYellow,
+				# "blue": self.clearData,
+			}, -1)
+
+	def __onShown(self):
+		threads.deferToThread(self.loadItems)
+
+	def fetch_children_threaded(self, boxset_id):
+		return threads.deferToThread(EmbyApiClient.getBoxsetsChildren, boxset_id)
+	
+	def loadMovies(self):
+		self.movies = EmbyApiClient.getItemsFromLibrary(self.library_id)
+
+	def loadItems(self):
+		# self.boxsets = EmbyApiClient.getBoxsetsFromLibrary(self.library_id)
+		# threads.deferToThread(self.loadMovies)
+		# deferreds = [self.fetch_children_threaded(box["Id"]) for box in self.boxsets]
+		# dlist = DeferredList(deferreds)
+		# dlist.addCallback(self.on_all_done)
+		items = EmbyApiClient.getItemsFromLibrary(self.library_id)
+		list = []
+		if items:
+			i = 0
+			for item in items:
+				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+				list.append((i, item, item.get('Name'), None, played_perc, True))
+				i += 1
+			self["list"].loadData(list)
+
+	def on_all_done(self, results):
+		items_in_sets = []
+		for success, children in results:
+			if success:
+				items_in_sets.extend([x["Id"] for x in children])
+
+		filtered = [x for x in self.movies if x["Id"] not in items_in_sets]
+
+		items = sorted(self.boxsets + filtered, key=lambda x: x["SortName"])
+
+		list = []
+		if items:
+			i = 0
+			for item in items:
+				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+				list.append((i, item, item.get('Name'), None, played_perc, True))
+				i += 1
+			self["list"].loadData(list)
+		
 
 class E2EmbyHome(Screen):
 	skin = ["""<screen name="E2EmbyHome" position="fill">
@@ -139,6 +209,7 @@ class E2EmbyHome(Screen):
 		pass
 
 	def __onShown(self):
+		activeConnection = getActiveConnection()
 		self.lists["list_watching"].enableSelection(self.selected_widget == "list_watching")
 		self.lists["list_recent_movies"].enableSelection(self.selected_widget == "list_recent_movies")
 		self.lists["list_recent_tvshows"].enableSelection(self.selected_widget == "list_recent_tvshows")
@@ -146,7 +217,7 @@ class E2EmbyHome(Screen):
 			self.lists["list_watching"].visible(False)
 			self.lists["list_recent_movies"].visible(False)
 			self.lists["list_recent_tvshows"].visible(False)
-			threads.deferToThread(self.loadHome)
+			threads.deferToThread(self.loadHome, activeConnection)
 
 	def left(self):
 		if hasattr(self[self.selected_widget].instance, "prevItem"):
@@ -205,7 +276,7 @@ class E2EmbyHome(Screen):
 		widget = self[self.selected_widget]
 		selected_item = widget.getCurrentItem()
 		if widget.isLibrary:
-			pass
+			self.session.open(E2EmbyLibrary, int(selected_item.get("Id", "0")))
 		else:
 			infobar = InfoBar.instance
 			if infobar:
@@ -229,7 +300,7 @@ class E2EmbyHome(Screen):
 			return
 		self.processing_cover = True
 		if not self.deferred_cover_url:
-			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1062, height=600, image_type="Backdrop", alpha_channel=self.mask_alpha)
+			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1062, image_type="Backdrop", alpha_channel=self.mask_alpha)
 			if backdrop_pix:
 				sel_item = self[self.selected_widget].selectedItem
 				if not self.deferred_cover_url and sel_item and sel_item[5] and (not self.last_item_id or item_id == self.last_item_id):
@@ -256,6 +327,7 @@ class E2EmbyHome(Screen):
 		threads.deferToThread(self.downloadCover, url, icon_img)
 
 	def loadSelectedItemDetails(self):
+		self["backdrop"].setPixmap(None)
 		widget = self[self.selected_widget]
 		sel_item = widget.selectedItem
 		if not sel_item:
@@ -338,9 +410,8 @@ class E2EmbyHome(Screen):
 
 		self.downloadCover(item_id, icon_img, sel_item)
 
-	def loadHome(self):
-		# for now hardcode username and password here
-		EmbyApiClient.authorizeUser("dimitarcc", "Japanese1")
+	def loadHome(self, activeConnection):
+		EmbyApiClient.authorizeUser(activeConnection[1], activeConnection[2], activeConnection[3], activeConnection[4])
 
 		libs = EmbyApiClient.getLibraries()
 		libs_list = []
@@ -377,18 +448,18 @@ class E2EmbyHome(Screen):
 					self.availableWidgets.append("list_recent_tvshows")
 
 		try:
-			slot = 0
-			self.lists["list"].move(40, self.slots_layout[slot]).visible(True)
-			slot += 1
+			y = self.slots_layout[0]
+			self.lists["list"].move(40, y).visible(True)
+			y += self.lists["list"].getHeight() + 40
 			if "list_watching" in self.availableWidgets:
-				self.lists["list_watching"].move(40, self.slots_layout[slot]).visible(True).enableSelection(self.selected_widget == "list_watching")
-				slot += 1
+				self.lists["list_watching"].move(40, y).visible(True).enableSelection(self.selected_widget == "list_watching")
+				y += self.lists["list_watching"].getHeight() + 40
 			if "list_recent_movies" in self.availableWidgets:
-				self.lists["list_recent_movies"].move(40, self.slots_layout[slot]).visible(True).enableSelection(self.selected_widget == "list_recent_movies")
-				slot += 1
+				self.lists["list_recent_movies"].move(40, y).visible(True).enableSelection(self.selected_widget == "list_recent_movies")
+				y += self.lists["list_recent_movies"].getHeight() + 40
 			if "list_recent_tvshows" in self.availableWidgets:
-				self.lists["list_recent_tvshows"].move(40, self.slots_layout[slot]).visible(True).enableSelection(self.selected_widget == "list_recent_tvshows")
-				slot += 1
+				self.lists["list_recent_tvshows"].move(40, y).visible(True).enableSelection(self.selected_widget == "list_recent_tvshows")
+				y += self.lists["list_recent_tvshows"].getHeight() + 40
 			self.loadSelectedItemDetails()
 		except:
 			pass
@@ -432,6 +503,9 @@ class E2EmbyHome(Screen):
 		return len(list) > 0
 
 
+def setup(session, **kwargs):
+	session.open(EmbySetup)
+
 def main(session, **kwargs):
 	session.open(E2EmbyHome)
 
@@ -451,7 +525,7 @@ def Plugins(path, **kwargs):
 		result = [
 			PluginDescriptor(where=PluginDescriptor.WHERE_SESSIONSTART, fnc=sessionstart, needsRestart=False),
 			PluginDescriptor(name=_("E2-Emby"), description=_("A client for Emby server"), where=PluginDescriptor.WHERE_MENU, needsRestart=False, fnc=startHome),
-			PluginDescriptor(name=_("E2-Emby Client"), description=_("A client for Emby server"), where=PluginDescriptor.WHERE_PLUGINMENU, icon='plugin.png', fnc=main)
+			PluginDescriptor(name=_("E2-Emby Client"), description=_("A client for Emby server"), where=PluginDescriptor.WHERE_PLUGINMENU, icon='plugin.png', fnc=setup)
 		]
 		return result
 	except ImportError:
