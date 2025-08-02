@@ -18,7 +18,6 @@ from .EmbyInfoLine import EmbyInfoLine
 from .EmbyPlayer import EmbyPlayer
 from .EmbySetup import initConfig, EmbySetup, getActiveConnection
 from os import path, fsync, rename, makedirs, remove
-
 import threading
 import os
 import uuid
@@ -32,7 +31,6 @@ initConfig()
 
 from .EmbyRestClient import EmbyApiClient
 from .EmbyGridList import EmbyGridList
-from twisted.internet.defer import DeferredList
 
 
 class E2EmbyLibrary(Screen):
@@ -61,18 +59,7 @@ class E2EmbyLibrary(Screen):
 	def __onShown(self):
 		threads.deferToThread(self.loadItems)
 
-	def fetch_children_threaded(self, boxset_id):
-		return threads.deferToThread(EmbyApiClient.getBoxsetsChildren, boxset_id)
-	
-	def loadMovies(self):
-		self.movies = EmbyApiClient.getItemsFromLibrary(self.library_id)
-
 	def loadItems(self):
-		# self.boxsets = EmbyApiClient.getBoxsetsFromLibrary(self.library_id)
-		# threads.deferToThread(self.loadMovies)
-		# deferreds = [self.fetch_children_threaded(box["Id"]) for box in self.boxsets]
-		# dlist = DeferredList(deferreds)
-		# dlist.addCallback(self.on_all_done)
 		items = EmbyApiClient.getItemsFromLibrary(self.library_id)
 		list = []
 		if items:
@@ -81,27 +68,7 @@ class E2EmbyLibrary(Screen):
 				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
 				list.append((i, item, item.get('Name'), None, played_perc, True))
 				i += 1
-			self["list"].loadData(list)
-
-	def on_all_done(self, results):
-		items_in_sets = []
-		for success, children in results:
-			if success:
-				items_in_sets.extend([x["Id"] for x in children])
-
-		filtered = [x for x in self.movies if x["Id"] not in items_in_sets]
-
-		items = sorted(self.boxsets + filtered, key=lambda x: x["SortName"])
-
-		list = []
-		if items:
-			i = 0
-			for item in items:
-				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
-				list.append((i, item, item.get('Name'), None, played_perc, True))
-				i += 1
-			self["list"].loadData(list)
-		
+			self["list"].loadData(list)	
 
 class E2EmbyHome(Screen):
 	skin = ["""<screen name="E2EmbyHome" position="fill">
@@ -133,6 +100,8 @@ class E2EmbyHome(Screen):
 		self.selected_widget = "list"
 		self.home_loaded = False
 		self.availableWidgets = ["list"]
+		self.last_item_id = None
+		self.last_widget_info_load_success = None
 
 		self.slots_layout = {}
 		self.slots_layout[0] = 570
@@ -170,7 +139,6 @@ class E2EmbyHome(Screen):
 		self.processing_cover = False
 		self.deferred_cover_url = None
 		self.deferred_image_tag = None
-		self.last_item_id = None
 		self.last_cover = ""
 		self.mask_alpha = Image.open(os.path.join(plugin_dir, "mask.png")).split()[3]
 		if self.mask_alpha.mode != "L":
@@ -178,6 +146,10 @@ class E2EmbyHome(Screen):
 		self.onShown.append(self.__onShown)
 		self.onClose.append(self.__onClose)
 		self.onLayoutFinish.append(self.__onLayoutFinished)
+		self["list"].onSelectionChanged.append(self.onSelectedIndexChanged)
+		self["list_watching"].onSelectionChanged.append(self.onSelectedIndexChanged)
+		self["list_recent_movies"].onSelectionChanged.append(self.onSelectedIndexChanged)
+		self["list_recent_tvshows"].onSelectionChanged.append(self.onSelectedIndexChanged)
 		self.plot_posy_orig = 290
 		self.plot_height_orig = 168
 		self.plot_width_orig = 924
@@ -219,21 +191,33 @@ class E2EmbyHome(Screen):
 			self.lists["list_recent_tvshows"].visible(False)
 			threads.deferToThread(self.loadHome, activeConnection)
 
+	def onSelectedIndexChanged(self, widget=None, item_id=None):
+		if (widget and widget != self[self.selected_widget]) or (widget and self.last_widget_info_load_success == widget):
+			return
+
+		if not item_id:
+			item_id = self[self.selected_widget].selectedItem.get("Id")
+		if item_id is not None and self.last_item_id is not None and item_id == self.last_item_id:
+			return
+		self.last_widget_info_load_success = None
+		if not widget:
+			self.clearInfoPane()
+		self.last_item_id = item_id
+		threads.deferToThread(self.loadSelectedItemDetails)
+
 	def left(self):
+		self.last_widget_info_load_success = None
 		if hasattr(self[self.selected_widget].instance, "prevItem"):
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
 		else:
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
 
-		threads.deferToThread(self.loadSelectedItemDetails)
-
 	def right(self):
+		self.last_widget_info_load_success = None
 		if hasattr(self[self.selected_widget].instance, "nextItem"):
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
 		else:
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
-
-		threads.deferToThread(self.loadSelectedItemDetails)
 
 	def up(self):
 		current_widget_index = self.availableWidgets.index(self.selected_widget)
@@ -251,7 +235,7 @@ class E2EmbyHome(Screen):
 			self.lists[item].move(40, y).enableSelection(False)
 			y += self.lists[item].getHeight() + 40
 
-		threads.deferToThread(self.loadSelectedItemDetails)
+		self.onSelectedIndexChanged()
 
 	def down(self):
 		current_widget_index = self.availableWidgets.index(self.selected_widget)
@@ -269,8 +253,7 @@ class E2EmbyHome(Screen):
 			if selEnabled:
 				self.selected_widget = item
 			selEnabled = False
-
-		threads.deferToThread(self.loadSelectedItemDetails)
+		self.onSelectedIndexChanged()
 
 	def processItem(self):
 		widget = self[self.selected_widget]
@@ -290,7 +273,7 @@ class E2EmbyHome(Screen):
 				ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
 				self.session.open(EmbyPlayer, ref, startPos=startTimeTicks, slist=infobar.servicelist, lastservice=LastService)
 
-	def downloadCover(self, item_id, icon_img, selected_item=None):
+	def downloadCover(self, item_id, icon_img, orig_item_id, selected_item=None):
 		url = (item_id, icon_img)
 		if self.deferred_cover_url and self.deferred_cover_url == url:
 			return
@@ -302,8 +285,7 @@ class E2EmbyHome(Screen):
 		if not self.deferred_cover_url:
 			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1062, image_type="Backdrop", alpha_channel=self.mask_alpha)
 			if backdrop_pix:
-				sel_item = self[self.selected_widget].selectedItem
-				if not self.deferred_cover_url and sel_item and sel_item[5] and (not self.last_item_id or item_id == self.last_item_id):
+				if not self.deferred_cover_url and (not self.last_item_id or item_id == self.last_item_id or orig_item_id == self.last_item_id):
 					self["backdrop"].setPixmap(backdrop_pix)
 				else:
 					self.deferred_image_tag = None
@@ -314,7 +296,7 @@ class E2EmbyHome(Screen):
 					icon_img = self.deferred_image_tag
 					self.deferred_image_tag = None
 					self.processing_cover = False
-					threads.deferToThread(self.downloadCover, item_id, defferred_tag)
+					threads.deferToThread(self.downloadCover, item_id, defferred_tag, orig_item_id)
 				self.processing_cover = False
 			else:
 				self.processing_cover = False
@@ -326,17 +308,35 @@ class E2EmbyHome(Screen):
 	def mdbCover(self, url, icon_img):
 		threads.deferToThread(self.downloadCover, url, icon_img)
 
-	def loadSelectedItemDetails(self):
+	def clearInfoPane(self):
 		self["backdrop"].setPixmap(None)
+		self["title_logo"].setPixmap(None)
+		self["title"].text = ""
+		self["subtitle"].text = ""
+		self["infoline"].updateInfo({})
+		self["plot"].text = ""
+
+	def loadSelectedItemDetails(self):
 		widget = self[self.selected_widget]
-		sel_item = widget.selectedItem
+		if widget and self.last_widget_info_load_success and self.last_widget_info_load_success == widget:
+			return
+		self.last_widget_info_load_success = widget
+		self["backdrop"].setPixmap(None)
+		
+		sel_item = widget.selectedWidgetItem
 		if not sel_item:
 			return
+		item = widget.selectedItem
+		orig_item_id = item.get("Id")
 
-		item = sel_item and sel_item[1] or {}
-		item_id = item.get("Id")
+		if widget.isLibrary:
+			self.clearInfoPane()
+
+		item_id = orig_item_id
 		if widget.isLibrary:
 			item = EmbyApiClient.getRandomItemFromLibrary(item_id, item.get("CollectionType"))
+			if self.last_item_id is not None and self.last_item_id != orig_item_id:
+				return
 			item_id = item.get("Id")
 
 		parent_b_item_id = item.get("ParentLogoItemId")
@@ -352,6 +352,8 @@ class E2EmbyHome(Screen):
 
 		if logo_tag:
 			logo_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_height=60, image_type="Logo", format="png")
+			if self.last_item_id is not None and self.last_item_id != orig_item_id:
+				return
 			if logo_pix:
 				self["title_logo"].setPixmap(logo_pix)
 				self["title"].text = ""
@@ -391,8 +393,6 @@ class E2EmbyHome(Screen):
 
 		self["plot"].text = item.get("Overview", "")
 
-		self.last_item_id = item_id
-
 		backdrop_image_tags = item.get("BackdropImageTags")
 		parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
 		if parent_backdrop_image_tags:
@@ -406,9 +406,8 @@ class E2EmbyHome(Screen):
 		parent_b_item_id = item.get("ParentBackdropItemId")
 		if parent_b_item_id:
 			item_id = parent_b_item_id
-			self.last_item_id = item_id
-
-		self.downloadCover(item_id, icon_img, sel_item)
+		self.downloadCover(item_id, icon_img, orig_item_id, sel_item)
+		
 
 	def loadHome(self, activeConnection):
 		EmbyApiClient.authorizeUser(activeConnection[1], activeConnection[2], activeConnection[3], activeConnection[4])
@@ -492,6 +491,8 @@ class E2EmbyHome(Screen):
 				parent_part = f"&ParentId={parent_id}"
 				part_items = EmbyApiClient.getItems(type_part, sortBy, includeItems, parent_part)
 				items.extend(part_items)
+			if len(parent_ids) > 1:
+				items = sorted(items, key=lambda x: x.get("DateCreated"), reverse=True)
 		list = []
 		if items:
 			i = 0

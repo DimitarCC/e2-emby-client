@@ -13,11 +13,12 @@ class EmbyList(GUIComponent):
 	def __init__(self, isLibrary=False):
 		GUIComponent.__init__(self)
 		self.isLibrary = isLibrary
+		self.onSelectionChanged = []
 		self.data = []
 		self.itemsForThumbs = []
 		self.selectionEnabled = True
 		self.font = gFont("Regular", 18)
-		self.selectedItem = None
+		self.selectedIndex = 0
 		self.l = eListboxPythonMultiContent()  # noqa: E741
 		self.l.setBuildFunc(self.buildEntry)
 		self.spacing_sides = 15
@@ -48,7 +49,24 @@ class EmbyList(GUIComponent):
 		self.interupt = True
 
 	def selectionChanged(self):
-		self.selectedItem = self.l.getCurrentSelection()
+		self.selectedIndex = self.l.getCurrentSelectionIndex()
+		for x in self.onSelectionChanged:
+			x(self, self.selectedItem and self.selectedItem.get("Id"))
+
+	def getCurrentObjectSelection(self):
+		return self.l.getCurrentSelection()
+	
+	def getCurrentItem(self):
+		cur = self.l.getCurrentSelection()
+		return cur and cur[1] or {}
+	
+	def getCurrentIndex(self):
+		return self.instance.getCurrentIndex() or -1
+
+	
+	selectedItem = property(getCurrentItem)
+
+	selectedWidgetItem = property(getCurrentObjectSelection)
 
 	def applySkin(self, desktop, parent):
 		attribs = []
@@ -80,10 +98,6 @@ class EmbyList(GUIComponent):
 	def toggleSelection(self, enabled):
 		self.selectionEnabled = enabled
 		self.instance.setSelectionEnable(enabled)
-
-	def getCurrentItem(self):
-		cur = self.l.getCurrentSelection()
-		return cur and cur[1]
 
 	def loadData(self, items):
 		self.data = items
@@ -150,7 +164,7 @@ class EmbyList(GUIComponent):
 		xPos = 0
 		yPos = 0
 		res = [None]
-		selected = self.selectedItem and self.selectedItem[1] == item
+		selected = self.selectedIndex == item_index
 		if selected and self.selectionEnabled:
 			res.append(MultiContentEntryRectangle(
 					pos=(self.spacing_sides - 3, self.spacing_sides - 3), size=(self.iconWidth + 6, self.iconHeight + 6),

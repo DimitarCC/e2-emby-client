@@ -65,14 +65,14 @@ class EmbyRestClient():
 
 	def getItems(self, type_part, sortBy, includeItems, parent_part, limit=40):
 		items = {}
-		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate&IncludeItemTypes={includeItems}{parent_part}")
+		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&IncludeItemTypes={includeItems}{parent_part}")
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = urllib.request.urlopen(req, timeout=4)  # set a timeout to prevent blocking
 				response_obj = response.read()
 				res_json_obj = json.loads(response_obj)
 				items = res_json_obj.get('Items')
-				break;
+				break
 			except urllib.error.URLError as e:
 				if not isinstance(e.reason, socket.timeout):
 					break  # Non-timeout error: Don't retry
@@ -89,7 +89,7 @@ class EmbyRestClient():
 				response_obj = response.read()
 				res_json_obj = json.loads(response_obj)
 				items.extend(res_json_obj.get('Items'))
-				break;
+				break
 			except urllib.error.URLError as e:
 				if not isinstance(e.reason, socket.timeout):
 					break  # Non-timeout error: Don't retry
@@ -106,7 +106,7 @@ class EmbyRestClient():
 				response_obj = response.read()
 				res_json_obj = json.loads(response_obj)
 				items.extend(res_json_obj.get('Items'))
-				break;
+				break
 			except urllib.error.URLError as e:
 				if not isinstance(e.reason, socket.timeout):
 					break  # Non-timeout error: Don't retry
@@ -123,7 +123,7 @@ class EmbyRestClient():
 				response_obj = response.read()
 				res_json_obj = json.loads(response_obj)
 				items.extend(res_json_obj.get('Items'))
-				break;
+				break
 			except urllib.error.URLError as e:
 				if not isinstance(e.reason, socket.timeout):
 					break  # Non-timeout error: Don't retry
