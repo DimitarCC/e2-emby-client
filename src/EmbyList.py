@@ -33,6 +33,7 @@ class EmbyList(GUIComponent):
 		self.refreshing = False
 		self.running = False
 		self.updatingIndexesInProgress = []
+		self.interupt = False
 
 	GUI_WIDGET = eListbox
 
@@ -44,6 +45,7 @@ class EmbyList(GUIComponent):
 
 	def preWidgetRemove(self, instance):
 		instance.selectionChanged.get().remove(self.selectionChanged)
+		self.interupt = True
 
 	def selectionChanged(self):
 		self.selectedItem = self.l.getCurrentSelection()
@@ -90,6 +92,9 @@ class EmbyList(GUIComponent):
 	def runQueueProcess(self):
 		self.running = True
 		while len(self.itemsForThumbs) > 0:
+			if self.interupt:
+				self.interupt = False
+				break
 			item_popped = self.itemsForThumbs.pop(-1)
 			item_index = item_popped[0]
 			item = item_popped[1]

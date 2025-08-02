@@ -5,6 +5,8 @@ from Components.Sources.StaticText import StaticText
 from Screens.Setup import Setup
 from Tools.BoundFunction import boundFunction
 
+retries = 0
+
 
 def initConnection(index):
 	config.plugins.e2embyclient.connections.append(ConfigSubsection())
@@ -18,12 +20,14 @@ def initConnection(index):
 
 def initConfig():
 	config.plugins.e2embyclient = ConfigSubsection()
+	config.plugins.e2embyclient.conretries = ConfigInteger(default=5, limits=(5, 20))
 	config.plugins.e2embyclient.dummy = ConfigYesNo(default=False)
 	config.plugins.e2embyclient.connectioncount = ConfigInteger(0)
 	config.plugins.e2embyclient.activeconnection = ConfigInteger(0)
 	config.plugins.e2embyclient.connections = ConfigSubList()
 	for idx in range(config.plugins.e2embyclient.connectioncount.value):
 		initConnection(idx)
+	retries = config.plugins.e2embyclient.conretries.value
 
 
 def getActiveConnection():

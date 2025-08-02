@@ -37,7 +37,7 @@ from twisted.internet.defer import DeferredList
 
 class E2EmbyLibrary(Screen):
 	skin = ["""<screen name="E2EmbyLibrary" position="fill">
-					<widget name="list" position="40,0" size="e-80,e" iconWidth="270" iconHeight="220" scrollbarMode="showNever" transparent="1" />
+					<widget name="list" position="40,0" size="e-80,e" iconWidth="200" iconHeight="260" spacing="10" scrollbarMode="showNever" transparent="1" />
 				</screen>"""]  # noqa: E124
 
 	def __init__(self, session, library_id):
@@ -106,7 +106,7 @@ class E2EmbyLibrary(Screen):
 class E2EmbyHome(Screen):
 	skin = ["""<screen name="E2EmbyHome" position="fill">
 					<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
-					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-220,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
+					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
 						<convert type="ClockToText">Default</convert>
 					</widget>
 					<widget name="title_logo" position="60,140" size="924,60" alphatest="blend"/>
@@ -124,7 +124,7 @@ class E2EmbyHome(Screen):
 					</widget>
 					<widget name="list_recent_movies" position="35,1150" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
 					<widget name="list_recent_tvshows_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
-					<widget name="list_recent_tvshows" position="35,1600" size="e-80,270" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
+					<widget name="list_recent_tvshows" position="35,1600" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
 				</screen>"""]  # noqa: E124
 
 	def __init__(self, session):

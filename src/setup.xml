@@ -1,5 +1,6 @@
 <setupxml>
 	<setup key="e2embyclient" title="E2EmbyClient Setup">
+		<item level="0" text="Connection reties count" description="Specify the connection retries count.">config.plugins.e2embyclient.conretries</item>
 		<item level="0" text="TEXT" description="Desc">config.plugins.e2embyclient.dummy</item>
 		<item level="0" text="Connections"></item>
 	</setup>

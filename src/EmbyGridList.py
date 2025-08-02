@@ -24,8 +24,8 @@ class EmbyGridList(GUIComponent):
 		self.l.setBuildFunc(self.buildEntry)
 		self.spacing = 15
 		self.orientation = eListbox.orGrid
-		self.iconWidth = 270
-		self.iconHeight = 330
+		self.iconWidth = 200
+		self.iconHeight = 260
 		self.itemWidth = self.iconWidth + self.spacing * 2
 		self.itemHeight = self.iconHeight + 72 + self.spacing * 2
 		self.l.setItemHeight(self.itemHeight)
@@ -34,6 +34,7 @@ class EmbyGridList(GUIComponent):
 		self.refreshing = False
 		self.running = False
 		self.updatingIndexesInProgress = []
+		self.interupt = False
 
 	GUI_WIDGET = eListbox
 
@@ -57,6 +58,7 @@ class EmbyGridList(GUIComponent):
 
 	def preWidgetRemove(self, instance):
 		instance.selectionChanged.get().remove(self.selectionChanged)
+		self.interupt = True
 
 	def selectionChanged(self):
 		self.selectedItem = self.l.getCurrentSelection()
@@ -77,6 +79,8 @@ class EmbyGridList(GUIComponent):
 				self.iconWidth = int(value)
 			elif attrib == "iconHeight":
 				self.iconHeight = int(value)
+			elif attrib == "spacing":
+				self.spacing = int(value)
 			else:
 				attribs.append((attrib, value))
 		self.skinAttributes = attribs
@@ -104,6 +108,9 @@ class EmbyGridList(GUIComponent):
 	def runQueueProcess(self):
 		self.running = True
 		while len(self.itemsForThumbs) > 0:
+			if self.interupt:
+				self.interupt = False
+				break
 			item_popped = self.itemsForThumbs.pop(-1)
 			item_index = item_popped[0]
 			item = item_popped[1]

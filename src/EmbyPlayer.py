@@ -88,8 +88,8 @@ class EmbyPlayer(MoviePlayer):
 		self.progress_timer.start(1000)
 
 	def setProgress(self, pos):
-		len = self.getLength()
-		if len == 0:
+		lenght = self.getLength()
+		if not lenght or pos is None:
 			self["progress"].value = 0
 			self["progress_summary"].value = 0
 			text = "-00:00:00         00:00:00         +00:00:00"
@@ -107,16 +107,16 @@ class EmbyPlayer(MoviePlayer):
 			return
 
 		r = self.getLength() - pos  # Remaining
-		progress_val = i if (i := int((pos / len) * 100)) and i >= 0 else 0
+		progress_val = i if (i := int((pos / lenght) * 100)) and i >= 0 else 0
 		self["progress"].value = progress_val
 		self["progress_summary"].value = progress_val
-		text = "-%d:%02d:%02d         %d:%02d:%02d         +%d:%02d:%02d" % (pos / 3600, pos % 3600 / 60, pos % 60, len / 3600, len % 3600 / 60, len % 60, r / 3600, r % 3600 / 60, r % 60)
+		text = "-%d:%02d:%02d         %d:%02d:%02d         +%d:%02d:%02d" % (pos / 3600, pos % 3600 / 60, pos % 60, lenght / 3600, lenght % 3600 / 60, lenght % 60, r / 3600, r % 3600 / 60, r % 60)
 		self["time_info"].setText(text)
 		self["time_info_summary"].setText(text)
 		text_elapsed = "-%d:%02d:%02d" % (pos / 3600, pos % 3600 / 60, pos % 60)
 		self["time_elapsed"].setText(text_elapsed)
 		self["time_elapsed_summary"].setText(text_elapsed)
-		text_duration = "%d:%02d:%02d" % (len / 3600, len % 3600 / 60, len % 60)
+		text_duration = "%d:%02d:%02d" % (lenght / 3600, lenght % 3600 / 60, lenght % 60)
 		self["time_duration"].setText(text_duration)
 		self["time_duration_summary"].setText(text_duration)
 		text_remaining = "+%d:%02d:%02d" % (r / 3600, r % 3600 / 60, r % 60)
