@@ -32,6 +32,26 @@ initConfig()
 from .EmbyRestClient import EmbyApiClient
 from .EmbyGridList import EmbyGridList
 
+current_thread = None
+
+class StoppableThread(threading.Thread):
+    def __init__(self, target, args=(), kwargs=None):
+        super().__init__()
+        self._stop_event = threading.Event()
+        self._target = target
+        self._args = args
+        self._kwargs = kwargs if kwargs else {}
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        return self._stop_event.is_set()
+
+    def run(self):
+        # Inject the stop check into the target function
+        self._target(self, *self._args, **self._kwargs)
+
 
 class E2EmbyLibrary(Screen):
 	skin = ["""<screen name="E2EmbyLibrary" position="fill">
@@ -203,7 +223,15 @@ class E2EmbyHome(Screen):
 		if not widget:
 			self.clearInfoPane()
 		self.last_item_id = item_id
-		threads.deferToThread(self.loadSelectedItemDetails)
+		self.start_new_thread()
+
+	def start_new_thread(self):
+		global current_thread
+		if current_thread and current_thread.is_alive():
+			current_thread.stop()
+
+		current_thread = StoppableThread(target=self.loadSelectedItemDetails)
+		current_thread.start()
 
 	def left(self):
 		self.last_widget_info_load_success = None
@@ -273,40 +301,21 @@ class E2EmbyHome(Screen):
 				ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
 				self.session.open(EmbyPlayer, ref, startPos=startTimeTicks, slist=infobar.servicelist, lastservice=LastService)
 
-	def downloadCover(self, item_id, icon_img, orig_item_id, selected_item=None):
-		url = (item_id, icon_img)
-		if self.deferred_cover_url and self.deferred_cover_url == url:
-			return
-		if self.processing_cover:
-			self.deferred_cover_url = url
-			self.deferred_image_tag = icon_img
+	def downloadCover(self, item_id, icon_img, thread, selected_item=None):
+		if thread.stopped():
 			return
 		self.processing_cover = True
-		if not self.deferred_cover_url:
+		if True or not self.deferred_cover_url:
 			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1062, image_type="Backdrop", alpha_channel=self.mask_alpha)
+			if thread.stopped():
+				return
 			if backdrop_pix:
-				if not self.deferred_cover_url and (not self.last_item_id or item_id == self.last_item_id or orig_item_id == self.last_item_id):
-					self["backdrop"].setPixmap(backdrop_pix)
-				else:
-					self.deferred_image_tag = None
-					self["backdrop"].setPixmap(None)
-				if self.deferred_cover_url:
-					item_id, defferred_tag = self.deferred_cover_url
-					self.deferred_cover_url = None
-					icon_img = self.deferred_image_tag
-					self.deferred_image_tag = None
-					self.processing_cover = False
-					threads.deferToThread(self.downloadCover, item_id, defferred_tag, orig_item_id)
+				self["backdrop"].setPixmap(backdrop_pix)
 				self.processing_cover = False
 			else:
 				self.processing_cover = False
 				self.deferred_cover_url = None
-				if selected_item:
-					selected_item = (selected_item[0], selected_item[1], selected_item[2], selected_item[3], selected_item[4], False)
 				self["backdrop"].setPixmap(None)
-
-	def mdbCover(self, url, icon_img):
-		threads.deferToThread(self.downloadCover, url, icon_img)
 
 	def clearInfoPane(self):
 		self["backdrop"].setPixmap(None)
@@ -316,11 +325,10 @@ class E2EmbyHome(Screen):
 		self["infoline"].updateInfo({})
 		self["plot"].text = ""
 
-	def loadSelectedItemDetails(self):
-		widget = self[self.selected_widget]
-		if widget and self.last_widget_info_load_success and self.last_widget_info_load_success == widget:
+	def loadSelectedItemDetails(self, thread):
+		if thread.stopped():
 			return
-		self.last_widget_info_load_success = widget
+		widget = self[self.selected_widget]
 		self["backdrop"].setPixmap(None)
 		
 		sel_item = widget.selectedWidgetItem
@@ -335,7 +343,7 @@ class E2EmbyHome(Screen):
 		item_id = orig_item_id
 		if widget.isLibrary:
 			item = EmbyApiClient.getRandomItemFromLibrary(item_id, item.get("CollectionType"))
-			if self.last_item_id is not None and self.last_item_id != orig_item_id:
+			if thread.stopped():
 				return
 			item_id = item.get("Id")
 
@@ -352,7 +360,7 @@ class E2EmbyHome(Screen):
 
 		if logo_tag:
 			logo_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_height=60, image_type="Logo", format="png")
-			if self.last_item_id is not None and self.last_item_id != orig_item_id:
+			if thread.stopped():
 				return
 			if logo_pix:
 				self["title_logo"].setPixmap(logo_pix)
@@ -406,7 +414,7 @@ class E2EmbyHome(Screen):
 		parent_b_item_id = item.get("ParentBackdropItemId")
 		if parent_b_item_id:
 			item_id = parent_b_item_id
-		self.downloadCover(item_id, icon_img, orig_item_id, sel_item)
+		self.downloadCover(item_id, icon_img, thread, sel_item)
 		
 
 	def loadHome(self, activeConnection):
