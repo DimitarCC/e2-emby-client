@@ -185,6 +185,7 @@ class EmbyRestClient():
 					except:
 						pass
 					return pix
+				break
 			except requests.exceptions.ReadTimeout:
 				pass
 			except:

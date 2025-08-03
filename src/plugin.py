@@ -19,6 +19,7 @@ from .EmbyPlayer import EmbyPlayer
 from .EmbySetup import initConfig, EmbySetup, getActiveConnection
 from os import path, fsync, rename, makedirs, remove
 import threading
+import time
 import os
 import uuid
 
@@ -212,14 +213,12 @@ class E2EmbyHome(Screen):
 			threads.deferToThread(self.loadHome, activeConnection)
 
 	def onSelectedIndexChanged(self, widget=None, item_id=None):
-		if (widget and widget != self[self.selected_widget]) or (widget and self.last_widget_info_load_success == widget):
+		if (self.last_widget_info_load_success and self.last_widget_info_load_success == widget):
 			return
 
 		if not item_id:
 			item_id = self[self.selected_widget].selectedItem.get("Id")
-		# if item_id is not None and self.last_item_id is not None and item_id == self.last_item_id:
-		# 	return
-		self.last_widget_info_load_success = None
+
 		if not widget:
 			self.clearInfoPane()
 		self.last_item_id = item_id
@@ -301,21 +300,14 @@ class E2EmbyHome(Screen):
 				ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
 				self.session.open(EmbyPlayer, ref, startPos=startTimeTicks, slist=infobar.servicelist, lastservice=LastService)
 
-	def downloadCover(self, item_id, icon_img, thread, selected_item=None):
+	def downloadCover(self, item_id, icon_img, thread):
+		backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1062, image_type="Backdrop", alpha_channel=self.mask_alpha)
 		if thread.stopped():
 			return
-		self.processing_cover = True
-		if True or not self.deferred_cover_url:
-			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1062, image_type="Backdrop", alpha_channel=self.mask_alpha)
-			if thread.stopped():
-				return
-			if backdrop_pix:
-				self["backdrop"].setPixmap(backdrop_pix)
-				self.processing_cover = False
-			else:
-				self.processing_cover = False
-				self.deferred_cover_url = None
-				self["backdrop"].setPixmap(None)
+		if backdrop_pix:
+			self["backdrop"].setPixmap(backdrop_pix)
+		else:
+			self["backdrop"].setPixmap(None)
 
 	def clearInfoPane(self):
 		self["backdrop"].setPixmap(None)
@@ -326,14 +318,18 @@ class E2EmbyHome(Screen):
 		self["plot"].text = ""
 
 	def loadSelectedItemDetails(self, thread):
+		time.sleep(0.4)
 		if thread.stopped():
 			return
 		widget = self[self.selected_widget]
-		self["backdrop"].setPixmap(None)
-		
-		sel_item = widget.selectedWidgetItem
-		if not sel_item:
+		if self.last_widget_info_load_success and self.last_widget_info_load_success == widget:
 			return
+		
+		if widget.isLibrary:
+			self.last_widget_info_load_success = widget
+
+		self["backdrop"].setPixmap(None)
+
 		item = widget.selectedItem
 		orig_item_id = item.get("Id")
 
@@ -414,7 +410,7 @@ class E2EmbyHome(Screen):
 		parent_b_item_id = item.get("ParentBackdropItemId")
 		if parent_b_item_id:
 			item_id = parent_b_item_id
-		self.downloadCover(item_id, icon_img, thread, sel_item)
+		self.downloadCover(item_id, icon_img, thread)
 		
 
 	def loadHome(self, activeConnection):
