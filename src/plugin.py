@@ -217,8 +217,8 @@ class E2EmbyHome(Screen):
 
 		if not item_id:
 			item_id = self[self.selected_widget].selectedItem.get("Id")
-		if item_id is not None and self.last_item_id is not None and item_id == self.last_item_id:
-			return
+		# if item_id is not None and self.last_item_id is not None and item_id == self.last_item_id:
+		# 	return
 		self.last_widget_info_load_success = None
 		if not widget:
 			self.clearInfoPane()
