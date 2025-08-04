@@ -1,12 +1,14 @@
 from . import _, PluginLanguageDomain
-from Components.GUIComponent import GUIComponent
-from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_LEFT, RT_VALIGN_CENTER, RT_VALIGN_TOP, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP
-from skin import parseColor, parseFont
-from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
-from .Variables import REQUEST_USER_AGENT
-from .EmbyRestClient import EmbyApiClient
 
 from twisted.internet import threads
+from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP
+from skin import parseColor, parseFont
+
+from Components.GUIComponent import GUIComponent
+from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
+
+from .EmbyRestClient import EmbyApiClient
+
 
 
 class EmbyList(GUIComponent):

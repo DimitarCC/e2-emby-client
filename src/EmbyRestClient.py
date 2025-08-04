@@ -5,11 +5,13 @@ import json
 import requests
 import os
 import random
-from .Variables import REQUEST_USER_AGENT
 from Tools.LoadPixmap import LoadPixmap
 from Components.SystemInfo import BoxInfo
-from PIL import Image
 from Components.config import config
+from PIL import Image
+
+from .Variables import REQUEST_USER_AGENT
+
 
 
 class EmbyRestClient():
@@ -161,7 +163,7 @@ class EmbyRestClient():
 		logo_url = f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&format={format}{addon}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = requests.get(logo_url, timeout=10)
+				response = requests.get(logo_url, timeout=20)
 				if response.status_code != 404:
 					im_tmp_path = "/tmp/emby/%s.%s" % (logo_tag, format)
 					with open(im_tmp_path, "wb") as f:
@@ -185,11 +187,10 @@ class EmbyRestClient():
 					except:
 						pass
 					return pix
-				break
 			except requests.exceptions.ReadTimeout:
 				pass
 			except:
-				break
+				pass
 		return None
 
 

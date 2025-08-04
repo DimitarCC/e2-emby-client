@@ -1,19 +1,22 @@
 from . import _, PluginLanguageDomain
-from Components.GUIComponent import GUIComponent
-from enigma import eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_LEFT, RT_VALIGN_CENTER, RT_VALIGN_TOP, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
-from skin import parseColor, parseFont
-from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryRectangle
 
 import os
-from Tools.LoadPixmap import LoadPixmap
+from sys import modules
+from datetime import datetime, timedelta
+
+from enigma import eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
+from skin import parseColor, parseFont
+
+from Components.GUIComponent import GUIComponent
+from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryRectangle
 from Components.Label import Label
+from Tools.LoadPixmap import LoadPixmap
 from Tools.Directories import resolveFilename, SCOPE_GUISKIN
 
-from twisted.internet import threads
-from sys import modules
+
 plugin_dir = os.path.dirname(modules[__name__].__file__)
 
-from datetime import datetime, timedelta
+
 
 
 class EmbyInfoLine(GUIComponent):
