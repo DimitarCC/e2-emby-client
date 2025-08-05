@@ -65,9 +65,9 @@ class EmbyRestClient():
 				pass
 		return libs
 
-	def getItems(self, type_part, sortBy, includeItems, parent_part, limit=40):
+	def getItems(self, type_part, sortBy, includeItems, parent_part, loadFullInfo=False, limit=40):
 		items = {}
-		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&IncludeItemTypes={includeItems}{parent_part}")
+		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated{',Chapters,Taglines,People' if loadFullInfo else ''}&IncludeItemTypes={includeItems}{parent_part}")
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = urllib.request.urlopen(req, timeout=4)  # set a timeout to prevent blocking
@@ -81,6 +81,22 @@ class EmbyRestClient():
 			except:
 				break
 		return items
+	
+	def getSingleItem(self, item_id):
+		item = {}
+		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}?Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated,Chapters,Taglines,People")
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = urllib.request.urlopen(req, timeout=4)  # set a timeout to prevent blocking
+				response_obj = response.read()
+				item = json.loads(response_obj)
+				break
+			except urllib.error.URLError as e:
+				if not isinstance(e.reason, socket.timeout):
+					break  # Non-timeout error: Don't retry
+			except:
+				break
+		return item
 	
 	def getBoxsetsFromLibrary(self, library_id):
 		items = []
@@ -118,7 +134,7 @@ class EmbyRestClient():
 
 	def getItemsFromLibrary(self, library_id, shouldShowBoxsets = True):
 		items = []
-		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series&ParentId={library_id}&GroupItemsIntoCollections={'true' if shouldShowBoxsets else 'false'}&Fields=SortName,RunTimeTicks,DateCreated,ParentId")
+		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series&ParentId={library_id}&GroupItemsIntoCollections={'true' if shouldShowBoxsets else 'false'}&Fields=SortName,PremiereDate,DateCreated")
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = urllib.request.urlopen(req, timeout=4)  # set a timeout to prevent blocking
@@ -160,7 +176,7 @@ class EmbyRestClient():
 			else:
 				image_type = f"{image_type}/0"
 
-		logo_url = f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&format={format}{addon}"
+		logo_url = f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = requests.get(logo_url, timeout=20)

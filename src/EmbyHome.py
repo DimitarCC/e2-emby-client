@@ -16,14 +16,16 @@ from Components.Sources.StaticText import StaticText
 from Components.Label import Label
 from Components.Pixmap import Pixmap
 
+from .StopableThread import StoppableThread
 from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyPlayer import EmbyPlayer
 from .EmbySetup import getActiveConnection
 from .EmbyRestClient import EmbyApiClient
-from .StopableThread import StoppableThread
 from .EmbyLibraryScreen import E2EmbyLibrary
+from .EmbyMovieItemView import EmbyMovieItemView
+from .EmbyEpisodeItemView import EmbyEpisodeItemView
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
 
@@ -35,12 +37,12 @@ class E2EmbyHome(Screen):
                     <widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
                         <convert type="ClockToText">Default</convert>
                     </widget>
-                    <widget name="backdrop" position="e-1062,0" size="1062,600" alphatest="blend"/>
-                    <widget name="title_logo" position="60,140" size="924,60" alphatest="blend"/>
+                    <widget name="backdrop" position="e-1280,0" size="1280,720" alphatest="blend" zPosition="-3"/>
+                    <widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
                     <widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
-                    <widget name="subtitle" position="65,215" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
-                    <widget name="infoline" position="60,220" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
-                    <widget name="plot" position="60,290" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
+                    <widget name="subtitle" position="65,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
+                    <widget name="infoline" position="60,240" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
+                    <widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
                     <widget name="list_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
                     <widget name="list_watching_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
                     <widget name="list_recent_movies_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
@@ -63,12 +65,13 @@ class E2EmbyHome(Screen):
         self.deferred_cover_url = None
         self.deferred_image_tag = None
         self.last_cover = ""
+        self.backdrop_pix = None
 
-        self.plot_posy_orig = 290
+        self.plot_posy_orig = 310
         self.plot_height_orig = 168
         self.plot_width_orig = 924
         
-        self.mask_alpha = Image.open(os.path.join(plugin_dir, "mask.png")).split()[3]
+        self.mask_alpha = Image.open(os.path.join(plugin_dir, "mask_l.png")).split()[3]
         if self.mask_alpha.mode != "L":
             self.mask_alpha = self.mask_alpha.convert("L")
         
@@ -229,28 +232,46 @@ class E2EmbyHome(Screen):
         if widget.isLibrary:
             self.session.open(E2EmbyLibrary, int(selected_item.get("Id", "0")))
         else:
-            infobar = InfoBar.instance
-            if infobar:
-                LastService = self.session.nav.getCurrentServiceReferenceOriginal()
-                item_id = int(selected_item.get("Id", "0"))
-                item_name = selected_item.get("Name", "Stream")
-                play_session_id = str(uuid.uuid4())
-                startTimeTicks = int(selected_item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
-                # subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/mediasource_80606/Subtitles/21/stream.srt?api_key={EmbyApiClient.access_token}"
-                url = f"{EmbyApiClient.server_root}/emby/Videos/{item_id}/stream?api_key={EmbyApiClient.access_token}&PlaySessionId={play_session_id}&DeviceId={EmbyApiClient.device_id}&static=true&EnableAutoStreamCopy=false"
-                ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
-                self.session.open(EmbyPlayer, ref, startPos=startTimeTicks, slist=infobar.servicelist, lastservice=LastService)
+            # threads.deferToThread(self.initItemForItemView, selected_item).addCallback(self.onItemInfoGot)
+            embyScreenClass = EmbyMovieItemView
+            if selected_item.get("Type") == "Episode":
+                embyScreenClass = EmbyEpisodeItemView
+            self.session.open(embyScreenClass, selected_item, self.backdrop_pix)
+            
+    def initItemForItemView(self, item):
+        item_id = item.get("Id")
+        backdrop_image_tags = item.get("BackdropImageTags")
+        parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
+        if parent_backdrop_image_tags:
+            backdrop_image_tags = parent_backdrop_image_tags
+
+        if not backdrop_image_tags or len(backdrop_image_tags) == 0:
+            return
+
+        icon_img = backdrop_image_tags[0]
+        parent_b_item_id = item.get("ParentBackdropItemId")
+        if parent_b_item_id:
+            item_id = parent_b_item_id
+        backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
+        return item, backdrop_pix
+    
+    def onItemInfoGot(self, data):
+        selected_item, backdrop = data
+        self.session.open(EmbyItemView, selected_item, backdrop)
 
     def downloadCover(self, item_id, icon_img, thread, orig_item_id):
-        backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1062, image_type="Backdrop", alpha_channel=self.mask_alpha)
+        backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
         if thread and thread.stopped() and orig_item_id != self.last_item_id:
             return
         if backdrop_pix:
             self["backdrop"].setPixmap(backdrop_pix)
+            self.backdrop_pix = backdrop_pix
         else:
             self["backdrop"].setPixmap(None)
+            self.backdrop_pix = None
 
     def clearInfoPane(self):
+        self.backdrop_pix = None
         self["backdrop"].setPixmap(None)
         self["title_logo"].setPixmap(None)
         self["title"].text = ""
@@ -278,6 +299,7 @@ class E2EmbyHome(Screen):
             self.last_widget_info_load_success = widget
 
         self["backdrop"].setPixmap(None)
+        self.backdrop_pix = None
 
         if isLib:
             self.clearInfoPane()
@@ -301,7 +323,10 @@ class E2EmbyHome(Screen):
         itemType = item.get("Type", None)
 
         if logo_tag:
-            logo_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_height=60, image_type="Logo", format="png")
+            logo_widget_size = self["title_logo"].instance.size()
+            max_w = logo_widget_size.width()
+            max_h = logo_widget_size.height()
+            logo_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
             if logo_pix:
                 self["title_logo"].setPixmap(logo_pix)
                 self["title"].text = ""
@@ -348,6 +373,7 @@ class E2EmbyHome(Screen):
 
         if not backdrop_image_tags or len(backdrop_image_tags) == 0:
             self["backdrop"].setPixmap(None)
+            self.backdrop_pix = None
             return
 
         icon_img = backdrop_image_tags[0]
