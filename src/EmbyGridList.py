@@ -1,5 +1,3 @@
-from . import _, PluginLanguageDomain
-
 from twisted.internet import threads
 
 from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP
@@ -9,6 +7,7 @@ from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
 
 from .EmbyRestClient import EmbyApiClient
+from . import _, PluginLanguageDomain
 
 
 class EmbyGridList(GUIComponent):
@@ -45,13 +44,13 @@ class EmbyGridList(GUIComponent):
 		max_columns = self.instance.size().width() // self.itemWidth
 		return (len(self.data) + max_columns - 1) // max_columns
 
-	listCount = property(getListCount) # for use with the pager addon. Returns total rows count
+	listCount = property(getListCount)  # for use with the pager addon. Returns total rows count
 
 	def getCurrentRow(self):
 		max_columns = self.instance.size().width() // self.itemWidth
 		return self.currentSelectedIndex // max_columns
 
-	currentIndex = property(getCurrentRow) # for use with the pager addon. Returns index of current row
+	currentIndex = property(getCurrentRow)  # for use with the pager addon. Returns index of current row
 
 	def postWidgetCreate(self, instance):
 		instance.setContent(self.l)

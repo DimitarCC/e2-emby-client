@@ -18,6 +18,7 @@ from PIL import Image
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
 
+
 class EmbyItemView(Screen):
     def __init__(self, session, item, backdrop=None):
         Screen.__init__(self, session)
@@ -67,8 +68,6 @@ class EmbyItemView(Screen):
                 # "blue": self.clearData,
             }, -2)  # noqa: E123
 
-        
-
     def preLayoutFinished(self):
         pass
 
@@ -93,7 +92,7 @@ class EmbyItemView(Screen):
         current_widget_index = self.availableWidgets.index(self.selected_widget)
         if current_widget_index == 0:
             return
-        
+
         if current_widget_index > 1:
             y = 560
 
@@ -109,7 +108,7 @@ class EmbyItemView(Screen):
         else:
            self.lists[self.selected_widget].enableSelection(False)
            self.selected_widget = "f_buttons"
-           self["f_buttons"].enableSelection(True) 
+           self["f_buttons"].enableSelection(True)
 
     def down(self):
         current_widget_index = self.availableWidgets.index(self.selected_widget)
@@ -141,7 +140,6 @@ class EmbyItemView(Screen):
                 self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
             else:
                 self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
-        
 
     def right(self):
         if self.selected_widget == "f_buttons":
@@ -161,7 +159,6 @@ class EmbyItemView(Screen):
 
     def loadItemInfoFromServer(self, item_id):
         return EmbyApiClient.getSingleItem(item_id=item_id)
-
 
     def loadItemDetails(self, item, backdrop_pix):
         item_id = item.get("Id")
@@ -231,12 +228,9 @@ class EmbyItemView(Screen):
                 i += 1
             self["list_cast"].loadData(list)
 
-
     def downloadCover(self, item_id, icon_img):
         backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
         if backdrop_pix:
             self["backdrop"].setPixmap(backdrop_pix)
         else:
             self["backdrop"].setPixmap(None)
-
-        

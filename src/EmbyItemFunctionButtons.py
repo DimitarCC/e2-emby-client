@@ -1,28 +1,26 @@
-from . import _, PluginLanguageDomain
-
+from datetime import datetime, timedelta
 import os
 from sys import modules
-from datetime import datetime, timedelta
+import uuid
 
 from enigma import eServiceReference, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
 
-from Screens.InfoBar import InfoBar
 
 from Components.GUIComponent import GUIComponent
-from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryRectangle
 from Components.Label import Label
-from .EmbyPlayer import EmbyPlayer
-from .EmbyRestClient import EmbyApiClient
+from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryRectangle
+from Screens.InfoBar import InfoBar
 from Tools.LoadPixmap import LoadPixmap
 from Tools.Directories import resolveFilename, SCOPE_GUISKIN
 
-import uuid
+
+from .EmbyPlayer import EmbyPlayer
+from .EmbyRestClient import EmbyApiClient
+from . import _, PluginLanguageDomain
 
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
-
-
 
 
 class EmbyItemFunctionButtons(GUIComponent):
@@ -87,7 +85,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		self.instance.setOrientation(self.orientation)
 		self.l.setOrientation(self.orientation)
 		return GUIComponent.applySkin(self, desktop, parent)
-	
+
 	def moveSelection(self, dir):
 		self.isMoveLeftRight = True
 		nextPos = self.selectedIndex + dir
@@ -104,10 +102,10 @@ class EmbyItemFunctionButtons(GUIComponent):
 
 	def isAtHome(self):
 		return self.selectedIndex == 0
-	
+
 	def isAtEnd(self):
 		return self.selectedIndex == len(self.buttons) - 1
-	
+
 	def convert_ticks_to_time(self, ticks):
 		seconds = ticks / 10_000_000
 		minutes = int(seconds // 60)
@@ -116,11 +114,11 @@ class EmbyItemFunctionButtons(GUIComponent):
 		if hours == 0:
 			return f"{minutes}min"
 		return f"{hours}h {minutes}min"
-	
+
 	def getSelectedButton(self):
 		return self.buttons[self.selectedIndex]
-	
-	def playItem(self, startPos = 0):
+
+	def playItem(self, startPos=0):
 		selected_item = self.item
 		infobar = InfoBar.instance
 		if infobar:
@@ -132,7 +130,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 			url = f"{EmbyApiClient.server_root}/emby/Videos/{item_id}/stream?api_key={EmbyApiClient.access_token}&PlaySessionId={play_session_id}&DeviceId={EmbyApiClient.device_id}&static=true&EnableAutoStreamCopy=false"
 			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
 			self.screen.session.open(EmbyPlayer, ref, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
-	
+
 	def resumePlay(self):
 		startPos = int(self.item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
 		self.playItem(startPos=startPos)
@@ -155,7 +153,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		runtime_ticks = int(item.get("RunTimeTicks", "0"))
 		position_ticks = int(item.get("UserData", {}).get("PlaybackPositionTicks", "0"))
 		trailers = item.get("RemoteTrailers", [])
-		played =  item.get("UserData", {}).get("Played", False)
+		played = item.get("UserData", {}).get("Played", False)
 		isFavorite = item.get("UserData", {}).get("IsFavorite", False)
 		if position_ticks:
 			self.buttons.append((len(self.buttons), self.resumeIcon, _("Resume (") + self.convert_ticks_to_time(position_ticks) + ")", self.resumePlay))
@@ -164,7 +162,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 			self.buttons.append((len(self.buttons), self.playIcon, _("Play"), self.playFromBeguinning))
 
 		if len(trailers) > 0:
-			self.buttons.append((len(self.buttons), self.trailerIcon, _("Play trailer"), self.playTrailer))	
+			self.buttons.append((len(self.buttons), self.trailerIcon, _("Play trailer"), self.playTrailer))
 
 		self.buttons.append((len(self.buttons), self.watchedIcon if played else self.unWatchedIcon, _("Watched"), self.toggleWatched))
 
@@ -203,7 +201,6 @@ class EmbyItemFunctionButtons(GUIComponent):
 		s = self.instance.size()
 		return s.width(), s.height()
 
-
 	def constructButton(self, res, current_draw_idex, icon, text, height, xPos, yPos, selected=False, spacing=None, backColorSelected=0x32772b, backColor=0x606060, textColor=0xffffff):
 		if not spacing:
 			spacing = self.spacing
@@ -227,7 +224,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 				cornerRadius=8,
 				backgroundColor=back_color, backgroundColorSelected=back_color))
 		offset = xPos + textWidth + pixd_width + (55 if text else 40)
-		
+
 		if icon:
 			res.append(MultiContentEntryPixmapAlphaBlend(
 				pos=(xPos + 20, yPos + (height - pixd_height) // 2),
@@ -251,7 +248,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		yPos = 0
 		height = self.instance.size().height()
 		res = [None]
-		
+
 		for button in buttons:
 			selected = button[0] == self.selectedIndex and self.selectionEnabled
 			xPos = self.constructButton(res, button[0], button[1], button[2], height, xPos, yPos, selected)

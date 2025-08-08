@@ -1,17 +1,17 @@
-# for localized messages
-from . import _, PluginLanguageDomain
-
 from os import makedirs
 from Plugins.Plugin import PluginDescriptor
 
 from .EmbySetup import initConfig, EmbySetup
 from .EmbyHome import E2EmbyHome
+from . import _, PluginLanguageDomain
 
 
 initConfig()
 
+
 def setup(session, **kwargs):
 	session.open(EmbySetup)
+
 
 def main(session, **kwargs):
 	session.open(E2EmbyHome)

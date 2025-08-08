@@ -1,5 +1,6 @@
 from multiprocessing import Process, Event
-import time
+from time import sleep
+
 
 class StoppableWorker:
     def __init__(self, callback, *args, **kwargs):
@@ -12,7 +13,7 @@ class StoppableWorker:
     def _run(self, stop_event):
         while not stop_event.is_set():
             self.callback(*self.args, **self.kwargs)
-            time.sleep(1)
+            sleep(1)
 
     def start(self):
         self.process.start()

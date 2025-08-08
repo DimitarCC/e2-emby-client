@@ -1,9 +1,7 @@
 from . import _
 
-import os
+from os.path import dirname
 from sys import modules
-from twisted.internet import threads
-from Screens.Screen import Screen, ScreenSummary
 from Components.ActionMap import ActionMap
 from Components.Label import Label
 from Components.Pixmap import Pixmap
@@ -14,7 +12,8 @@ from .EmbyItemView import EmbyItemView
 
 from PIL import Image
 
-plugin_dir = os.path.dirname(modules[__name__].__file__)
+plugin_dir = dirname(modules[__name__].__file__)
+
 
 class EmbyMovieItemView(EmbyItemView):
     skin = ["""<screen name="EmbyMovieItemView" position="fill">
@@ -44,7 +43,6 @@ class EmbyMovieItemView(EmbyItemView):
         #         # "yellow": self.keyYellow,
         #         # "blue": self.clearData,
         #     }, -1)  # noqa: E123
-        
 
     def preLayoutFinished(self):
         plot_pos = self["plot"].instance.position()
@@ -58,7 +56,3 @@ class EmbyMovieItemView(EmbyItemView):
         if len(taglines) > 0:
             tagline = taglines[0]
             self["tagline"].text = tagline
-        
-
-
-        

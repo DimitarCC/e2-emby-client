@@ -1,7 +1,7 @@
-from . import _
-
 import os
 from sys import modules
+from PIL import Image
+
 from twisted.internet import threads
 from Screens.Screen import Screen, ScreenSummary
 from Components.ActionMap import ActionMap
@@ -9,10 +9,11 @@ from Components.Label import Label
 from Components.Pixmap import Pixmap
 
 from .EmbyItemView import EmbyItemView
+from . import _
 
-from PIL import Image
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
+
 
 class EmbyEpisodeItemView(EmbyItemView):
     skin = ["""<screen name="EmbyEpisodeItemView" position="fill">
@@ -46,7 +47,3 @@ class EmbyEpisodeItemView(EmbyItemView):
     def infoRetrieveInject(self, item):
         sub_title = f"S{item.get("ParentIndexNumber", 0)}:E{item.get("IndexNumber", 0)} - {" ".join(item.get("Name", "").splitlines())}"
         self["subtitle"].text = sub_title
-        
-
-
-        
