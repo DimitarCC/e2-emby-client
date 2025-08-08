@@ -232,7 +232,7 @@ class EmbyRestClient():
 		logo_url = f"{self.server_root}/emby/Persons/{encoded}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = requests.get(logo_url, timeout=20)
+				response = get(logo_url, timeout=20)
 				if response.status_code != 404:
 					im_tmp_path = "/tmp/emby/%s.%s" % (logo_tag, format)
 					with open(im_tmp_path, "wb") as f:
@@ -243,7 +243,7 @@ class EmbyRestClient():
 					except:
 						pass
 					return pix
-			except requests.exceptions.ReadTimeout:
+			except ReadTimeout:
 				pass
 			except:
 				pass
