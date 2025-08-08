@@ -1,6 +1,3 @@
-# for localized messages
-from . import _, PluginLanguageDomain
-
 import os
 import uuid
 from sys import modules
@@ -9,14 +6,13 @@ from PIL import Image
 
 from enigma import eServiceReference, eTimer
 
-from Screens.Screen import Screen, ScreenSummary
-from Screens.InfoBar import InfoBar
 from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
-from Components.Sources.StaticText import StaticText
 from Components.Label import Label
 from Components.Pixmap import Pixmap
+from Components.Sources.StaticText import StaticText
+from Screens.InfoBar import InfoBar
+from Screens.Screen import Screen, ScreenSummary
 
-from .StopableThread import StoppableThread
 from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
 from .EmbyInfoLine import EmbyInfoLine
@@ -26,10 +22,13 @@ from .EmbyRestClient import EmbyApiClient
 from .EmbyLibraryScreen import E2EmbyLibrary
 from .EmbyMovieItemView import EmbyMovieItemView
 from .EmbyEpisodeItemView import EmbyEpisodeItemView
+from .StopableThread import StoppableThread
+from . import _, PluginLanguageDomain
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
 
 current_thread = None
+
 
 class E2EmbyHome(Screen):
     skin = ["""<screen name="E2EmbyHome" position="fill">
@@ -56,7 +55,7 @@ class E2EmbyHome(Screen):
     def __init__(self, session):
         Screen.__init__(self, session)
         self.setTitle(_("Emby"))
-        
+
         self.access_token = None
         self.home_loaded = False
         self.last_item_id = None
@@ -70,14 +69,14 @@ class E2EmbyHome(Screen):
         self.plot_posy_orig = 310
         self.plot_height_orig = 168
         self.plot_width_orig = 924
-        
+
         self.mask_alpha = Image.open(os.path.join(plugin_dir, "mask_l.png")).split()[3]
         if self.mask_alpha.mode != "L":
             self.mask_alpha = self.mask_alpha.convert("L")
-        
+
         self.availableWidgets = ["list"]
         self.selected_widget = "list"
-        
+
         self.top_slot_y = 570
 
         self.onShown.append(self.__onShown)
@@ -112,7 +111,7 @@ class E2EmbyHome(Screen):
         self.lists["list_watching"] = EmbyListController(self["list_watching"], self["list_watching_header"])
         self.lists["list_recent_movies"] = EmbyListController(self["list_recent_movies"], self["list_recent_movies_header"])
         self.lists["list_recent_tvshows"] = EmbyListController(self["list_recent_tvshows"], self["list_recent_tvshows_header"])
-        
+
         self["list"].onSelectionChanged.append(self.onSelectedIndexChanged)
         self["list_watching"].onSelectionChanged.append(self.onSelectedIndexChanged)
         self["list_recent_movies"].onSelectionChanged.append(self.onSelectedIndexChanged)
@@ -168,7 +167,6 @@ class E2EmbyHome(Screen):
         if not widget:
             self.clearInfoPane()
 
-        
         self["backdrop"].setPixmap(None)
         self.backdrop_pix = None
         self.sel_timer.stop()
@@ -237,8 +235,7 @@ class E2EmbyHome(Screen):
             if selected_item.get("Type") == "Episode":
                 embyScreenClass = EmbyEpisodeItemView
             self.session.open(embyScreenClass, selected_item, self.backdrop_pix)
-            
-    
+
     def downloadCover(self, item_id, icon_img, orig_item_id):
         try:
             backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
@@ -268,17 +265,17 @@ class E2EmbyHome(Screen):
 
         if self.last_widget_info_load_success and self.last_widget_info_load_success == widget:
             return
-        
+
         orig_item_id = item.get("Id")
         colType = item.get("CollectionType")
         isLib = colType is not None
 
         if not isLib and self.last_item_id and orig_item_id == self.last_item_id:
             return
-        
+
         self.last_item_id = orig_item_id
         item_id = orig_item_id
-        
+
         if isLib:
             self.last_widget_info_load_success = widget
             self.clearInfoPane()
@@ -358,7 +355,6 @@ class E2EmbyHome(Screen):
         if orig_item_id != self.last_item_id:
             return
         self.downloadCover(item_id, icon_img, orig_item_id)
-        
 
     def loadHome(self, activeConnection):
         EmbyApiClient.authorizeUser(activeConnection[1], activeConnection[2], activeConnection[3], activeConnection[4])

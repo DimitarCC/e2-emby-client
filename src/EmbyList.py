@@ -1,4 +1,3 @@
-from . import _, PluginLanguageDomain
 
 from twisted.internet import threads
 from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP
@@ -8,7 +7,7 @@ from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
 
 from .EmbyRestClient import EmbyApiClient
-
+from . import _, PluginLanguageDomain
 
 
 class EmbyList(GUIComponent):
@@ -59,15 +58,14 @@ class EmbyList(GUIComponent):
 
 	def getCurrentObjectSelection(self):
 		return self.l.getCurrentSelection()
-	
+
 	def getCurrentItem(self):
 		cur = self.l.getCurrentSelection()
 		return cur and cur[1] or {}
-	
+
 	def getCurrentIndex(self):
 		return self.instance.getCurrentIndex() or -1
 
-	
 	selectedItem = property(getCurrentItem)
 
 	selectedWidgetItem = property(getCurrentObjectSelection)

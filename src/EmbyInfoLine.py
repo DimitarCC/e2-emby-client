@@ -8,15 +8,13 @@ from enigma import eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPEC
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
-from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryRectangle
 from Components.Label import Label
-from Tools.LoadPixmap import LoadPixmap
+from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryRectangle
 from Tools.Directories import resolveFilename, SCOPE_GUISKIN
+from Tools.LoadPixmap import LoadPixmap
 
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
-
-
 
 
 class EmbyInfoLine(GUIComponent):

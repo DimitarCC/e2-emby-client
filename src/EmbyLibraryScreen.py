@@ -1,4 +1,3 @@
-import uuid
 from twisted.internet import threads
 from enigma import eServiceReference
 from Screens.Screen import Screen
@@ -10,6 +9,7 @@ from .EmbyRestClient import EmbyApiClient
 from .EmbyPlayer import EmbyPlayer
 from .EmbyMovieItemView import EmbyMovieItemView
 from .EmbyEpisodeItemView import EmbyEpisodeItemView
+
 
 class E2EmbyLibrary(Screen):
 	skin = ["""<screen name="E2EmbyLibrary" position="fill">
@@ -54,4 +54,4 @@ class E2EmbyLibrary(Screen):
 				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
 				list.append((i, item, item.get('Name'), None, played_perc, True))
 				i += 1
-			self["list"].loadData(list)	
+			self["list"].loadData(list)
