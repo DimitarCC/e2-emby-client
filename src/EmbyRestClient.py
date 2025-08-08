@@ -148,8 +148,8 @@ class EmbyRestClient():
 			except:
 				break
 		
-		sorted_items = sorted(items, key=lambda x: x.get("SortName"))
-		return sorted_items
+		# sorted_items = sorted(items, key=lambda x: x.get("SortName"))
+		return items #sorted_items
 
 	def getRandomItemFromLibrary(self, parent_id, type, limit=200):
 		includeItems = "Movie"
@@ -198,6 +198,43 @@ class EmbyRestClient():
 						pix = LoadPixmap("/tmp/emby/backdrop.png")
 					else:
 						pix = LoadPixmap(im_tmp_path)
+					try:
+						os.remove(im_tmp_path)
+					except:
+						pass
+					return pix
+			except requests.exceptions.ReadTimeout:
+				pass
+			except:
+				pass
+		return None
+	
+	def getPersonImage(self, person_name, logo_tag, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1):
+		image_type = "Primary"
+		addon = ""
+		if width > 0:
+			addon += f"&Width={width}"
+		if height > 0:
+			addon += f"&Height={height}"
+		if max_width > 0:
+			addon += f"&MaxWidth={max_width}"
+		if max_height > 0:
+			addon += f"&MaxHeight={max_height}"
+		if image_index > -1:
+			image_type = f"{image_type}/{image_index}"
+		else:
+			image_type = f"{image_type}/0"
+
+		encoded = urllib.parse.quote(person_name)
+		logo_url = f"{self.server_root}/emby/Persons/{encoded}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = requests.get(logo_url, timeout=20)
+				if response.status_code != 404:
+					im_tmp_path = "/tmp/emby/%s.%s" % (logo_tag, format)
+					with open(im_tmp_path, "wb") as f:
+						f.write(response.content)
+					pix = LoadPixmap(im_tmp_path)
 					try:
 						os.remove(im_tmp_path)
 					except:

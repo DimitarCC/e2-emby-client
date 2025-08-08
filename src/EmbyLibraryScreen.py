@@ -8,6 +8,8 @@ from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
 from .EmbyGridList import EmbyGridList
 from .EmbyRestClient import EmbyApiClient
 from .EmbyPlayer import EmbyPlayer
+from .EmbyMovieItemView import EmbyMovieItemView
+from .EmbyEpisodeItemView import EmbyEpisodeItemView
 
 class E2EmbyLibrary(Screen):
 	skin = ["""<screen name="E2EmbyLibrary" position="fill">
@@ -37,17 +39,11 @@ class E2EmbyLibrary(Screen):
 
 	def processItem(self):
 		selected_item = self["list"].getCurrentItem()
-		infobar = InfoBar.instance
-		if infobar:
-			LastService = self.session.nav.getCurrentServiceReferenceOriginal()
-			item_id = int(selected_item.get("Id", "0"))
-			item_name = selected_item.get("Name", "Stream")
-			play_session_id = str(uuid.uuid4())
-			startTimeTicks = int(selected_item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
-			# subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/mediasource_80606/Subtitles/21/stream.srt?api_key={EmbyApiClient.access_token}"
-			url = f"{EmbyApiClient.server_root}/emby/Videos/{item_id}/stream?api_key={EmbyApiClient.access_token}&PlaySessionId={play_session_id}&DeviceId={EmbyApiClient.device_id}&static=true&EnableAutoStreamCopy=false"
-			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
-			self.session.open(EmbyPlayer, ref, startPos=startTimeTicks, slist=infobar.servicelist, lastservice=LastService)
+		item_type = selected_item.get("Type")
+		embyScreenClass = EmbyMovieItemView
+		if item_type == "Episode":
+			embyScreenClass = EmbyEpisodeItemView
+		self.session.open(embyScreenClass, selected_item)
 
 	def loadItems(self):
 		items = EmbyApiClient.getItemsFromLibrary(self.library_id)

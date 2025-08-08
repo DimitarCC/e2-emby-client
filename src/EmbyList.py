@@ -12,12 +12,14 @@ from .EmbyRestClient import EmbyApiClient
 
 
 class EmbyList(GUIComponent):
-	def __init__(self, isLibrary=False):
+	def __init__(self, type="item", isLibrary=False):
 		GUIComponent.__init__(self)
+		self.type = type
 		self.isLibrary = isLibrary
 		self.onSelectionChanged = []
 		self.data = []
 		self.itemsForThumbs = []
+		self.thumbs = {}
 		self.selectionEnabled = True
 		self.font = gFont("Regular", 18)
 		self.selectedIndex = 0
@@ -111,24 +113,47 @@ class EmbyList(GUIComponent):
 			if self.interupt:
 				self.interupt = False
 				break
-			item_popped = self.itemsForThumbs.pop(-1)
+			item_popped = self.itemsForThumbs.pop(0)
 			item_index = item_popped[0]
 			item = item_popped[1]
-			icon_img = item.get("ImageTags").get("Primary")
-			item_id = item.get("Id")
-			parent_id = item.get("ParentThumbItemId")
-			parent_icon_img = item.get("ParentThumbImageTag")
-			if parent_id and parent_icon_img:
-				item_id = parent_id
-				icon_img = parent_icon_img
-				self.icon_type = "Thumb"
+			if self.type == "item":
+				icon_img = item.get("ImageTags").get("Primary")
+				item_id = item.get("Id")
+				parent_id = item.get("ParentThumbItemId")
+				parent_icon_img = item.get("ParentThumbImageTag")
+				if parent_id and parent_icon_img:
+					item_id = parent_id
+					icon_img = parent_icon_img
+					self.icon_type = "Thumb"
 
-			if item_index not in self.updatingIndexesInProgress:
-				threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img, False)
+				threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img)
+			else:
+				icon_img = item.get("PrimaryImageTag")
+				person_name = item.get("Name")
+				threads.deferToThread(self.updateCastThumbnail, person_name, item_index, icon_img)
 
 		self.running = False
 
-	def updateThumbnail(self, item_id, item_index, item, icon_img, fromRecursion):
+	def updateCastThumbnail(self, person_name, item_index, icon_img):
+		icon_pix = None
+
+		if item_index not in self.updatingIndexesInProgress:
+			self.updatingIndexesInProgress.append(item_index)
+
+		icon_pix = EmbyApiClient.getPersonImage(person_name=person_name, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight)
+		if not hasattr(self, "data"):
+			return False
+		if item_index not in self.thumbs:
+			self.thumbs[item_index] = icon_pix or True
+
+		if item_index in self.updatingIndexesInProgress:
+			self.updatingIndexesInProgress.remove(item_index)
+
+		if icon_pix:
+			self.instance.redrawItemByIndex(item_index)
+		return True
+
+	def updateThumbnail(self, item_id, item_index, item, icon_img):
 		icon_pix = None
 
 		if item_index not in self.updatingIndexesInProgress:
@@ -153,13 +178,14 @@ class EmbyList(GUIComponent):
 
 		if not hasattr(self, "data"):
 			return False
-		if not self.data[item_index][3]:
-			self.data[item_index] = (item_index, item, self.data[item_index][2], icon_pix or True, self.data[item_index][4], self.data[item_index][5])
+		if item_index not in self.thumbs:
+			self.thumbs[item_index] = icon_pix or True
 
 		if item_index in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.remove(item_index)
 
-		self.loadData(self.data)
+		if icon_pix:
+			self.instance.redrawItemByIndex(item_index)
 		return True
 
 	def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
@@ -167,6 +193,8 @@ class EmbyList(GUIComponent):
 		yPos = 0
 		res = [None]
 		selected = self.selectedIndex == item_index
+		if item_index in self.thumbs:
+			item_icon = self.thumbs[item_index]
 		if selected and self.selectionEnabled:
 			res.append(MultiContentEntryRectangle(
 					pos=(self.spacing_sides - 3, self.spacing_sides - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
@@ -204,7 +232,7 @@ class EmbyList(GUIComponent):
 			))
 
 		res.append(MultiContentEntryText(
-							pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 60),
+							pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 70),
 							font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_WRAP,
 							cornerRadius=6,
 							text=item_name,

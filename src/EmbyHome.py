@@ -40,16 +40,16 @@ class E2EmbyHome(Screen):
                     <widget name="backdrop" position="e-1280,0" size="1280,720" alphatest="blend" zPosition="-3"/>
                     <widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
                     <widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
-                    <widget name="subtitle" position="65,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
+                    <widget name="subtitle" position="60,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
                     <widget name="infoline" position="60,240" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
                     <widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
-                    <widget name="list_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
-                    <widget name="list_watching_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
-                    <widget name="list_recent_movies_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
+                    <widget name="list_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+                    <widget name="list_watching_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+                    <widget name="list_recent_movies_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
                     <widget name="list" position="40,610" size="e-80,230" scrollbarMode="showNever" orientation="orHorizontal" transparent="1" />
                     <widget name="list_watching" position="35,820" size="e-80,270" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" orientation="orHorizontal" transparent="1" />
                     <widget name="list_recent_movies" position="35,1150" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
-                    <widget name="list_recent_tvshows_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left"/>
+                    <widget name="list_recent_tvshows_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
                     <widget name="list_recent_tvshows" position="35,1600" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
                 </screen>"""]  # noqa: E124
 
@@ -83,6 +83,8 @@ class E2EmbyHome(Screen):
         self.onShown.append(self.__onShown)
         self.onClose.append(self.__onClose)
         self.onLayoutFinish.append(self.__onLayoutFinished)
+        self.sel_timer = eTimer()
+        self.sel_timer.callback.append(self.trigger_sel_changed_event)
 
         self["title_logo"] = Pixmap()
         self["title"] = Label()
@@ -91,7 +93,7 @@ class E2EmbyHome(Screen):
         self["plot"] = Label()
         self["backdrop"] = Pixmap()
         self["list_header"] = Label(_("My Media"))
-        self["list"] = EmbyList(True)
+        self["list"] = EmbyList(isLibrary=True)
         self["list_watching_header"] = Label(_("Continue watching"))
         self["list_watching"] = EmbyList()
         self["list_recent_movies_header"] = Label(_("Recently released movies"))
@@ -153,6 +155,9 @@ class E2EmbyHome(Screen):
             self.lists["list_recent_tvshows"].visible(False)
             threads.deferToThread(self.loadHome, activeConnection)
 
+    def trigger_sel_changed_event(self):
+        threads.deferToThread(self.loadSelectedItemDetails, self[self.selected_widget].selectedItem, self[self.selected_widget])
+
     def onSelectedIndexChanged(self, widget=None, item_id=None):
         if (self.last_widget_info_load_success and self.last_widget_info_load_success == widget):
             return
@@ -163,15 +168,11 @@ class E2EmbyHome(Screen):
         if not widget:
             self.clearInfoPane()
 
-        self.start_new_thread(widget or self[self.selected_widget], self[self.selected_widget].selectedItem)
-
-    def start_new_thread(self, widget, selectedItem):
-        global current_thread
-        if current_thread and current_thread.is_alive():
-            current_thread.stop()
-
-        current_thread = StoppableThread(target=self.loadSelectedItemDetails, args=(selectedItem, widget))
-        current_thread.start()
+        
+        self["backdrop"].setPixmap(None)
+        self.backdrop_pix = None
+        self.sel_timer.stop()
+        self.sel_timer.start(150, True)
 
     def left(self):
         self.last_widget_info_load_success = None
@@ -232,43 +233,25 @@ class E2EmbyHome(Screen):
         if widget.isLibrary:
             self.session.open(E2EmbyLibrary, int(selected_item.get("Id", "0")))
         else:
-            # threads.deferToThread(self.initItemForItemView, selected_item).addCallback(self.onItemInfoGot)
             embyScreenClass = EmbyMovieItemView
             if selected_item.get("Type") == "Episode":
                 embyScreenClass = EmbyEpisodeItemView
             self.session.open(embyScreenClass, selected_item, self.backdrop_pix)
             
-    def initItemForItemView(self, item):
-        item_id = item.get("Id")
-        backdrop_image_tags = item.get("BackdropImageTags")
-        parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
-        if parent_backdrop_image_tags:
-            backdrop_image_tags = parent_backdrop_image_tags
-
-        if not backdrop_image_tags or len(backdrop_image_tags) == 0:
-            return
-
-        icon_img = backdrop_image_tags[0]
-        parent_b_item_id = item.get("ParentBackdropItemId")
-        if parent_b_item_id:
-            item_id = parent_b_item_id
-        backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
-        return item, backdrop_pix
     
-    def onItemInfoGot(self, data):
-        selected_item, backdrop = data
-        self.session.open(EmbyItemView, selected_item, backdrop)
-
-    def downloadCover(self, item_id, icon_img, thread, orig_item_id):
-        backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
-        if thread and thread.stopped() and orig_item_id != self.last_item_id:
-            return
-        if backdrop_pix:
-            self["backdrop"].setPixmap(backdrop_pix)
-            self.backdrop_pix = backdrop_pix
-        else:
-            self["backdrop"].setPixmap(None)
-            self.backdrop_pix = None
+    def downloadCover(self, item_id, icon_img, orig_item_id):
+        try:
+            backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
+            if orig_item_id != self.last_item_id:
+                return
+            if backdrop_pix:
+                self["backdrop"].setPixmap(backdrop_pix)
+                self.backdrop_pix = backdrop_pix
+            else:
+                self["backdrop"].setPixmap(None)
+                self.backdrop_pix = None
+        except:
+            pass
 
     def clearInfoPane(self):
         self.backdrop_pix = None
@@ -279,8 +262,8 @@ class E2EmbyHome(Screen):
         self["infoline"].updateInfo({})
         self["plot"].text = ""
 
-    def loadSelectedItemDetails(self, thread, item, widget):
-        if not self.home_loaded or (thread and thread.stopped()):
+    def loadSelectedItemDetails(self, item, widget):
+        if not self.home_loaded:
             return
 
         if self.last_widget_info_load_success and self.last_widget_info_load_success == widget:
@@ -294,21 +277,13 @@ class E2EmbyHome(Screen):
             return
         
         self.last_item_id = orig_item_id
+        item_id = orig_item_id
         
         if isLib:
             self.last_widget_info_load_success = widget
-
-        self["backdrop"].setPixmap(None)
-        self.backdrop_pix = None
-
-        if isLib:
             self.clearInfoPane()
 
-        item_id = orig_item_id
-        if isLib:
             item = EmbyApiClient.getRandomItemFromLibrary(item_id, colType)
-            if thread and thread.stopped():
-                return
             item_id = item.get("Id")
 
         parent_b_item_id = item.get("ParentLogoItemId")
@@ -380,9 +355,9 @@ class E2EmbyHome(Screen):
         parent_b_item_id = item.get("ParentBackdropItemId")
         if parent_b_item_id:
             item_id = parent_b_item_id
-        if thread and thread.stopped() and orig_item_id != self.last_item_id:
+        if orig_item_id != self.last_item_id:
             return
-        self.downloadCover(item_id, icon_img, thread, orig_item_id)
+        self.downloadCover(item_id, icon_img, orig_item_id)
         
 
     def loadHome(self, activeConnection):

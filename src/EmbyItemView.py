@@ -10,25 +10,15 @@ from Components.Pixmap import Pixmap
 
 from .EmbyRestClient import EmbyApiClient
 from .EmbyInfoLine import EmbyInfoLine
+from .EmbyItemFunctionButtons import EmbyItemFunctionButtons
+from .EmbyList import EmbyList
+from .EmbyListController import EmbyListController
 
 from PIL import Image
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
 
 class EmbyItemView(Screen):
-    # skin = ["""<screen name="EmbyItemView" position="fill">
-    #                 <ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
-    #                 <widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
-    #                     <convert type="ClockToText">Default</convert>
-    #                 </widget>
-    #                 <widget name="backdrop" position="e-1280,0" size="1280,720" alphatest="blend" zPosition="-3"/>
-    #                 <widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
-    #                 <widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
-    #                 <widget name="subtitle" position="65,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
-    #                 <widget name="infoline" position="60,240" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
-    #                 <widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
-    #             </screen>"""]  # noqa: E124
-
     def __init__(self, session, item, backdrop=None):
         Screen.__init__(self, session)
         self.setTitle(_("Emby") + item.get("Name"))
@@ -46,20 +36,37 @@ class EmbyItemView(Screen):
         self.plot_height_orig = 168
         self.plot_width_orig = 924
 
+        self.availableWidgets = ["f_buttons"]
+        self.selected_widget = "f_buttons"
         self["title_logo"] = Pixmap()
         self["title"] = Label()
         self["subtitle"] = Label()
         self["infoline"] = EmbyInfoLine(self)
         self["plot"] = Label()
         self["backdrop"] = Pixmap()
+        self["f_buttons"] = EmbyItemFunctionButtons(self)
+        self["cast_header"] = Label(_("Cast/Crew"))
+        self["list_cast"] = EmbyList(type="cast")
+        self.cast_controller = EmbyListController(self["list_cast"], self["cast_header"])
+        self.lists = {}
+        self.lists["list_cast"] = self.cast_controller
         self["actions"] = ActionMap(["E2EmbyActions",],
             {
                 "cancel": self.close,  # KEY_RED / KEY_EXIT
                 # "save": self.addProvider,  # KEY_GREEN
-                #"ok": self.processItem,
+                "ok": self.processItem,
                 # "yellow": self.keyYellow,
                 # "blue": self.clearData,
             }, -1)  # noqa: E123
+        self["nav_actions"] = ActionMap(["NavigationActions",],
+            {
+                "up": self.up,
+                "down": self.down,
+                "left": self.left,
+                "right": self.right,
+                # "blue": self.clearData,
+            }, -2)  # noqa: E123
+
         
 
     def preLayoutFinished(self):
@@ -67,15 +74,87 @@ class EmbyItemView(Screen):
 
     def __onLayoutFinished(self):
         self.item = self.loadItemInfoFromServer(self.item_id)
-        self.loadSelectedItemDetails(self.item, self.backdrop)
+        self.preLayoutFinished()
+        self["f_buttons"].setItem(self.item)
+        cast_header_y = self["cast_header"].instance.position().y()
+        self.cast_controller.move(40, cast_header_y).visible(True).enableSelection(False)
+        self.availableWidgets.append("list_cast")
+        self.loadItemDetails(self.item, self.backdrop)
         # threads.deferToThread(self.loadItemInfoFromServer, self.item_id).addCallback(self.loadItemDetailsInUI)
 
     def __onShown(self):
         pass
 
+    def processItem(self):
+        if self.selected_widget == "f_buttons":
+            self["f_buttons"].getSelectedButton()[3]()
+
+    def up(self):
+        current_widget_index = self.availableWidgets.index(self.selected_widget)
+        if current_widget_index == 0:
+            return
+        
+        if current_widget_index > 1:
+            y = 560
+
+            prevWidgetName = self.availableWidgets[current_widget_index - 1]
+            prevItem = self.lists[prevWidgetName]
+            prevItem.move(40, y).visible(True).enableSelection(True)
+            y += prevItem.getHeight() + 40
+            self.selected_widget = prevWidgetName
+
+            for item in self.availableWidgets[current_widget_index:]:
+                self.lists[item].move(40, y).enableSelection(False)
+                y += self.lists[item].getHeight() + 40
+        else:
+           self.lists[self.selected_widget].enableSelection(False)
+           self.selected_widget = "f_buttons"
+           self["f_buttons"].enableSelection(True) 
+
+    def down(self):
+        current_widget_index = self.availableWidgets.index(self.selected_widget)
+        if current_widget_index == len(self.availableWidgets) - 1:
+            return
+        safe_index = min(current_widget_index + 1, len(self.availableWidgets))
+        for item in self.availableWidgets[1:safe_index]:
+            self.lists[item].visible(False).enableSelection(False)
+
+        if self.selected_widget != "f_buttons":
+            y = 560
+            selEnabled = True
+            for item in self.availableWidgets[safe_index:]:
+                self.lists[item].move(40, y).enableSelection(selEnabled)
+                y += self.lists[item].getHeight() + 40
+                if selEnabled:
+                    self.selected_widget = item
+                selEnabled = False
+        else:
+           self.selected_widget = self.availableWidgets[safe_index]
+           self.lists[self.selected_widget].enableSelection(True)
+           self["f_buttons"].enableSelection(False)
+
+    def left(self):
+        if self.selected_widget == "f_buttons":
+            self["f_buttons"].movePrevious()
+        else:
+            if hasattr(self[self.selected_widget].instance, "prevItem"):
+                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
+            else:
+                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
+        
+
+    def right(self):
+        if self.selected_widget == "f_buttons":
+            self["f_buttons"].moveNext()
+        else:
+            if hasattr(self[self.selected_widget].instance, "nextItem"):
+                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
+            else:
+                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
+
     def loadItemDetailsInUI(self, item):
         self.item = item
-        self.loadSelectedItemDetails(self.item, self.backdrop)
+        self.loadItemDetails(self.item, self.backdrop)
 
     def infoRetrieveInject(self, item):
         pass
@@ -84,8 +163,7 @@ class EmbyItemView(Screen):
         return EmbyApiClient.getSingleItem(item_id=item_id)
 
 
-    def loadSelectedItemDetails(self, item, backdrop_pix):
-        self.preLayoutFinished()
+    def loadItemDetails(self, item, backdrop_pix):
         item_id = item.get("Id")
         parent_b_item_id = item.get("ParentLogoItemId")
         if parent_b_item_id:
@@ -143,6 +221,15 @@ class EmbyItemView(Screen):
                 item_id = parent_b_item_id
 
             threads.deferToThread(self.downloadCover, item_id, icon_img)
+
+        cast_crew_list = item.get("People", [])
+        list = []
+        if cast_crew_list:
+            i = 0
+            for item in cast_crew_list:
+                list.append((i, item, f"{item.get('Name')}\n({item.get("Role", item.get("Type"))})", None, "0", True))
+                i += 1
+            self["list_cast"].loadData(list)
 
 
     def downloadCover(self, item_id, icon_img):

@@ -18,6 +18,7 @@ class EmbyGridList(GUIComponent):
 		self.isLibrary = isLibrary
 		self.data = []
 		self.itemsForThumbs = []
+		self.thumbs = {}
 		self.onSelectionChanged = []
 		self.selectionEnabled = True
 		self.font = gFont("Regular", 18)
@@ -113,7 +114,7 @@ class EmbyGridList(GUIComponent):
 			if self.interupt:
 				self.interupt = False
 				break
-			item_popped = self.itemsForThumbs.pop(-1)
+			item_popped = self.itemsForThumbs.pop(0)
 			item_index = item_popped[0]
 			item = item_popped[1]
 			icon_img = item.get("ImageTags").get("Primary")
@@ -125,8 +126,7 @@ class EmbyGridList(GUIComponent):
 				icon_img = parent_icon_img
 				self.icon_type = "Thumb"
 
-			if item_index not in self.updatingIndexesInProgress:
-				threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img, False)
+			threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img, False)
 
 		self.running = False
 
@@ -155,13 +155,14 @@ class EmbyGridList(GUIComponent):
 
 		if not hasattr(self, "data"):
 			return False
-		if not self.data[item_index][3]:
-			self.data[item_index] = (item_index, item, self.data[item_index][2], icon_pix or True, self.data[item_index][4], self.data[item_index][5])
+		if item_index not in self.thumbs:
+			self.thumbs[item_index] = icon_pix or True
 
 		if item_index in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.remove(item_index)
 
-		self.loadData(self.data)
+		if icon_pix:
+			self.instance.redrawItemByIndex(item_index)
 		return True
 
 	def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
@@ -169,6 +170,8 @@ class EmbyGridList(GUIComponent):
 		yPos = 0
 		res = [None]
 		selected = self.currentSelectedIndex == item_index
+		if item_index in self.thumbs:
+			item_icon = self.thumbs[item_index]
 		if selected and self.selectionEnabled:
 			res.append(MultiContentEntryRectangle(
 					pos=(self.spacing - 3, self.spacing - 3), size=(self.iconWidth + 6, self.iconHeight + 6),

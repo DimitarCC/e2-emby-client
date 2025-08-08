@@ -26,8 +26,9 @@ class EmbyMovieItemView(EmbyItemView):
                     <widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
                     <widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
                     <widget name="infoline" position="60,240" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
-                    <widget name="tagline" position="60,310" size="924,50" alphatest="blend" font="Bold;42" foregroundColor="yellow" transparent="1"/>
+                    <widget name="tagline" position="60,310" size="924,50" alphatest="blend" font="Bold;42" transparent="1"/>
                     <widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
+                    <widget name="f_buttons" position="60,500" size="924,60" transparent="1"/>
                 </screen>"""]  # noqa: E124
 
     def __init__(self, session, item, backdrop=None):
@@ -35,14 +36,14 @@ class EmbyMovieItemView(EmbyItemView):
         self.setTitle(_("Emby") + item.get("Name"))
 
         self["tagline"] = Label()
-        self["actions"] = ActionMap(["E2EmbyActions",],
-            {
-                "cancel": self.close,  # KEY_RED / KEY_EXIT
-                # "save": self.addProvider,  # KEY_GREEN
-                #"ok": self.processItem,
-                # "yellow": self.keyYellow,
-                # "blue": self.clearData,
-            }, -1)  # noqa: E123
+        # self["actions"] = ActionMap(["E2EmbyActions",],
+        #     {
+        #         "cancel": self.close,  # KEY_RED / KEY_EXIT
+        #         # "save": self.addProvider,  # KEY_GREEN
+        #         "ok": self.processItem,
+        #         # "yellow": self.keyYellow,
+        #         # "blue": self.clearData,
+        #     }, -1)  # noqa: E123
         
 
     def preLayoutFinished(self):
@@ -50,7 +51,7 @@ class EmbyMovieItemView(EmbyItemView):
         tagline_h = self["tagline"].instance.size().height()
         taglines = self.item.get("Taglines", [])
         if len(taglines) > 0:
-            self["plot"].move(plot_pos.x(), plot_pos.y() + tagline_h + 35)
+            self["plot"].move(plot_pos.x(), plot_pos.y() + tagline_h + 15)
 
     def infoRetrieveInject(self, item):
         taglines = item.get("Taglines", [])

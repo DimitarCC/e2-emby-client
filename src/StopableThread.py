@@ -1,8 +1,10 @@
 import threading
 
 class StoppableThread(threading.Thread):
-    def __init__(self, target, args=(), kwargs=None):
-        super().__init__()
+    def __init__(self, id, target, args=(), kwargs=None):
+        self.id = id
+        self.name = "EmbyListThread-" + str(id)
+        super().__init__(name=self.name)
         self._stop_event = threading.Event()
         self._target = target
         self._args = args
@@ -17,3 +19,11 @@ class StoppableThread(threading.Thread):
     def run(self):
         # Inject the stop check into the target function
         self._target(self, *self._args, **self._kwargs)
+
+    def __eq__(self, other):
+        if isinstance(other, StoppableThread):
+            return self.id == other.id
+        return False
+    
+    def __hash__(self):
+        return hash(self.name)
