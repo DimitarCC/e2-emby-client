@@ -129,7 +129,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 			# subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/mediasource_80606/Subtitles/21/stream.srt?api_key={EmbyApiClient.access_token}"
 			url = f"{EmbyApiClient.server_root}/emby/Videos/{item_id}/stream?api_key={EmbyApiClient.access_token}&PlaySessionId={play_session_id}&DeviceId={EmbyApiClient.device_id}&static=true&EnableAutoStreamCopy=false"
 			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
-			self.screen.session.open(EmbyPlayer, ref, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
+			self.screen.session.open(EmbyPlayer, ref, item=selected_item, play_session_id=play_session_id, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
 
 	def resumePlay(self):
 		startPos = int(self.item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000

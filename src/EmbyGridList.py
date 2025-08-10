@@ -161,7 +161,7 @@ class EmbyGridList(GUIComponent):
 			self.updatingIndexesInProgress.remove(item_index)
 
 		if icon_pix:
-			self.instance.redrawItemByIndex(item_index)
+			threads.deferToThread(self.instance.redrawItemByIndex, item_index)
 		return True
 
 	def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
