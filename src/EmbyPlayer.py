@@ -1,3 +1,4 @@
+from twisted.internet import threads
 from enigma import eTimer, iPlayableService
 from Screens.InfoBar import MoviePlayer
 from Components.ServiceEventTracker import ServiceEventTracker
@@ -7,13 +8,17 @@ from Components.Label import Label
 from Components.Sources.Progress import Progress
 from Components.config import config
 
+from .EmbyRestClient import EmbyApiClient
+
 
 class EmbyPlayer(MoviePlayer):
-	def __init__(self, session, service, startPos=None, slist=None, lastservice=None):
+	def __init__(self, session, service, item=None, play_session_id=None, startPos=None, slist=None, lastservice=None):
 		MoviePlayer.__init__(self, session, service=service, slist=slist, lastservice=lastservice)
 		self.skinName = ["EmbyPlayer", "CatchupPlayer", "MoviePlayer"]
 		self.onPlayStateChanged.append(self.__playStateChanged)
 		self.init_seek_to = startPos
+		self.item = item or {}
+		self.play_session_id = play_session_id
 		self.skip_progress_update = False
 		self.current_seek_step = 0
 		self.current_pos = -1
@@ -31,6 +36,8 @@ class EmbyPlayer(MoviePlayer):
 		self["time_remaining_summary"] = StaticText("")
 		self.progress_timer = eTimer()
 		self.progress_timer.callback.append(self.onProgressTimer)
+		self.emby_progress_timer = eTimer()
+		self.emby_progress_timer.callback.append(self.updateEmbyProgress)
 		self.onProgressTimer()
 		self.seek_timer = eTimer()
 		self.seek_timer.callback.append(self.onSeekRequest)
@@ -64,6 +71,11 @@ class EmbyPlayer(MoviePlayer):
 		if pos[0]:
 			return 0
 		return pos[1] / 90000
+	
+	def updateEmbyProgress(self):
+		pos = self.getPosition()
+		ticks = pos * 10_000_000
+		threads.deferToThread(EmbyApiClient.sendPlayingProgress, self.item, ticks, self.play_session_id)
 
 	def numberSeek(self, key):
 		if self.getSeek() is None:  # not currently seekable, so skip this key press
@@ -133,10 +145,14 @@ class EmbyPlayer(MoviePlayer):
 			self.doSeek(int(self.init_seek_to) * 90000)
 		if self.progress_timer:
 			self.progress_timer.start(1000)
+		threads.deferToThread(EmbyApiClient.sendStartPlaying, self.item, self.play_session_id)
+		self.emby_progress_timer.start(10000)
 
 	def __evServiceEnd(self):
 		if self.progress_timer:
 			self.progress_timer.stop()
+		threads.deferToThread(EmbyApiClient.sendStopPlaying, self.item, self.play_session_id)
+		self.emby_progress_timer.stop()
 
 	def __playStateChanged(self, state):
 		playstateString = state[3]

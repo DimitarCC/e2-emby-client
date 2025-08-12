@@ -1,8 +1,13 @@
 <setupxml>
 	<setup key="e2embyclient" title="E2EmbyClient Setup">
+		<item level="0" text="Timeouts"></item>
+		<item level="0" text="---"></item>
 		<item level="0" text="Connection reties count" description="Specify the connection retries count.">config.plugins.e2embyclient.conretries</item>
-		<item level="0" text="TEXT" description="Desc">config.plugins.e2embyclient.dummy</item>
+		<item level="0" text="General connection timeout" description="Specify the timeout for general connections.">config.plugins.e2embyclient.regular_con_timeout</item>
+		<item level="0" text="Image retrieve connection timeout" description="Specify the timeout for connections that retrieve images.">config.plugins.e2embyclient.image_con_timeout</item>
+		<item level="0" text="---"></item>
 		<item level="0" text="Connections"></item>
+		<item level="0" text="---"></item>
 	</setup>
 
 	<setup key="e2embyclientconnection" title="E2EmbyClient Connection">

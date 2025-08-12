@@ -1,5 +1,5 @@
 from Components.ActionMap import HelpableActionMap
-from Components.config import config, ConfigSelection, ConfigSubsection, ConfigSubList, ConfigInteger, ConfigYesNo, ConfigText
+from Components.config import config, ConfigSelection, ConfigSubsection, ConfigSubList, ConfigInteger, ConfigYesNo, ConfigText, ConfigNothing
 from Components.Sources.StaticText import StaticText
 from Screens.Setup import Setup
 from Tools.BoundFunction import boundFunction
@@ -18,7 +18,9 @@ def initConnection(index):
 def initConfig():
 	config.plugins.e2embyclient = ConfigSubsection()
 	config.plugins.e2embyclient.conretries = ConfigInteger(default=5, limits=(5, 20))
-	config.plugins.e2embyclient.dummy = ConfigYesNo(default=False)
+	config.plugins.e2embyclient.regular_con_timeout = ConfigInteger(default=4, limits=(1, 20))
+	config.plugins.e2embyclient.image_con_timeout = ConfigInteger(default=1, limits=(1, 20))
+	config.plugins.e2embyclient.nothing = ConfigNothing()
 	config.plugins.e2embyclient.connectioncount = ConfigInteger(0)
 	config.plugins.e2embyclient.activeconnection = ConfigInteger(0)
 	config.plugins.e2embyclient.connections = ConfigSubList()
