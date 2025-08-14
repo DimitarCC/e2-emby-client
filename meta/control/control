@@ -1,0 +1,12 @@
+Package: enigma2-plugin-extensions-e2embyclient
+Version: 1.0
+Description: An enigma2 client for Emby servers
+Section: base
+Priority: optional
+Maintainer: DimitarCC
+Architecture: all
+OE: enigma2-plugin-extensions-e2embyclient
+License: GPL-3.0-only
+Homepage: https://github.com/DimitarCC/e2-emby-client
+Depends: python3-pillow python3-requests
+Source: https://github.com/DimitarCC/e2-emby-client/blob/main/build.sh
