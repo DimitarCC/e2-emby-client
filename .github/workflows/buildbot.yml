@@ -1,6 +1,6 @@
 name: buildbot
 
-on:
+on: 
   push:
     branches: [ main ]
 
