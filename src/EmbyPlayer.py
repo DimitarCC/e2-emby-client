@@ -71,7 +71,7 @@ class EmbyPlayer(MoviePlayer):
 		if pos[0]:
 			return 0
 		return pos[1] / 90000
-	
+
 	def updateEmbyProgress(self):
 		pos = self.getPosition()
 		ticks = pos * 10_000_000
