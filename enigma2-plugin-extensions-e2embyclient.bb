@@ -12,7 +12,7 @@ inherit gitpkgv allarch gettext setuptools3-openplugins
 # end: for "oe-alliance-core"
 
 # start: for "openpli-oe-core"
-#inherit gitpkgv allarch gettext setuptools3-openplugins python3-compileall
+# inherit gitpkgv allarch gettext setuptools3-openplugins python3-compileall
 # end: for "openpli-oe-core"
 
 PV = "1.0+git"
@@ -20,6 +20,6 @@ PKGV = "1.0+git${GITPKGV}"
 
 SRCREV = "${AUTOREV}"
 
-SRC_URI = "git://github.com/OpenViX/PlutoTV.git;protocol=https;branch=master"
+SRC_URI = "git://github.com/DimitarCC/e2-emby-client.git;protocol=https;branch=main"
 
 S = "${WORKDIR}/git"
