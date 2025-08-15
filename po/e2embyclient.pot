@@ -1,0 +1,219 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-08-14 16:48+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../src/plugin.py:34
+msgid "A client for Emby server"
+msgstr ""
+
+#: ../src/plugin.py:35
+msgid "A client for Emby server setup"
+msgstr ""
+
+#: ../src/EmbySetup.py:49 ../src/EmbySetup.py:64
+msgid "Add"
+msgstr ""
+
+#: ../src/EmbySetup.py:53
+msgid "Add Connection"
+msgstr ""
+
+#: ../src/EmbyHome.py:103
+msgid "Add provider"
+msgstr ""
+
+#: ../src/EmbyItemView.py:49
+msgid "Cast/Crew"
+msgstr ""
+
+#: ../src/EmbyHome.py:105
+msgid "Clear all data"
+msgstr ""
+
+#: ../src/EmbyHome.py:102
+msgid "Close"
+msgstr ""
+
+#: ../src/EmbyHome.py:96
+msgid "Continue watching"
+msgstr ""
+
+#: ../src/plugin.py:23 ../src/plugin.py:34
+msgid "E2Emby"
+msgstr ""
+
+#: ../src/plugin.py:35
+msgid "E2Emby Client Setup"
+msgstr ""
+
+#: ../src/EmbySetup.py:61
+msgid "Edit"
+msgstr ""
+
+#: ../src/EmbyEpisodeItemView.py:35 ../src/EmbyHome.py:57
+#: ../src/EmbyItemView.py:25 ../src/EmbyMovieItemView.py:37
+msgid "Emby"
+msgstr ""
+
+#: ../src/EmbyLibraryScreen.py:24
+msgid "Emby Library"
+msgstr ""
+
+#: ../src/EmbyInfoLine.py:136
+msgid "Ends at"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:169
+msgid "Favorite"
+msgstr ""
+
+#: ../src/EmbyHome.py:104
+msgid "Generate bouquets"
+msgstr ""
+
+#: ../src/EmbyHome.py:94
+msgid "My Media"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:162
+msgid "Play"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:160
+msgid "Play from start"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:165
+msgid "Play trailer"
+msgstr ""
+
+#: ../src/EmbyHome.py:107
+msgid "Press OK to edit the currently selected provider"
+msgstr ""
+
+#: ../src/EmbyHome.py:98
+msgid "Recently released movies"
+msgstr ""
+
+#: ../src/EmbyHome.py:100
+msgid "Recently released tvshows"
+msgstr ""
+
+#: ../src/EmbySetup.py:50 ../src/EmbySetup.py:62
+msgid "Remove"
+msgstr ""
+
+#: ../src/EmbySetup.py:54
+msgid "Remove Connection"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:159
+msgid "Resume ("
+msgstr ""
+
+#: ../src/EmbySetup.py:55
+msgid "Setup Actions"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:167
+msgid "Watched"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "---"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Connection reties count"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Connections"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "E2EmbyClient Connection"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "E2EmbyClient Setup"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "General connection timeout"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Image retrieve connection timeout"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Name"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Name of the Remote Box (freely selectable)."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Password"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Password for the Connection."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Port"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Port of the Connection."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Root URL address of the Connection."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Specify the connection retries count."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Specify the timeout for connections that retrieve images."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Specify the timeout for general connections."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Timeouts"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "URL"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "User"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "User for the Connection."
+msgstr ""
