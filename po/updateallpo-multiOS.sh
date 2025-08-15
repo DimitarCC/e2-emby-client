@@ -119,6 +119,7 @@ if [[ "$OSTYPE" == "darwin"* ]]
 		# Mac OSX
 		printf "Script running on Mac OSX [%s]\n" "$OSTYPE"
     	findoptions=" -s -X "
+		localgsed="gsed"
 fi
 #
 # Script only run with sed but on some distro normal sed is already sed so checking it.
@@ -156,12 +157,12 @@ languages=($(ls *.po | tr "\n" " " | sed 's/.po//g'))
 #languages=("ar" "bg" "ca" "cs" "da" "de" "el" "en" "en_GB" "es" "et" "fa" "fi" "fr" "fy" "he" "hr" "hu" "is" "it" "ku" "lt" "lv" "nl" "no" "nb" "pl" "pt" "pt_BR" "ro" "ru" "sv" "sk" "sl" "sr" "th" "tr" "uk" "zh_CN")
 
 printf "Creating temporary file %s-py.pot\n" $plugin
-find $findoptions .. -name "*.py" -exec xgettext --no-wrap -L Python --from-code=UTF-8 -kpgettext:1c,2 --add-comments="TRANSLATORS:" -d enigma2 -s -o "$plugin"-py.pot {} \+
+find $findoptions .. -name "*.py" -exec xgettext --no-wrap -L Python --from-code=UTF-8 -kpgettext:1c,2 --add-comments="TRANSLATORS:" -d enigma2 -o "$plugin"-py.pot {} \+
 "$localgsed" --in-place "$plugin"-py.pot --expression=s/CHARSET/UTF-8/
 printf "Creating temporary file %s-xml.pot\n" $plugin
 find $findoptions .. -name "*.xml" -exec "$python" "$xml2po" {} \+ >  "$plugin"-xml.pot
 printf "Merging pot files to create: %s.pot\n" "$plugin"
-cat "$plugin"-py.pot "$plugin"-xml.pot | msguniq --no-wrap -o "$plugin".pot -
+cat "$plugin"-py.pot "$plugin"-xml.pot | msguniq -s --no-wrap -o "$plugin".pot -
 OLDIFS=$IFS
 IFS=" "
 
