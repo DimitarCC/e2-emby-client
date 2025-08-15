@@ -1,219 +1,214 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
-#
-#, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-08-14 19:04+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: jbleyel\n"
+"Language-Team: \n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
 
 #: ../src/setup.xml
 msgid "---"
-msgstr ""
+msgstr "---"
 
 #: ../src/plugin.py:34
 msgid "A client for Emby server"
-msgstr ""
+msgstr "Ein Client für den Emby-Server"
 
 #: ../src/plugin.py:35
 msgid "A client for Emby server setup"
-msgstr ""
+msgstr "Ein Client für die Emby-Server-Einrichtung"
 
 #: ../src/EmbySetup.py:49 ../src/EmbySetup.py:64
 msgid "Add"
-msgstr ""
+msgstr "Hinzufügen"
 
 #: ../src/EmbySetup.py:53
 msgid "Add Connection"
-msgstr ""
+msgstr "Verbindung hinzufügen"
 
 #: ../src/EmbyHome.py:103
 msgid "Add provider"
-msgstr ""
+msgstr "Anbieter hinzufügen"
 
 #: ../src/EmbyItemView.py:49
 msgid "Cast/Crew"
-msgstr ""
+msgstr "Besetzung/Team"
 
 #: ../src/EmbyHome.py:105
 msgid "Clear all data"
-msgstr ""
+msgstr "Alle Daten löschen"
 
 #: ../src/EmbyHome.py:102
 msgid "Close"
-msgstr ""
+msgstr "Schließen"
 
 #: ../src/setup.xml
 msgid "Connection reties count"
-msgstr ""
+msgstr "Anzahl der Verbindungswiederholungen"
 
 #: ../src/setup.xml
 msgid "Connections"
-msgstr ""
+msgstr "Verbindungen"
 
 #: ../src/EmbyHome.py:96
 msgid "Continue watching"
-msgstr ""
+msgstr "Weitersehen"
 
 #: ../src/plugin.py:23 ../src/plugin.py:34
 msgid "E2Emby"
-msgstr ""
+msgstr "E2Emby"
 
 #: ../src/plugin.py:35
 msgid "E2Emby Client Setup"
-msgstr ""
+msgstr "E2Emby-Client-Einrichtung"
 
 #: ../src/setup.xml
 msgid "E2EmbyClient Connection"
-msgstr ""
+msgstr "E2EmbyClient-Verbindung"
 
 #: ../src/setup.xml
 msgid "E2EmbyClient Setup"
-msgstr ""
+msgstr "E2EmbyClient-Einrichtung"
 
 #: ../src/EmbySetup.py:61
 msgid "Edit"
-msgstr ""
+msgstr "Bearbeiten"
 
 #: ../src/EmbyEpisodeItemView.py:35 ../src/EmbyHome.py:57
 #: ../src/EmbyItemView.py:25 ../src/EmbyMovieItemView.py:37
 msgid "Emby"
-msgstr ""
+msgstr "Emby"
 
 #: ../src/EmbyLibraryScreen.py:24
 msgid "Emby Library"
-msgstr ""
+msgstr "Emby-Bibliothek"
 
 #: ../src/EmbyInfoLine.py:136
 msgid "Ends at"
-msgstr ""
+msgstr "Endet um"
 
 #: ../src/EmbyItemFunctionButtons.py:169
 msgid "Favorite"
-msgstr ""
+msgstr "Favorit"
 
 #: ../src/setup.xml
 msgid "General connection timeout"
-msgstr ""
+msgstr "Allgemeines Verbindungszeitlimit"
 
 #: ../src/EmbyHome.py:104
 msgid "Generate bouquets"
-msgstr ""
+msgstr "Bouquets erstellen"
 
 #: ../src/setup.xml
 msgid "Image retrieve connection timeout"
-msgstr ""
+msgstr "Zeitlimit für den Bildabruf"
 
 #: ../src/EmbyHome.py:94
 msgid "My Media"
-msgstr ""
+msgstr "Meine Medien"
 
 #: ../src/setup.xml
 msgid "Name"
-msgstr ""
+msgstr "Name"
 
 #: ../src/setup.xml
 msgid "Name of the Remote Box (freely selectable)."
-msgstr ""
+msgstr "Name der Remote-Box (frei wählbar)."
 
 #: ../src/setup.xml
 msgid "Password"
-msgstr ""
+msgstr "Passwort"
 
 #: ../src/setup.xml
 msgid "Password for the Connection."
-msgstr ""
+msgstr "Passwort für die Verbindung."
 
 #: ../src/EmbyItemFunctionButtons.py:162
 msgid "Play"
-msgstr ""
+msgstr "Abspielen"
 
 #: ../src/EmbyItemFunctionButtons.py:160
 msgid "Play from start"
-msgstr ""
+msgstr "Von Anfang an abspielen"
 
 #: ../src/EmbyItemFunctionButtons.py:165
 msgid "Play trailer"
-msgstr ""
+msgstr "Trailer abspielen"
 
 #: ../src/setup.xml
 msgid "Port"
-msgstr ""
+msgstr "Port"
 
 #: ../src/setup.xml
 msgid "Port of the Connection."
-msgstr ""
+msgstr "Port der Verbindung."
 
 #: ../src/EmbyHome.py:107
 msgid "Press OK to edit the currently selected provider"
-msgstr ""
+msgstr "OK drücken, um den aktuell ausgewählten Anbieter zu bearbeiten"
 
 #: ../src/EmbyHome.py:98
 msgid "Recently released movies"
-msgstr ""
+msgstr "Kürzlich veröffentlichte Filme"
 
 #: ../src/EmbyHome.py:100
 msgid "Recently released tvshows"
-msgstr ""
+msgstr "Kürzlich veröffentlichte Serien"
 
 #: ../src/EmbySetup.py:50 ../src/EmbySetup.py:62
 msgid "Remove"
-msgstr ""
+msgstr "Entfernen"
 
 #: ../src/EmbySetup.py:54
 msgid "Remove Connection"
-msgstr ""
+msgstr "Verbindung entfernen"
 
 #: ../src/EmbyItemFunctionButtons.py:159
 msgid "Resume ("
-msgstr ""
+msgstr "Fortsetzen ("
 
 #: ../src/setup.xml
 msgid "Root URL address of the Connection."
-msgstr ""
+msgstr "Basis-URL-Adresse der Verbindung."
 
 #: ../src/EmbySetup.py:55
 msgid "Setup Actions"
-msgstr ""
+msgstr "Einrichtungsaktionen"
 
 #: ../src/setup.xml
 msgid "Specify the connection retries count."
-msgstr ""
+msgstr "Anzahl der Verbindungswiederholungen festlegen."
 
 #: ../src/setup.xml
 msgid "Specify the timeout for connections that retrieve images."
-msgstr ""
+msgstr "Zeitlimit für Verbindungen zum Abrufen von Bildern festlegen."
 
 #: ../src/setup.xml
 msgid "Specify the timeout for general connections."
-msgstr ""
+msgstr "Zeitlimit für allgemeine Verbindungen festlegen."
 
 #: ../src/setup.xml
 msgid "Timeouts"
-msgstr ""
+msgstr "Zeitlimits"
 
 #: ../src/setup.xml
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #: ../src/setup.xml
 msgid "User"
-msgstr ""
+msgstr "Benutzer"
 
 #: ../src/setup.xml
 msgid "User for the Connection."
-msgstr ""
+msgstr "Benutzer für die Verbindung."
 
 #: ../src/EmbyItemFunctionButtons.py:167
 msgid "Watched"
-msgstr ""
+msgstr "Gesehen"
