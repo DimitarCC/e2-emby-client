@@ -10,6 +10,9 @@ PluginLanguageDomain = "e2embyclient"
 PluginLanguagePath = "Extensions/E2EmbyClient/locale"
 
 
+__version__ = "1.0"
+
+
 def pluginlanguagedomain():
 	return PluginLanguageDomain
 
