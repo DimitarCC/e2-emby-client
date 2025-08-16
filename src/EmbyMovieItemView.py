@@ -19,12 +19,12 @@ class EmbyMovieItemView(EmbyItemView):
                     <widget name="infoline" position="60,160" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1"/>
                     <widget name="tagline" position="60,230" size="1400,50" alphatest="blend" font="Bold;42" foregroundColor="yellowsoft" transparent="1" shadowColor="black" shadowOffset="-1,-1"/>
                     <widget name="plot" position="60,230" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
-                    <widget name="f_buttons" position="60,540" size="924,65" font="Regular;26" transparent="1"/>
+                    <widget name="f_buttons" position="60,520" size="924,65" font="Regular;26" transparent="1"/>
                     <widget name="cast_header" position="40,630" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
                     <widget name="list_cast" position="40,700" size="e-80,426" iconWidth="180" iconHeight="270" font="Regular;20" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
                     <widget name="chapters_header" position="40,1166" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-                    <widget name="list_chapters" position="40,1230" size="e-80,426" iconWidth="407" iconHeight="220" font="Regular;20" scrollbarMode="showNever" iconType="Chapter" orientation="orHorizontal" transparent="1"/>
-               </screen>"""]  # noqa: E124
+                    <widget name="list_chapters" position="40,1230" size="e-80,426" iconWidth="395" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" orientation="orHorizontal" transparent="1"/>
+               </screen>"""]
 
     def __init__(self, session, item, backdrop=None):
         EmbyItemView.__init__(self, session, item, backdrop)

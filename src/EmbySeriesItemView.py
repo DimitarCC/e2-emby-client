@@ -30,17 +30,16 @@ class EmbySeriesItemView(EmbyItemView):
                     <widget name="backdrop" position="e-1280,0" size="1280,720" alphatest="blend" zPosition="-3"/>
                     <widget name="title_logo" position="60,60" size="924,80" alphatest="blend"/>
                     <widget name="title" position="60,50" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
-                    <widget name="subtitle" position="60,170" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
-                    <widget name="infoline" position="60,230" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
-                    <widget name="plot" position="60,310" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
-                    <widget name="f_buttons" position="60,520" size="924,70" font="Regular;32" transparent="1"/>
-                    <widget name="seasons_list" position="40,630" size="900,60" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-                    <widget name="episodes_list" position="40,720" size="e-80,426" iconWidth="407" iconHeight="220" font="Regular;20" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
+                    <widget name="infoline" position="60,160" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
+                    <widget name="plot" position="60,230" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
+                    <widget name="f_buttons" position="60,440" size="924,65" font="Regular;32" transparent="1"/>
+                    <!--<widget name="seasons_list" position="40,630" size="900,60" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>-->
+                    <widget name="episodes_list" position="40,630" size="e-80,408" iconWidth="407" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
                     <widget name="cast_header" position="40,1186" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
                     <widget name="list_cast" position="40,1250" size="e-80,426" iconWidth="180" iconHeight="270" font="Regular;20" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
                     <widget name="chapters_header" position="40,1716" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
                     <widget name="list_chapters" position="40,1800" size="e-80,426" iconWidth="407" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" orientation="orHorizontal" transparent="1"/>
-               </screen>"""]  # noqa: E124
+                </screen>"""]
 
     def __init__(self, session, item, backdrop=None):
         EmbyItemView.__init__(self, session, item, backdrop)
