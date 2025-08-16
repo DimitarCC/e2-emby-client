@@ -10,7 +10,7 @@ class EmbyListController():
             self.header.move(x + 15, y + self.yOffset)
         self.list.move(x, y + self.yOffset + header_h)
         return self
-    
+
     def getTopLeftCornerPos(self):
         widget = self.header
         if not widget:

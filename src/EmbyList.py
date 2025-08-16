@@ -96,7 +96,7 @@ class EmbyList(GUIComponent):
 		self.skinAttributes = attribs
 		self.l.setFont(0, self.font)
 		self.itemWidth = self.iconWidth + self.spacing_sides * 2
-		
+
 		self.l.setItemHeight(self.itemHeight)
 		self.l.setItemWidth(self.itemWidth)
 		self.instance.setOrientation(self.orientation)
@@ -206,7 +206,6 @@ class EmbyList(GUIComponent):
 
 			icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
 
-
 		if orig_item_id not in self.thumbs:
 			self.thumbs[orig_item_id] = icon_pix or True
 
@@ -274,7 +273,7 @@ class EmbyList(GUIComponent):
 			date_str = item.get("PremiereDate")
 			desc = item.get("Overview", "")
 			if date_str:
-				desc = f"{embyDateToString(date_str, "Episode")}  {convert_ticks_to_time(item.get("RunTimeTicks"))}\n{desc}" 
+				desc = f"{embyDateToString(date_str, "Episode")}  {convert_ticks_to_time(item.get("RunTimeTicks"))}\n{desc}"
 			y = self.iconHeight + 32 + 25 + 5
 			res.append(MultiContentEntryText(
 							pos=(self.spacing_sides, y), size=(self.iconWidth, self.itemHeight - y),
@@ -296,7 +295,7 @@ class EmbyList(GUIComponent):
 					pos=(self.spacing_sides + self.iconWidth - 34, self.spacing_sides),
 					size=(34, 34),
 					cornerRadius=6,
-					cornerEdges=2|4,
+					cornerEdges=2 | 4,
 					backgroundColor=0x32772b))
 			res.append(MultiContentEntryPixmapAlphaBlend(
 							pos=(self.spacing_sides + self.iconWidth - 34, self.spacing_sides),

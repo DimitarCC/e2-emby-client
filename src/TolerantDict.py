@@ -1,5 +1,6 @@
 from bisect import bisect_left, bisect_right
 
+
 class TolerantDict:
     def __init__(self, d):
         self.d = dict(d)

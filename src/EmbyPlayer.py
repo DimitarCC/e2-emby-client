@@ -51,7 +51,7 @@ class EmbyPlayer(MoviePlayer):
 		self.skip_progress_update = False
 		self.current_seek_step = 0
 		self.current_pos = -1
-		self.selectedSubtitleTrack = (0,0,0,0,"und")
+		self.selectedSubtitleTrack = (0, 0, 0, 0, "und")
 		self.current_subs_stream = defaultSubtitle_idx
 		self.subs_parser = SubRipParser()
 		self.currentSubsList = TolerantDict({})
@@ -92,7 +92,7 @@ class EmbyPlayer(MoviePlayer):
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
 			iPlayableService.evStart: self.__evServiceStart,
 			iPlayableService.evEnd: self.__evServiceEnd, })
-		
+
 	def loadAndParseSubs(self, stream_url):
 		response = get(stream_url, timeout=5)
 		if response.status_code != 404:
@@ -110,17 +110,16 @@ class EmbyPlayer(MoviePlayer):
 			self.onhideSubs()
 
 		currentLine = None
-		window_matches = self.currentSubsList.get_all_in_window(currentPTS, 150*90)
+		window_matches = self.currentSubsList.get_all_in_window(currentPTS, 150 * 90)
 		if window_matches and len(window_matches) > 0:
 			currentLine = window_matches[0][1]
 
 		if currentLine and (self.currentSubPTS < 0 or self.currentSubPTS != currentLine["start"]):
-			
+
 			self.currentSubPTS = currentLine["start"]
 			self.currentSubEndPTS = currentLine["end"]
 			subtitleText = currentLine["text"]
 			self.subtitle_window.showSubtitles(subtitleText)
-
 
 	def onhideSubs(self):
 		self.currentSubEndPTS = -1
@@ -216,7 +215,6 @@ class EmbyPlayer(MoviePlayer):
 		if not self.skip_progress_update:
 			self.setProgress(curr_pos if self.current_pos == -1 else self.current_pos)
 
-
 	def runSubtitles(self, subtitle):
 		if not subtitle:
 			self.checkSubs.stop()
@@ -245,9 +243,9 @@ class EmbyPlayer(MoviePlayer):
 			index = stream.get("Index")
 			subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{index}/stream.srt?api_key={EmbyApiClient.access_token}"
 			if SUBTITLE_TUPLE_SIZE == 5:
-				subtitlesList.append((2, i, 4, 0, stream.get("Language"), self.runSubtitles, subs_uri ))
+				subtitlesList.append((2, i, 4, 0, stream.get("Language"), self.runSubtitles, subs_uri))
 			else:
-				subtitlesList.append((2, i, 4, 0, stream.get("Language"), "", self.runSubtitles, subs_uri ))
+				subtitlesList.append((2, i, 4, 0, stream.get("Language"), "", self.runSubtitles, subs_uri))
 			i += 1
 
 	def __evServiceStart(self):

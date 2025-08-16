@@ -24,6 +24,7 @@ EXIT_RESULT_BOXSET = 3
 EXIT_RESULT_EPISODE = 4
 EXIT_RESULT_SEASON = 5
 
+
 class EmbyItemViewBase(Screen):
     def __init__(self, session, item, backdrop=None):
         Screen.__init__(self, session)
@@ -67,13 +68,13 @@ class EmbyItemViewBase(Screen):
                 "right": self.right,
                 # "blue": self.clearData,
             }, -2)  # noqa: E123
-    
+
     def __closeScreen(self):
         self.close(self.exitResult)
 
     def onPlayerClosedResult(self):
         pass
-        
+
     def __onPlayerClosed(self):
         self.onPlayerClosedResult()
         self.loadItemInfoFromServer(self.item_id)
@@ -95,7 +96,6 @@ class EmbyItemViewBase(Screen):
             self.preLayoutFinished()
             self.loadItemInUI(load_res)
             self.init_loaded = True
-
 
     def loadItemInUI(self, result):
         self["f_buttons"].setItem(self.item)
@@ -130,7 +130,6 @@ class EmbyItemViewBase(Screen):
             for item in keys[current_widget_index:]:
                 self.lists[item].move(40, y).enableSelection(False)
                 y += self.lists[item].getHeight() + 40
-           
 
     def down(self):
         keys = list(self.lists.keys())
@@ -180,7 +179,7 @@ class EmbyItemViewBase(Screen):
     def loadItemInfoFromServer(self, item_id):
         self.item = EmbyApiClient.getSingleItem(item_id=item_id)
         return True
-    
+
     def injectAfterLoad(self, item):
         pass
 

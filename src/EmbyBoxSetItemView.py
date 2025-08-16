@@ -59,7 +59,6 @@ class EmbyBoxSetItemView(EmbyItemViewBase):
             self.selected_widget = "boxset_items"
             self[self.selected_widget].toggleSelection(True)
 
-
     def left(self):
         if self.selected_widget == "f_buttons":
             self["f_buttons"].movePrevious()
@@ -77,7 +76,6 @@ class EmbyBoxSetItemView(EmbyItemViewBase):
                 self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
             else:
                 self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
-
 
     def loadBoxSetDetails(self):
         items = EmbyApiClient.getBoxsetsChildren(self.item_id)

@@ -7,7 +7,6 @@ from .EmbyItemViewBase import EXIT_RESULT_MOVIE
 from .EmbyList import EmbyList
 
 
-
 class EmbyMovieItemView(EmbyItemView):
     skin = ["""<screen name="EmbyMovieItemView" position="fill">
                     <!--<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>-->
@@ -34,7 +33,6 @@ class EmbyMovieItemView(EmbyItemView):
         self["tagline"] = Label()
         self["header_parent_boxsets"] = Label(_("Included in"))
         self["list_parent_boxsets"] = EmbyList()
-
 
     def preLayoutFinished(self):
         plot_pos = self["plot"].instance.position()

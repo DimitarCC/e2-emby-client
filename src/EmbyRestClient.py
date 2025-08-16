@@ -115,7 +115,7 @@ class EmbyRestClient():
 			except:
 				break
 		return item
-	
+
 	def getEpisodesForSeries(self, item_id):
 		items = []
 		print("SERIES ID: " + str(item_id))
@@ -133,7 +133,7 @@ class EmbyRestClient():
 			except:
 				break
 		return items
-	
+
 	def getSeasonsForSeries(self, item_id):
 		items = []
 		req = self.constructRequest(f"{self.server_root}/emby/Shows/{item_id}/Seasons?UserId={self.user_id}")
@@ -166,7 +166,7 @@ class EmbyRestClient():
 			except:
 				break
 		return items
-	
+
 	def getSimilarMoviesForItem(self, item_id, limit=40):
 		items = []
 		req = self.constructRequest(f"{self.server_root}/emby/Movies/{item_id}/Similar?UserId={self.user_id}&Limit={limit}")
@@ -182,7 +182,7 @@ class EmbyRestClient():
 			except:
 				break
 		return items
-	
+
 	def getSimilarSeriesForItem(self, item_id, limit=40):
 		items = []
 		req = self.constructRequest(f"{self.server_root}/emby/Shows/{item_id}/Similar?UserId={self.user_id}&Limit={limit}")
@@ -198,7 +198,7 @@ class EmbyRestClient():
 			except:
 				break
 		return items
-	
+
 	def getExtrasForItem(self, item_id, limit=40):
 		items = []
 		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}/SpecialFeatures")

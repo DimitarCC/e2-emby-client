@@ -242,7 +242,7 @@ class EmbyGridList(GUIComponent):
 					pos=(self.spacing + self.iconWidth - 34, self.spacing),
 					size=(34, 34),
 					cornerRadius=6,
-					cornerEdges=2|4,
+					cornerEdges=2 | 4,
 					backgroundColor=0x32772b))
 			res.append(MultiContentEntryPixmapAlphaBlend(
 							pos=(self.spacing + self.iconWidth - 34, self.spacing),
