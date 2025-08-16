@@ -1,20 +1,49 @@
 from twisted.internet import threads
-from enigma import eTimer, iPlayableService
+from uuid import uuid4
+from enigma import eTimer, iPlayableService, eServiceReference
 from Screens.InfoBar import MoviePlayer
+from Screens.AudioSelection import AudioSelection
 from Components.ServiceEventTracker import ServiceEventTracker
 from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
 from Components.Sources.StaticText import StaticText
 from Components.Label import Label
 from Components.Sources.Progress import Progress
 from Components.config import config
+from requests import get, post, delete
+from requests.exceptions import ReadTimeout
+from Components.SystemInfo import BoxInfo
 
 from .EmbyRestClient import EmbyApiClient
+from .subrip import SubRipParser
+from .TolerantDict import TolerantDict
+
+distro = BoxInfo.getItem("distro")
+
+SUBTITLE_TUPLE_SIZE = 6 if distro == "openatv" else 5
 
 
 class EmbyPlayer(MoviePlayer):
-	def __init__(self, session, service, item=None, play_session_id=None, startPos=None, slist=None, lastservice=None):
-		MoviePlayer.__init__(self, session, service=service, slist=slist, lastservice=lastservice)
+	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None):
+		item_id = int(item.get("Id", "0"))
+		item_name = item.get("Name", "Stream")
+		play_session_id = str(uuid4())
+		media_sources = item.get("MediaSources")
+		media_source = media_sources[0]
+		defaultAudio_idx = media_source.get("DefaultAudioStreamIndex", -1)
+		defaultSubtitle_idx = media_source.get("DefaultSubtitleStreamIndex", -1)
+		subs_uri = ""
+		# if defaultSubtitle_idx > -1:
+		# 	subs_uri = f"&suburi={EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{defaultSubtitle_idx}/stream.srt?api_key={EmbyApiClient.access_token}"
+		tracks_addon = ""
+		if defaultAudio_idx > -1:
+			tracks_addon += f"&AudioStreamIndex={defaultAudio_idx}"
+		if defaultSubtitle_idx > -1:
+			tracks_addon += f"&SubtitleStreamIndex={defaultSubtitle_idx}"
+		url = f"{EmbyApiClient.server_root}/emby/Videos/{item_id}/stream?api_key={EmbyApiClient.access_token}&PlaySessionId={play_session_id}&DeviceId={EmbyApiClient.device_id}&static=true&EnableAutoStreamCopy=false{tracks_addon}{subs_uri.replace(":", "%3a")}"
+		ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
+		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
 		self.skinName = ["EmbyPlayer", "CatchupPlayer", "MoviePlayer"]
+		AudioSelection.fillSubtitleExt = self.subtitleListIject
 		self.onPlayStateChanged.append(self.__playStateChanged)
 		self.init_seek_to = startPos
 		self.item = item or {}
@@ -22,6 +51,12 @@ class EmbyPlayer(MoviePlayer):
 		self.skip_progress_update = False
 		self.current_seek_step = 0
 		self.current_pos = -1
+		self.selectedSubtitleTrack = (0,0,0,0,"und")
+		self.current_subs_stream = defaultSubtitle_idx
+		self.subs_parser = SubRipParser()
+		self.currentSubsList = TolerantDict({})
+		self.currentSubPTS = -1
+		self.currentSubEndPTS = -1
 		self["progress"] = Progress()
 		self["progress_summary"] = Progress()
 		self["progress"].value = 0
@@ -36,6 +71,10 @@ class EmbyPlayer(MoviePlayer):
 		self["time_remaining_summary"] = StaticText("")
 		self.progress_timer = eTimer()
 		self.progress_timer.callback.append(self.onProgressTimer)
+		self.checkSubs = eTimer()
+		self.checkSubs.callback.append(self.checkPTSAndShowSub)
+		self.hideSubs = eTimer()
+		self.hideSubs.callback.append(self.onhideSubs)
 		self.emby_progress_timer = eTimer()
 		self.emby_progress_timer.callback.append(self.updateEmbyProgress)
 		self.onProgressTimer()
@@ -53,6 +92,43 @@ class EmbyPlayer(MoviePlayer):
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
 			iPlayableService.evStart: self.__evServiceStart,
 			iPlayableService.evEnd: self.__evServiceEnd, })
+		
+	def loadAndParseSubs(self, stream_url):
+		response = get(stream_url, timeout=5)
+		if response.status_code != 404:
+			subs_file = response.content.decode("utf-8")
+			self.currentSubsList = TolerantDict(self.subs_parser.parse(subs_file))
+
+	def checkPTSAndShowSubBase(self):
+		seek = self.getSeek()
+		if seek is None:
+			return
+		pos = seek.getPlayPosition()
+		currentPTS = int(pos[1])
+
+		if self.currentSubEndPTS > -1 and currentPTS > self.currentSubEndPTS:
+			self.onhideSubs()
+
+		currentLine = None
+		window_matches = self.currentSubsList.get_all_in_window(currentPTS, 150*90)
+		if window_matches and len(window_matches) > 0:
+			currentLine = window_matches[0][1]
+
+		if currentLine and (self.currentSubPTS < 0 or self.currentSubPTS != currentLine["start"]):
+			
+			self.currentSubPTS = currentLine["start"]
+			self.currentSubEndPTS = currentLine["end"]
+			subtitleText = currentLine["text"]
+			self.subtitle_window.showSubtitles(subtitleText)
+
+
+	def onhideSubs(self):
+		self.currentSubEndPTS = -1
+		self.subtitle_window.showSubtitles("")
+		self.subtitle_window.hideSubtitles()
+
+	def checkPTSAndShowSub(self):
+		self.checkPTSAndShowSubBase()
 
 	def getLength(self):
 		seek = self.getSeek()
@@ -140,17 +216,82 @@ class EmbyPlayer(MoviePlayer):
 		if not self.skip_progress_update:
 			self.setProgress(curr_pos if self.current_pos == -1 else self.current_pos)
 
+
+	def runSubtitles(self, subtitle):
+		if not subtitle:
+			self.checkSubs.stop()
+			self.currentSubPTS = -1
+			self.currentSubsList = TolerantDict({})
+			self.selected_subtitle = (0, 0, 0, 0, "")
+			return
+
+		self.enableSubtitle(None)
+		subs_uri = subtitle[SUBTITLE_TUPLE_SIZE + 1]
+		self.loadAndParseSubs(subs_uri)
+		self.checkSubs.start(100)
+		self.selected_subtitle = subtitle
+
+	def subtitleListIject(self, subtitlesList):
+		item_id = int(self.item.get("Id", "0"))
+		media_sources = self.item.get("MediaSources")
+		media_source = media_sources[0]
+		media_streams = media_source.get("MediaStreams")
+		i = len(subtitlesList) + 1
+		for stream in media_streams:
+			type_stream = stream.get("Type")
+			isExternal = stream.get("IsExternal")
+			if type_stream != "Subtitle" or not isExternal:
+				continue
+			index = stream.get("Index")
+			subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{index}/stream.srt?api_key={EmbyApiClient.access_token}"
+			if SUBTITLE_TUPLE_SIZE == 5:
+				subtitlesList.append((2, i, 4, 0, stream.get("Language"), self.runSubtitles, subs_uri ))
+			else:
+				subtitlesList.append((2, i, 4, 0, stream.get("Language"), "", self.runSubtitles, subs_uri ))
+			i += 1
+
 	def __evServiceStart(self):
+
 		if self.init_seek_to:
 			self.doSeek(int(self.init_seek_to) * 90000)
+		# item_id = int(self.item.get("Id", "0"))
+		# media_sources = self.item.get("MediaSources")
+		# media_source = media_sources[0]
+		# subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/21/stream.srt?api_key={EmbyApiClient.access_token}"
+		# self.loadAndParseSubs(subs_uri)
+		# self.checkSubs.start(100)
+
+		# service = self.session.nav.getCurrentService()
+		# subtitle = service and service.subtitle()
+		# if subtitle:
+		# 	item_id = int(self.item.get("Id", "0"))
+		# 	media_sources = self.item.get("MediaSources")
+		# 	media_source = media_sources[0]
+		# 	media_streams = media_source.get("MediaStreams")
+		# 	for stream in media_streams:
+		# 		type_stream = stream.get("Type")
+		# 		isExternal = stream.get("IsExternal")
+		# 		if type_stream != "Subtitle" or not isExternal:
+		# 			continue
+		# 		index = stream.get("Index")
+		# 		subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{index}/stream.srt?api_key={EmbyApiClient.access_token}"
+		# 		subtitle.addExternalSubtitles((4,1,4,0,"bg", subs_uri, "UTF-8"))
+		# if self.selectedSubtitleTrack:
+		# 	self.changeSubTimer.start(1000, True)
+		# else:
+		# 	self.enableSubtitleTrack(None)
 		if self.progress_timer:
 			self.progress_timer.start(1000)
 		threads.deferToThread(EmbyApiClient.sendStartPlaying, self.item, self.play_session_id)
 		self.emby_progress_timer.start(10000)
 
 	def __evServiceEnd(self):
+		self.currentSubPTS = -1
+		self.currentSubsList = TolerantDict({})
+		self.selected_subtitle = (0, 0, 0, 0, "")
 		if self.progress_timer:
 			self.progress_timer.stop()
+		self.checkSubs.stop()
 		threads.deferToThread(EmbyApiClient.sendStopPlaying, self.item, self.play_session_id)
 		self.emby_progress_timer.stop()
 
@@ -164,7 +305,7 @@ class EmbyPlayer(MoviePlayer):
 			self.progress_timer.stop()
 
 	def leavePlayer(self):
-		self.setResumePoint()
+		AudioSelection.fillSubtitleExt = None
 		self.handleLeave("quit")
 
 	def leavePlayerOnExit(self):

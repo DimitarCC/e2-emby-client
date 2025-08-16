@@ -9,11 +9,13 @@ from .EmbyRestClient import EmbyApiClient
 from .EmbyPlayer import EmbyPlayer
 from .EmbyMovieItemView import EmbyMovieItemView
 from .EmbyEpisodeItemView import EmbyEpisodeItemView
+from .EmbyBoxSetItemView import EmbyBoxSetItemView
+from .EmbySeriesItemView import EmbySeriesItemView
 
 
 class E2EmbyLibrary(Screen):
 	skin = ["""<screen name="E2EmbyLibrary" position="fill">
-					<widget name="list" position="40,0" size="e-80,e" iconWidth="200" iconHeight="260" spacing="10" scrollbarMode="showNever" transparent="1" />
+					<widget name="list" position="40,0" size="e-80,e" iconWidth="173" iconHeight="260" spacing="10" scrollbarMode="showNever" transparent="1" />
 				</screen>"""]  # noqa: E124
 
 	def __init__(self, session, library_id):
@@ -43,6 +45,10 @@ class E2EmbyLibrary(Screen):
 		embyScreenClass = EmbyMovieItemView
 		if item_type == "Episode":
 			embyScreenClass = EmbyEpisodeItemView
+		elif item_type == "BoxSet":
+			embyScreenClass = EmbyBoxSetItemView
+		elif item_type == "Series":
+			embyScreenClass = EmbySeriesItemView
 		self.session.open(embyScreenClass, selected_item)
 
 	def loadItems(self):

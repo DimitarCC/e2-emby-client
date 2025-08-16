@@ -1,8 +1,8 @@
-from datetime import datetime, timedelta
-import os
 from sys import modules
+import os
 import uuid
 
+from twisted.internet import threads
 from enigma import eServiceReference, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
 
@@ -23,10 +23,18 @@ from . import _, PluginLanguageDomain
 plugin_dir = os.path.dirname(modules[__name__].__file__)
 
 
+def playItem(selected_item, session, callback, startPos=0):
+		infobar = InfoBar.instance
+		if infobar:
+			LastService = session.nav.getCurrentServiceReferenceOriginal()
+			session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
+
+
 class EmbyItemFunctionButtons(GUIComponent):
 	def __init__(self, screen):
 		GUIComponent.__init__(self)
 		self.screen = screen
+		self.onPlayerExit = []
 		self.buttons = []
 		self.selectedIndex = 0
 		self.selectionEnabled = True
@@ -118,36 +126,48 @@ class EmbyItemFunctionButtons(GUIComponent):
 	def getSelectedButton(self):
 		return self.buttons[self.selectedIndex]
 
-	def playItem(self, startPos=0):
-		selected_item = self.item
-		infobar = InfoBar.instance
-		if infobar:
-			LastService = self.screen.session.nav.getCurrentServiceReferenceOriginal()
-			item_id = int(selected_item.get("Id", "0"))
-			item_name = selected_item.get("Name", "Stream")
-			play_session_id = str(uuid.uuid4())
-			# subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/mediasource_80606/Subtitles/21/stream.srt?api_key={EmbyApiClient.access_token}"
-			url = f"{EmbyApiClient.server_root}/emby/Videos/{item_id}/stream?api_key={EmbyApiClient.access_token}&PlaySessionId={play_session_id}&DeviceId={EmbyApiClient.device_id}&static=true&EnableAutoStreamCopy=false"
-			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
-			self.screen.session.open(EmbyPlayer, ref, item=selected_item, play_session_id=play_session_id, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
+	def playerExitCallback(self, *result):
+		for x in self.onPlayerExit:
+			x()
 
 	def resumePlay(self):
 		startPos = int(self.item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
-		self.playItem(startPos=startPos)
+		playItem(self.item, self.screen.session, self.playerExitCallback, startPos=startPos)
 
 	def playFromBeguinning(self):
-		self.playItem()
+		playItem(self.item, self.screen.session, self.playerExitCallback)
 
 	def playTrailer(self):
 		pass
 
 	def toggleWatched(self):
-		pass
+		played = self.item.get("UserData", {}).get("Played", False)
+		if played:
+			threads.deferToThread(EmbyApiClient.sendUnWatched, self.item).addCallback(self.setWatchedCallback)
+		else:
+			threads.deferToThread(EmbyApiClient.sendWatched, self.item).addCallback(self.setWatchedCallback)
 
 	def toggleFavorite(self):
-		pass
+		isFavorite = self.item.get("UserData", {}).get("IsFavorite", False)
+		if isFavorite:
+			threads.deferToThread(EmbyApiClient.sendNotFavorite, self.item).addCallback(self.setFavoriteCallback)
+		else:
+			threads.deferToThread(EmbyApiClient.sendFavorite, self.item).addCallback(self.setFavoriteCallback)
+
+	def setWatchedCallback(self, result):
+		res, val = result
+		if res:
+			self.item["UserData"]["Played"] = val
+			self.setItem(self.item)
+
+	def setFavoriteCallback(self, result):
+		res, val = result
+		if res:
+			self.item["UserData"]["IsFavorite"] = val
+			self.setItem(self.item)
 
 	def setItem(self, item):
+		self.buttons = []
 		self.item = item
 		type = item.get("Type", None)
 		runtime_ticks = int(item.get("RunTimeTicks", "0"))

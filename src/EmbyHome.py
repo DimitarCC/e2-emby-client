@@ -10,19 +10,19 @@ from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
 from Components.Label import Label
 from Components.Pixmap import Pixmap
 from Components.Sources.StaticText import StaticText
-from Screens.InfoBar import InfoBar
 from Screens.Screen import Screen, ScreenSummary
 
 from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
 from .EmbyInfoLine import EmbyInfoLine
-from .EmbyPlayer import EmbyPlayer
 from .EmbySetup import getActiveConnection
 from .EmbyRestClient import EmbyApiClient
 from .EmbyLibraryScreen import E2EmbyLibrary
 from .EmbyMovieItemView import EmbyMovieItemView
 from .EmbyEpisodeItemView import EmbyEpisodeItemView
-from .StopableThread import StoppableThread
+from .EmbyBoxSetItemView import EmbyBoxSetItemView
+from .EmbySeriesItemView import EmbySeriesItemView
+from .EmbyItemViewBase import EXIT_RESULT_MOVIE, EXIT_RESULT_SERIES, EXIT_RESULT_EPISODE
 from . import _, PluginLanguageDomain
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
@@ -85,6 +85,10 @@ class E2EmbyHome(Screen):
         self.sel_timer = eTimer()
         self.sel_timer.callback.append(self.trigger_sel_changed_event)
 
+        self.movie_libs_ids = []
+        self.tvshow_libs_ids = []
+        self.music_libs_ids = []
+
         self["title_logo"] = Pixmap()
         self["title"] = Label()
         self["subtitle"] = Label()
@@ -95,9 +99,9 @@ class E2EmbyHome(Screen):
         self["list"] = EmbyList(isLibrary=True)
         self["list_watching_header"] = Label(_("Continue watching"))
         self["list_watching"] = EmbyList()
-        self["list_recent_movies_header"] = Label(_("Recently released movies"))
+        self["list_recent_movies_header"] = Label(_("Recently added movies"))
         self["list_recent_movies"] = EmbyList()
-        self["list_recent_tvshows_header"] = Label(_("Recently released tvshows"))
+        self["list_recent_tvshows_header"] = Label(_("Recently added tvshows"))
         self["list_recent_tvshows"] = EmbyList()
         self["key_red"] = StaticText(_("Close"))
         self["key_green"] = StaticText(_("Add provider"))
@@ -158,6 +162,7 @@ class E2EmbyHome(Screen):
         threads.deferToThread(self.loadSelectedItemDetails, self[self.selected_widget].selectedItem, self[self.selected_widget])
 
     def onSelectedIndexChanged(self, widget=None, item_id=None):
+        self.last_item_id = self[self.selected_widget].selectedItem.get("Id")
         if (self.last_widget_info_load_success and self.last_widget_info_load_success == widget):
             return
 
@@ -169,6 +174,12 @@ class E2EmbyHome(Screen):
 
         self["backdrop"].setPixmap(None)
         self.backdrop_pix = None
+
+        colType = self[self.selected_widget].selectedItem.get("CollectionType")
+        isLib = colType is not None and colType != "BoxSet"
+        if isLib:
+            self.clearInfoPane()
+
         self.sel_timer.stop()
         self.sel_timer.start(150, True)
 
@@ -231,10 +242,40 @@ class E2EmbyHome(Screen):
         if widget.isLibrary:
             self.session.open(E2EmbyLibrary, int(selected_item.get("Id", "0")))
         else:
+            item_type = selected_item.get("Type")
             embyScreenClass = EmbyMovieItemView
-            if selected_item.get("Type") == "Episode":
+            if item_type == "Episode":
                 embyScreenClass = EmbyEpisodeItemView
-            self.session.open(embyScreenClass, selected_item, self.backdrop_pix)
+            elif item_type == "BoxSet":
+                embyScreenClass = EmbyBoxSetItemView
+            elif item_type == "Series":
+                embyScreenClass = EmbySeriesItemView
+            self.session.openWithCallback(self.exitCallback, embyScreenClass, selected_item, self.backdrop_pix)
+
+    def exitCallback(self, *result):
+        if not len(result):
+            return
+        result = result[0]
+        if result == EXIT_RESULT_MOVIE:
+            threads.deferToThread(self.reloadMovieWidgets)
+        elif result in [EXIT_RESULT_SERIES, EXIT_RESULT_EPISODE]:
+            threads.deferToThread(self.reloadSeriesWidgets)
+
+    def reloadMovieWidgets(self):
+        self.last_widget_info_load_success = None
+        self.last_item_id = self[self.selected_widget].selectedItem.get("Id")
+        if "list_watching" in self.availableWidgets:
+            self.loadEmbyList(self["list_watching"], "Resume")
+        if "list_recent_movies" in self.availableWidgets:
+                self.loadEmbyList(self["list_recent_movies"], "LastMovies", self.movie_libs_ids)
+
+    def reloadSeriesWidgets(self):
+        self.last_widget_info_load_success = None
+        self.last_item_id = self[self.selected_widget].selectedItem.get("Id")
+        if "list_watching" in self.availableWidgets:
+            self.loadEmbyList(self["list_watching"], "Resume")
+        if "list_recent_tvshows" in self.availableWidgets:
+                self.loadEmbyList(self["list_recent_tvshows"], "LastSeries", self.tvshow_libs_ids)
 
     def downloadCover(self, item_id, icon_img, orig_item_id):
         try:
@@ -268,12 +309,12 @@ class E2EmbyHome(Screen):
 
         orig_item_id = item.get("Id")
         colType = item.get("CollectionType")
-        isLib = colType is not None
+        isLib = colType is not None and colType != "BoxSet"
 
-        if not isLib and self.last_item_id and orig_item_id == self.last_item_id:
-            return
+        # if not isLib and self.last_item_id and orig_item_id == self.last_item_id:
+        #     return
 
-        self.last_item_id = orig_item_id
+        # self.last_item_id = orig_item_id
         item_id = orig_item_id
 
         if isLib:
@@ -361,21 +402,18 @@ class E2EmbyHome(Screen):
 
         libs = EmbyApiClient.getLibraries()
         libs_list = []
-        movie_libs_ids = []
-        tvshow_libs_ids = []
-        music_libs_ids = []
         i = 0
         if libs:
             for lib in libs:
                 colType = lib.get("CollectionType")
                 if colType and colType == "movies":
-                    movie_libs_ids.append(int(lib.get("Id")))
+                    self.movie_libs_ids.append(int(lib.get("Id")))
 
                 if colType and colType == "tvshows":
-                    tvshow_libs_ids.append(int(lib.get("Id")))
+                    self.tvshow_libs_ids.append(int(lib.get("Id")))
 
                 if colType and colType == "music":
-                    music_libs_ids.append(int(lib.get("Id")))
+                    self.music_libs_ids.append(int(lib.get("Id")))
 
                 libs_list.append((i, lib, lib.get('Name'), None, "0", True))
                 i += 1
@@ -384,12 +422,12 @@ class E2EmbyHome(Screen):
         if self.loadEmbyList(self["list_watching"], "Resume"):
             if "list_watching" not in self.availableWidgets:
                 self.availableWidgets.append("list_watching")
-        if movie_libs_ids:
-            if self.loadEmbyList(self["list_recent_movies"], "LastMovies", movie_libs_ids):
+        if self.movie_libs_ids:
+            if self.loadEmbyList(self["list_recent_movies"], "LastMovies", self.movie_libs_ids):
                 if "list_recent_movies" not in self.availableWidgets:
                     self.availableWidgets.append("list_recent_movies")
-        if tvshow_libs_ids:
-            if self.loadEmbyList(self["list_recent_tvshows"], "LastSeries", tvshow_libs_ids):
+        if self.tvshow_libs_ids:
+            if self.loadEmbyList(self["list_recent_tvshows"], "LastSeries", self.tvshow_libs_ids):
                 if "list_recent_tvshows" not in self.availableWidgets:
                     self.availableWidgets.append("list_recent_tvshows")
 

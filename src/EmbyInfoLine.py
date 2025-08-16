@@ -2,7 +2,6 @@ from . import _, PluginLanguageDomain
 
 import os
 from sys import modules
-from datetime import datetime, timedelta
 
 from enigma import eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
@@ -12,6 +11,8 @@ from Components.Label import Label
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryRectangle
 from Tools.Directories import resolveFilename, SCOPE_GUISKIN
 from Tools.LoadPixmap import LoadPixmap
+
+from .HelperFunctions import convert_ticks_to_time, embyDateToString, embyEndsAtToString
 
 
 plugin_dir = os.path.dirname(modules[__name__].__file__)
@@ -91,15 +92,6 @@ class EmbyInfoLine(GUIComponent):
 		l_list.append((item,))
 		self.l.setList(l_list)
 
-	def convert_ticks_to_time(self, ticks):
-		seconds = ticks / 10_000_000
-		minutes = int(seconds // 60)
-		hours = int(minutes // 60)
-		minutes = minutes % 60
-		if hours == 0:
-			return f"{minutes}min"
-		return f"{hours}h {minutes}min"
-
 	def _calcTextWidth(self, text, font=None, size=None):
 		self.textRenderer.instance.setNoWrap(1)
 		if size:
@@ -119,21 +111,6 @@ class EmbyInfoLine(GUIComponent):
 	def getSize(self):
 		s = self.instance.size()
 		return s.width(), s.height()
-
-	def embyDateToString(self, dateString, type):
-		cleaned_date = dateString.rstrip('Z')[:26]
-		dt = datetime.fromisoformat(cleaned_date)
-
-		if type == "Episode":
-			return dt.strftime("%d.%m.%Y")
-		return dt.strftime("%Y")
-
-	def embyEndsAtToString(self, totalTicks, positionTicks):
-		if not totalTicks:
-			return ""
-		remainingSecs = (totalTicks - positionTicks) / 10_000_000
-		end_time = datetime.now() + timedelta(seconds=remainingSecs)
-		return _("Ends at") + " " + end_time.strftime("%H:%M")
 
 	def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0xadacaa, backColor=0x02111111, textColor=0xffffff):
 		if not spacing:
@@ -197,14 +174,14 @@ class EmbyInfoLine(GUIComponent):
 		type = item.get("Type", None)
 
 		premiereDate_str = item.get("PremiereDate", None)
-		premiereDate = premiereDate_str and self.embyDateToString(premiereDate_str, type)
+		premiereDate = premiereDate_str and embyDateToString(premiereDate_str, type)
 		user_rating = int(item.get("CommunityRating", "0"))
 		critics_rating = int(item.get("CriticRating", "0"))
 		mpaa = item.get("OfficialRating", None)
 		runtime_ticks = int(item.get("RunTimeTicks", "0"))
-		runtime = runtime_ticks and self.convert_ticks_to_time(runtime_ticks)
+		runtime = runtime_ticks and convert_ticks_to_time(runtime_ticks)
 		position_ticks = int(item.get("UserData", {}).get("PlaybackPositionTicks", "0"))
-		ends_at = self.embyEndsAtToString(runtime_ticks, position_ticks)
+		ends_at = embyEndsAtToString(runtime_ticks, position_ticks)
 		v_width = int(item.get("Width", "0"))
 		v_height = int(item.get("Height", "0"))
 		resString = self.constructResolutionLabel(v_width, v_height)

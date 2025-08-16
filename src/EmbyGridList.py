@@ -1,12 +1,15 @@
 from twisted.internet import threads
 
-from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP
+from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP, RT_ELLIPSIS
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
+from Tools.Hex2strColor import Hex2strColor
+from Tools.LoadPixmap import LoadPixmap
 
 from .EmbyRestClient import EmbyApiClient
+from .HelperFunctions import embyDateToString, plugin_dir
 from . import _, PluginLanguageDomain
 
 
@@ -19,6 +22,7 @@ class EmbyGridList(GUIComponent):
 		self.itemsForThumbs = []
 		self.thumbs = {}
 		self.onSelectionChanged = []
+		self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
 		self.selectionEnabled = True
 		self.font = gFont("Regular", 18)
 		self.selectedItem = None
@@ -29,7 +33,7 @@ class EmbyGridList(GUIComponent):
 		self.iconWidth = 200
 		self.iconHeight = 260
 		self.itemWidth = self.iconWidth + self.spacing * 2
-		self.itemHeight = self.iconHeight + 72 + self.spacing * 2
+		self.itemHeight = self.iconHeight + 90 + self.spacing * 2
 		self.l.setItemHeight(self.itemHeight)
 		self.l.setItemWidth(self.itemWidth)
 		self.icon_type = "Primary"
@@ -88,7 +92,7 @@ class EmbyGridList(GUIComponent):
 		self.skinAttributes = attribs
 		self.l.setFont(0, self.font)
 		self.itemWidth = self.iconWidth + self.spacing * 2
-		self.itemHeight = self.iconHeight + 72 + self.spacing * 2
+		self.itemHeight = self.iconHeight + 90 + self.spacing * 2
 		self.l.setItemHeight(self.itemHeight)
 		self.l.setItemWidth(self.itemWidth)
 		self.instance.setOrientation(self.orientation)
@@ -132,6 +136,8 @@ class EmbyGridList(GUIComponent):
 	def updateThumbnail(self, item_id, item_index, item, icon_img, fromRecursion):
 		icon_pix = None
 
+		orig_id = item.get("Id")
+
 		if item_index not in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.append(item_index)
 
@@ -154,8 +160,8 @@ class EmbyGridList(GUIComponent):
 
 		if not hasattr(self, "data"):
 			return False
-		if item_index not in self.thumbs:
-			self.thumbs[item_index] = icon_pix or True
+		if orig_id not in self.thumbs:
+			self.thumbs[orig_id] = icon_pix or True
 
 		if item_index in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.remove(item_index)
@@ -168,9 +174,10 @@ class EmbyGridList(GUIComponent):
 		xPos = 0
 		yPos = 0
 		res = [None]
+		orig_id = item.get("Id")
 		selected = self.currentSelectedIndex == item_index
-		if item_index in self.thumbs:
-			item_icon = self.thumbs[item_index]
+		if orig_id in self.thumbs:
+			item_icon = self.thumbs[orig_id]
 		if selected and self.selectionEnabled:
 			res.append(MultiContentEntryRectangle(
 					pos=(self.spacing - 3, self.spacing - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
@@ -207,11 +214,42 @@ class EmbyGridList(GUIComponent):
 				percent=played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=cornerEdges
 			))
 
+		premiereDate_str = item.get("PremiereDate", None)
+		premiereDate = premiereDate_str and embyDateToString(premiereDate_str, "Movie")
+		# color = Hex2strColor(0x003EA07E)
+		text = f"{item_name}"
+		text1 = ""
+		if premiereDate:
+			text1 = f"({premiereDate})"
+
 		res.append(MultiContentEntryText(
-							pos=(self.spacing, self.iconHeight + 32), size=(self.iconWidth, 60),
-							font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_WRAP,
+							pos=(self.spacing, self.iconHeight + 32), size=(self.iconWidth, 25),
+							font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
 							cornerRadius=6,
-							text=item_name,
+							text=text,
 							color=0xffffff, color_sel=0xffffff))
+		if text1:
+			res.append(MultiContentEntryText(
+								pos=(self.spacing, self.iconHeight + 62), size=(self.iconWidth, 25),
+								font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
+								cornerRadius=6,
+								text=text1,
+								color=0xc2c2c2, color_sel=0xc2c2c2))
+
+		played = item.get("UserData", {}).get("Played", False)
+		if played:
+			res.append(MultiContentEntryRectangle(
+					pos=(self.spacing + self.iconWidth - 34, self.spacing),
+					size=(34, 34),
+					cornerRadius=6,
+					cornerEdges=2|4,
+					backgroundColor=0x32772b))
+			res.append(MultiContentEntryPixmapAlphaBlend(
+							pos=(self.spacing + self.iconWidth - 34, self.spacing),
+							size=(34, 34),
+							png=self.check24,
+							backcolor=None, backcolor_sel=None,
+							cornerRadius=6,
+							flags=BT_HALIGN_CENTER | BT_VALIGN_CENTER))
 
 		return res

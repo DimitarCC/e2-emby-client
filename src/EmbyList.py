@@ -1,12 +1,14 @@
-
 from twisted.internet import threads
-from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP
+from enigma import eListbox, eListboxPythonMultiContent, eRect, eLabel, BT_SCALE, BT_KEEP_ASPECT_RATIO, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
+from Components.Label import Label
+from Tools.LoadPixmap import LoadPixmap
 
 from .EmbyRestClient import EmbyApiClient
+from .HelperFunctions import embyDateToString, convert_ticks_to_time, find_index, plugin_dir
 from . import _, PluginLanguageDomain
 
 
@@ -19,9 +21,11 @@ class EmbyList(GUIComponent):
 		self.data = []
 		self.itemsForThumbs = []
 		self.thumbs = {}
+		self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
 		self.selectionEnabled = True
 		self.font = gFont("Regular", 18)
 		self.selectedIndex = 0
+		self.lastSelectedItemId = None
 		self.l = eListboxPythonMultiContent()  # noqa: E741
 		self.l.setBuildFunc(self.buildEntry)
 		self.spacing_sides = 15
@@ -50,9 +54,11 @@ class EmbyList(GUIComponent):
 	def preWidgetRemove(self, instance):
 		instance.selectionChanged.get().remove(self.selectionChanged)
 		self.interupt = True
+		self.textRenderer = None
 
 	def selectionChanged(self):
 		self.selectedIndex = self.l.getCurrentSelectionIndex()
+		self.lastSelectedItemId = self.selectedItem.get("Id")
 		for x in self.onSelectionChanged:
 			x(self, self.selectedItem and self.selectedItem.get("Id"))
 
@@ -90,20 +96,28 @@ class EmbyList(GUIComponent):
 		self.skinAttributes = attribs
 		self.l.setFont(0, self.font)
 		self.itemWidth = self.iconWidth + self.spacing_sides * 2
-		self.itemHeight = self.iconHeight + 72
+		
 		self.l.setItemHeight(self.itemHeight)
 		self.l.setItemWidth(self.itemWidth)
 		self.instance.setOrientation(self.orientation)
 		self.l.setOrientation(self.orientation)
-		return GUIComponent.applySkin(self, desktop, parent)
+		res = GUIComponent.applySkin(self, desktop, parent)
+		self.itemHeight = self.instance.size().height()
+		return res
 
 	def toggleSelection(self, enabled):
 		self.selectionEnabled = enabled
 		self.instance.setSelectionEnable(enabled)
 
 	def loadData(self, items):
+		new_index = -1
+		if self.lastSelectedItemId:
+			new_index = find_index(items, lambda x: x[1].get("Id") == self.lastSelectedItemId)
+
 		self.data = items
 		self.l.setList(items)
+		if new_index > -1:
+			self.instance.moveSelectionTo(new_index)
 
 	def runQueueProcess(self):
 		self.running = True
@@ -125,24 +139,33 @@ class EmbyList(GUIComponent):
 					self.icon_type = "Thumb"
 
 				threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img)
+			elif self.type == "episodes":
+				icon_img = item.get("ImageTags").get("Primary")
+				item_id = item.get("Id")
+				threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img)
+			elif self.type == "chapters":
+				item_id = item.get("Id").split("_")[0]
+				icon_img = item.get("ImageTag")
+				threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img)
 			else:
 				icon_img = item.get("PrimaryImageTag")
+				item_id = item.get("Id")
 				person_name = item.get("Name")
-				threads.deferToThread(self.updateCastThumbnail, person_name, item_index, icon_img)
+				threads.deferToThread(self.updateCastThumbnail, item_id, person_name, item_index, icon_img)
 
 		self.running = False
 
-	def updateCastThumbnail(self, person_name, item_index, icon_img):
+	def updateCastThumbnail(self, item_id, person_name, item_index, icon_img):
 		icon_pix = None
 
 		if item_index not in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.append(item_index)
 
-		icon_pix = EmbyApiClient.getPersonImage(person_name=person_name, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight)
+		icon_pix = EmbyApiClient.getPersonImage(person_name=person_name, logo_tag=icon_img, height=self.iconHeight, req_width=self.iconWidth, req_height=self.iconHeight)
 		if not hasattr(self, "data"):
 			return False
-		if item_index not in self.thumbs:
-			self.thumbs[item_index] = icon_pix or True
+		if item_id not in self.thumbs:
+			self.thumbs[item_id] = icon_pix or True
 
 		if item_index in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.remove(item_index)
@@ -153,12 +176,21 @@ class EmbyList(GUIComponent):
 
 	def updateThumbnail(self, item_id, item_index, item, icon_img):
 		icon_pix = None
+		orig_item_id = item.get("Id")
 
 		if item_index not in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.append(item_index)
 
-		icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type=self.icon_type)
-		if not icon_pix:
+		image_index = -1
+		req_width = -1
+		req_height = -1
+		if self.type == "chapters":
+			image_index = item.get("ChapterIndex", -1)
+			req_width = self.iconWidth
+			req_height = self.iconHeight
+
+		icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type=self.icon_type, image_index=image_index, req_width=req_width, req_height=req_height)
+		if not icon_pix and self.type != "chapters":
 			backdrop_image_tags = item.get("BackdropImageTags")
 			parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
 			if parent_backdrop_image_tags:
@@ -171,13 +203,12 @@ class EmbyList(GUIComponent):
 			parent_b_item_id = item.get("ParentBackdropItemId")
 			if parent_b_item_id:
 				item_id = parent_b_item_id
-			if not icon_pix:
-				icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
 
-		if not hasattr(self, "data"):
-			return False
-		if item_index not in self.thumbs:
-			self.thumbs[item_index] = icon_pix or True
+			icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
+
+
+		if orig_item_id not in self.thumbs:
+			self.thumbs[orig_item_id] = icon_pix or True
 
 		if item_index in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.remove(item_index)
@@ -191,8 +222,9 @@ class EmbyList(GUIComponent):
 		yPos = 0
 		res = [None]
 		selected = self.selectedIndex == item_index
-		if item_index in self.thumbs:
-			item_icon = self.thumbs[item_index]
+		item_id = item.get("Id")
+		if item_id in self.thumbs:
+			item_icon = self.thumbs[item_id]
 		if selected and self.selectionEnabled:
 			res.append(MultiContentEntryRectangle(
 					pos=(self.spacing_sides - 3, self.spacing_sides - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
@@ -200,13 +232,16 @@ class EmbyList(GUIComponent):
 					backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
 		is_icon = not isinstance(item_icon, bool)
 		if item_icon and is_icon:
+			flags = 0
+			if self.type == "cast":
+				flags = BT_HALIGN_CENTER | BT_VALIGN_CENTER
 			res.append(MultiContentEntryPixmapAlphaBlend(
 							pos=(self.spacing_sides, self.spacing_sides),
 							size=(self.iconWidth, self.iconHeight),
 							png=item_icon,
 							backcolor=None, backcolor_sel=None,
 							cornerRadius=6,
-							flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
+							flags=flags))
 		else:
 			found = any(item_index in tup for tup in self.itemsForThumbs)
 			if is_icon and not found:
@@ -217,7 +252,7 @@ class EmbyList(GUIComponent):
 					pos=(self.spacing_sides, self.spacing_sides),
 					size=(self.iconWidth, self.iconHeight),
 					cornerRadius=6,
-					backgroundColor=0x22222222))
+					backgroundColor=0x00222222))
 
 		played_perc = int(played_perc)
 		cornerEdges = 12
@@ -229,11 +264,46 @@ class EmbyList(GUIComponent):
 				percent=played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=cornerEdges
 			))
 
-		res.append(MultiContentEntryText(
-							pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 70),
-							font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_WRAP,
+		if self.type == "episodes":
+			res.append(MultiContentEntryText(
+							pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 25),
+							font=0, flags=RT_HALIGN_LEFT | RT_BLEND,
 							cornerRadius=6,
 							text=item_name,
 							color=0xffffff, color_sel=0xffffff))
+			date_str = item.get("PremiereDate")
+			desc = item.get("Overview", "")
+			if date_str:
+				desc = f"{embyDateToString(date_str, "Episode")}  {convert_ticks_to_time(item.get("RunTimeTicks"))}\n{desc}" 
+			y = self.iconHeight + 32 + 25 + 5
+			res.append(MultiContentEntryText(
+							pos=(self.spacing_sides, y), size=(self.iconWidth, self.itemHeight - y),
+							font=0, flags=RT_HALIGN_LEFT | RT_BLEND | RT_WRAP,
+							cornerRadius=6,
+							text=desc,
+							color=0x666666, color_sel=0x666666))
+		else:
+			res.append(MultiContentEntryText(
+								pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 70),
+								font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_WRAP,
+								cornerRadius=6,
+								text=item_name,
+								color=0xffffff, color_sel=0xffffff))
+
+		played = item.get("UserData", {}).get("Played", False)
+		if played:
+			res.append(MultiContentEntryRectangle(
+					pos=(self.spacing_sides + self.iconWidth - 34, self.spacing_sides),
+					size=(34, 34),
+					cornerRadius=6,
+					cornerEdges=2|4,
+					backgroundColor=0x32772b))
+			res.append(MultiContentEntryPixmapAlphaBlend(
+							pos=(self.spacing_sides + self.iconWidth - 34, self.spacing_sides),
+							size=(34, 34),
+							png=self.check24,
+							backcolor=None, backcolor_sel=None,
+							cornerRadius=6,
+							flags=BT_HALIGN_CENTER | BT_VALIGN_CENTER))
 
 		return res

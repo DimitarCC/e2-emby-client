@@ -8,13 +8,14 @@ from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 from urllib.error import URLError
 
-from PIL import Image
-
 from Components.config import config
 from Components.SystemInfo import BoxInfo
 from Tools.LoadPixmap import LoadPixmap
 
 from .Variables import REQUEST_USER_AGENT
+from .HelperFunctions import crop_image_from_bytes, resize_and_center_image
+
+from PIL import Image
 
 
 class EmbyRestClient():
@@ -24,6 +25,7 @@ class EmbyRestClient():
 		self.user_id = None
 		self.device_name = device_name
 		self.device_id = device_id
+		self.userSettings = {}
 
 	def constructHeaders(self):
 		headers = {'User-Agent': REQUEST_USER_AGENT}
@@ -56,6 +58,15 @@ class EmbyRestClient():
 				auth_json_obj = loads(auth_response)
 				self.user_id = auth_json_obj.get('User', {}).get('Id', None)
 				self.access_token = auth_json_obj.get('AccessToken', None)
+				req = self.constructRequest(f"{self.server_root}/emby/UserSettings/{self.user_id}")
+				try:
+					response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
+					status_code = response.getcode()
+					if status_code == 200 or status_code == 204:
+						response_str = response.read().decode('utf-8')
+						self.userSettings = loads(response_str)
+				except:
+					pass
 		except:
 			pass
 
@@ -91,7 +102,7 @@ class EmbyRestClient():
 
 	def getSingleItem(self, item_id):
 		item = {}
-		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}?Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated,Chapters,Taglines,People")
+		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}")
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
@@ -104,6 +115,105 @@ class EmbyRestClient():
 			except:
 				break
 		return item
+	
+	def getEpisodesForSeries(self, item_id):
+		items = []
+		print("SERIES ID: " + str(item_id))
+		req = self.constructRequest(f"{self.server_root}/emby/Shows/{item_id}/Episodes?UserId={self.user_id}&Fields=Overview")
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
+				response_obj = response.read()
+				json_obj = loads(response_obj)
+				items.extend(json_obj.get("Items", []))
+				break
+			except URLError as e:
+				if not isinstance(e.reason, socket_timeout):
+					break  # Non-timeout error: Don't retry
+			except:
+				break
+		return items
+	
+	def getSeasonsForSeries(self, item_id):
+		items = []
+		req = self.constructRequest(f"{self.server_root}/emby/Shows/{item_id}/Seasons?UserId={self.user_id}")
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
+				response_obj = response.read()
+				json_obj = loads(response_obj)
+				items.extend(json_obj.get("Items", []))
+				break
+			except URLError as e:
+				if not isinstance(e.reason, socket_timeout):
+					break  # Non-timeout error: Don't retry
+			except:
+				break
+		return items
+
+	def getBoxsetsForItem(self, item_id, limit=40):
+		items = []
+		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?IncludeItemTypes=Playlist%2CBoxSet&Recursive=true&SortBy=SortName&ListItemIds={item_id}&Limit={limit}")
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
+				response_obj = response.read()
+				items.extend(loads(response_obj))
+				break
+			except URLError as e:
+				if not isinstance(e.reason, socket_timeout):
+					break  # Non-timeout error: Don't retry
+			except:
+				break
+		return items
+	
+	def getSimilarMoviesForItem(self, item_id, limit=40):
+		items = []
+		req = self.constructRequest(f"{self.server_root}/emby/Movies/{item_id}/Similar?UserId={self.user_id}&Limit={limit}")
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
+				response_obj = response.read()
+				items.extend(loads(response_obj))
+				break
+			except URLError as e:
+				if not isinstance(e.reason, socket_timeout):
+					break  # Non-timeout error: Don't retry
+			except:
+				break
+		return items
+	
+	def getSimilarSeriesForItem(self, item_id, limit=40):
+		items = []
+		req = self.constructRequest(f"{self.server_root}/emby/Shows/{item_id}/Similar?UserId={self.user_id}&Limit={limit}")
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
+				response_obj = response.read()
+				items.extend(loads(response_obj))
+				break
+			except URLError as e:
+				if not isinstance(e.reason, socket_timeout):
+					break  # Non-timeout error: Don't retry
+			except:
+				break
+		return items
+	
+	def getExtrasForItem(self, item_id, limit=40):
+		items = []
+		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}/SpecialFeatures")
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
+				response_obj = response.read()
+				items.extend(loads(response_obj))
+				break
+			except URLError as e:
+				if not isinstance(e.reason, socket_timeout):
+					break  # Non-timeout error: Don't retry
+			except:
+				break
+		return items
 
 	def getBoxsetsFromLibrary(self, library_id):
 		items = []
@@ -124,7 +234,7 @@ class EmbyRestClient():
 
 	def getBoxsetsChildren(self, boxset_id):
 		items = []
-		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&ParentId={boxset_id}")
+		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes=Movie&ParentId={boxset_id}")
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = urlopen(req, timeout=config.plugins.e2embyclient.regular_con_timeout.value)  # set a timeout to prevent blocking
@@ -139,7 +249,8 @@ class EmbyRestClient():
 				break
 		return items
 
-	def getItemsFromLibrary(self, library_id, shouldShowBoxsets=True):
+	def getItemsFromLibrary(self, library_id):
+		shouldShowBoxsets = self.userSettings.get(f"{library_id}-1-videos-groupItemsIntoCollections", "false") == "true"
 		items = []
 		req = self.constructRequest(f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series&ParentId={library_id}&GroupItemsIntoCollections={'true' if shouldShowBoxsets else 'false'}&Fields=SortName,PremiereDate,DateCreated")
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
@@ -167,9 +278,10 @@ class EmbyRestClient():
 		items = self.getItems("", "DateCreated", includeItems, f"&ParentId={parent_id}", limit)
 		return items and choice(items) or {}
 
-	def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None):
+	def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1):
 		timeout = config.plugins.e2embyclient.image_con_timeout.value
 		addon = ""
+		orig_image_type = image_type
 		if width > 0:
 			addon += f"&Width={width}"
 		if height > 0:
@@ -184,15 +296,26 @@ class EmbyRestClient():
 				image_type = f"{image_type}/{image_index}"
 			else:
 				image_type = f"{image_type}/0"
+		if image_type == "Chapter":
+			if image_index > -1:
+				image_type = f"{image_type}/{image_index}"
+			else:
+				image_type = f"{image_type}/0"
 
 		logo_url = f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(logo_url, timeout=timeout)
 				if response.status_code != 404:
-					im_tmp_path = "/tmp/emby/%s.%s" % (logo_tag, format)
-					with open(im_tmp_path, "wb") as f:
-						f.write(response.content)
+					filename = logo_tag
+					if orig_image_type == "Chapter":
+						filename = f"{filename}_{image_index}"
+					im_tmp_path = "/tmp/emby/%s.%s" % (filename, format)
+					if req_width > 0 and req_height > 0:
+						resize_and_center_image(response.content, (req_width, req_height), im_tmp_path)
+					else:
+						with open(im_tmp_path, "wb") as f:
+							f.write(response.content)
 
 					if alpha_channel:
 						im = Image.open(im_tmp_path).convert("RGBA")
@@ -214,11 +337,11 @@ class EmbyRestClient():
 					return pix
 			except ReadTimeout:
 				pass
-			except:
-				pass
+			except Exception as ex:
+				print("EXEPTION: " + str(ex))
 		return None
 
-	def getPersonImage(self, person_name, logo_tag, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1):
+	def getPersonImage(self, person_name, logo_tag, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, req_width=-1, req_height=-1):
 		image_type = "Primary"
 		addon = ""
 		if width > 0:
@@ -241,8 +364,11 @@ class EmbyRestClient():
 				response = get(logo_url, timeout=config.plugins.e2embyclient.image_con_timeout.value)
 				if response.status_code != 404:
 					im_tmp_path = "/tmp/emby/%s.%s" % (logo_tag, format)
-					with open(im_tmp_path, "wb") as f:
-						f.write(response.content)
+					if req_width > 0 and req_height > 0:
+						crop_image_from_bytes(response.content, req_width, req_height, im_tmp_path)
+					else:
+						with open(im_tmp_path, "wb") as f:
+							f.write(response.content)
 					pix = LoadPixmap(im_tmp_path)
 					try:
 						remove(im_tmp_path)
@@ -282,6 +408,7 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+
 	def sendPlayingProgress(self, item, position, play_session_id):
 		headers = self.constructHeaders()
 		item_id = item.get("Id")
@@ -296,6 +423,61 @@ class EmbyRestClient():
 			except:
 				break
 
+	def sendWatched(self, item):
+		item_id = item.get("Id")
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayedItems/{item_id}"
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				post(url, headers=headers, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
+				return True, True
+			except ReadTimeout:
+				pass
+			except:
+				break
+		return False, False
 
-# here enter the server URL, Device name and device id
+	def sendUnWatched(self, item):
+		item_id = item.get("Id")
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayedItems/{item_id}"
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				delete(url, headers=headers, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
+				return True, False
+			except ReadTimeout:
+				pass
+			except:
+				break
+		return False, False
+
+	def sendFavorite(self, item):
+		item_id = item.get("Id")
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/FavoriteItems/{item_id}"
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				post(url, headers=headers, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
+				return True, True
+			except ReadTimeout:
+				pass
+			except:
+				break
+		return False, False
+
+	def sendNotFavorite(self, item):
+		item_id = item.get("Id")
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/FavoriteItems/{item_id}"
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				delete(url, headers=headers, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
+				return True, False
+			except ReadTimeout:
+				pass
+			except:
+				break
+		return False, False
+
+
 EmbyApiClient = EmbyRestClient(BoxInfo.getItem("displaymodel"), BoxInfo.getItem("model"))
