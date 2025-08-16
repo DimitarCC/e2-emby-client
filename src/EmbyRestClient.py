@@ -380,7 +380,7 @@ class EmbyRestClient():
 			except:
 				pass
 		return None
-	
+
 	def sendStartPlaying(self, item, play_session_id):
 		item_id = item.get("Id")
 		media_sources = item.get("MediaSources", [])
