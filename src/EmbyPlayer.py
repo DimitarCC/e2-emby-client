@@ -231,14 +231,14 @@ class EmbyPlayer(MoviePlayer):
 		self.enableSubtitle(None)
 		subs_uri = subtitle[SUBTITLE_TUPLE_SIZE + 1]
 		threads.deferToThread(self.downloadAndRunSubs, subs_uri, subtitle)
-		
+
 	def downloadAndRunSubs(self, subs_uri, subtitle):
 		result = self.loadAndParseSubs(subs_uri)
 		if result:
 			self.checkSubs.start(100)
 			self.selected_subtitle = subtitle
 		else:
-			pass # TODO: add message, log, etc...
+			pass  # TODO: add message, log, etc...
 
 	def subtitleListIject(self, subtitlesList):
 		item_id = int(self.item.get("Id", "0"))
