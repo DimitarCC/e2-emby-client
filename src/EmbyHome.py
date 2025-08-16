@@ -50,7 +50,7 @@ class E2EmbyHome(Screen):
                 <widget name="list_recent_movies" position="35,1150" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
                 <widget name="list_recent_tvshows_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
                 <widget name="list_recent_tvshows" position="35,1600" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
-            </screen>"""] 
+            </screen>"""]
 
     def __init__(self, session):
         Screen.__init__(self, session)
