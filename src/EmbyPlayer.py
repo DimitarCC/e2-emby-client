@@ -94,10 +94,15 @@ class EmbyPlayer(MoviePlayer):
 			iPlayableService.evEnd: self.__evServiceEnd, })
 
 	def loadAndParseSubs(self, stream_url):
-		response = get(stream_url, timeout=5)
-		if response.status_code != 404:
-			subs_file = response.content.decode("utf-8")
-			self.currentSubsList = TolerantDict(self.subs_parser.parse(subs_file))
+		try:
+			response = get(stream_url, timeout=5)
+			if response.status_code != 404:
+				subs_file = response.content.decode("utf-8")
+				self.currentSubsList = TolerantDict(self.subs_parser.parse(subs_file))
+				return True
+		except:
+			pass
+		return False
 
 	def checkPTSAndShowSubBase(self):
 		seek = self.getSeek()
@@ -225,9 +230,15 @@ class EmbyPlayer(MoviePlayer):
 
 		self.enableSubtitle(None)
 		subs_uri = subtitle[SUBTITLE_TUPLE_SIZE + 1]
-		self.loadAndParseSubs(subs_uri)
-		self.checkSubs.start(100)
-		self.selected_subtitle = subtitle
+		threads.deferToThread(self.downloadAndRunSubs, subs_uri, subtitle)
+		
+	def downloadAndRunSubs(self, subs_uri, subtitle):
+		result = self.loadAndParseSubs(subs_uri)
+		if result:
+			self.checkSubs.start(100)
+			self.selected_subtitle = subtitle
+		else:
+			pass # TODO: add message, log, etc...
 
 	def subtitleListIject(self, subtitlesList):
 		item_id = int(self.item.get("Id", "0"))
