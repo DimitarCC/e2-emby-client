@@ -381,48 +381,6 @@ class EmbyRestClient():
 				pass
 		return None
 
-	def sendStartPlaying(self, item, play_session_id):
-		item_id = item.get("Id")
-		media_sources = item.get("MediaSources", [])
-		media_source_id = media_sources[0].get("Id")
-		headers = self.constructHeaders()
-		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayingItems/{item_id}?MediaSourceId={media_source_id}&PlaySessionId={play_session_id}"
-		for attempt in range(config.plugins.e2embyclient.conretries.value):
-			try:
-				response = post(url, headers=headers, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
-			except ReadTimeout:
-				pass
-			except Exception as ex:
-				break
-
-	def sendStopPlaying(self, item, play_session_id):
-		item_id = item.get("Id")
-		media_sources = item.get("MediaSources", [])
-		media_source_id = media_sources[0].get("Id")
-		headers = self.constructHeaders()
-		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayingItems/{item_id}?MediaSourceId={media_source_id}&PlaySessionId={play_session_id}"
-		for attempt in range(config.plugins.e2embyclient.conretries.value):
-			try:
-				delete(url, headers=headers, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
-			except ReadTimeout:
-				pass
-			except:
-				break
-
-	def sendPlayingProgress(self, item, position, play_session_id):
-		headers = self.constructHeaders()
-		item_id = item.get("Id")
-		media_sources = item.get("MediaSources", [])
-		media_source_id = media_sources[0].get("Id")
-		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayingItems/{item_id}/Progress?MediaSourceId={media_source_id}&PositionTicks={int(position)}&PlaySessionId={play_session_id}"
-		for attempt in range(config.plugins.e2embyclient.conretries.value):
-			try:
-				response = post(url, headers=headers, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
-			except ReadTimeout:
-				pass
-			except:
-				break
-
 	def sendWatched(self, item):
 		item_id = item.get("Id")
 		headers = self.constructHeaders()
@@ -478,6 +436,69 @@ class EmbyRestClient():
 			except:
 				break
 		return False, False
+
+	def updateTimeProgress(self, playSessionId, item_id, media_source_id, aIndex, sIndex, pos):
+		self.updateProgress(playSessionId, item_id, media_source_id, "TimeUpdate", aIndex, sIndex, pos)
+
+	def updateProgress(self, playSessionId, item_id, media_source_id, event, aIndex, sIndex, pos):
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Sessions/Playing/Progress?reqformat=json"
+		post_data = {}
+		post_data["ItemId"] = item_id
+		post_data["MediaSourceId"] = media_source_id
+		post_data["PlaySessionId"] = playSessionId
+		post_data["EventName"] = event
+		post_data["AudioStreamIndex"] = aIndex
+		post_data["IsPaused"] = event == "Pause"
+		if sIndex > -1:
+			post_data["SubtitleStreamIndex"] = sIndex
+		post_data["PositionTicks"] = pos
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				post(url, headers=headers, json=post_data, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
+			except ReadTimeout:
+				pass
+			except:
+				break
+
+	def setPlaySessionParameters(self, playSessionId, item_id, media_source_id, defAudioIndex, defSubtitleIndex, playPos=-1, stopped=False):
+		headers = self.constructHeaders()
+		stoppedAddon = ""
+		if stopped:
+			stoppedAddon = "/Stopped"
+		url = f"{self.server_root}/emby/Sessions/Playing{stoppedAddon}?reqformat=json"
+		post_data = {}
+		post_data["ItemId"] = item_id
+		post_data["MediaSourceId"] = media_source_id
+		post_data["PlaySessionId"] = playSessionId
+		post_data["AudioStreamIndex"] = defAudioIndex + 1
+		if playPos > -1:
+			post_data["PositionTicks"] = playPos
+		if defSubtitleIndex > -1:
+			post_data["SubtitleStreamIndex"] = defSubtitleIndex
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				post(url, headers=headers, json=post_data, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
+			except ReadTimeout:
+				pass
+			except:
+				break
+
+	def getPlaySession(self, item_id, media_source_id, defAudioIndex, defSubtitleIndex):
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Items/{item_id}/PlaybackInfo?UserId={self.user_id}&IsPlayback=true&AutoOpenLiveStream=true&AudioStreamIndex={defAudioIndex}&SubtitleStreamIndex={defSubtitleIndex}&MediaSourceId={media_source_id}"
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = post(url, headers=headers, timeout=config.plugins.e2embyclient.regular_con_timeout.value)
+				json = loads(response.content)
+				playSessionId = json.get("PlaySessionId")
+				print(playSessionId)
+				return playSessionId
+			except ReadTimeout:
+				pass
+			except:
+				break
+		return ""
 
 
 EmbyApiClient = EmbyRestClient(BoxInfo.getItem("displaymodel"), BoxInfo.getItem("model"))

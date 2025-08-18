@@ -17,6 +17,7 @@ from Tools.Directories import resolveFilename, SCOPE_GUISKIN
 
 from .EmbyPlayer import EmbyPlayer
 from .EmbyRestClient import EmbyApiClient
+from .HelperFunctions import convert_ticks_to_time
 from . import _, PluginLanguageDomain
 
 
@@ -49,6 +50,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		self.unWatchedIcon = LoadPixmap("%s/unwatched.png" % plugin_dir)
 		self.favoriteIcon = LoadPixmap("%s/favorite.png" % plugin_dir)
 		self.notFavoriteIcon = LoadPixmap("%s/notfavorite.png" % plugin_dir)
+		self.tvIcon = LoadPixmap("%s/tv.png" % plugin_dir)
 		self.textRenderer = Label("")
 		self.font = gFont("Regular", 22)
 		self.fontAdditional = gFont("Regular", 22)
@@ -114,15 +116,6 @@ class EmbyItemFunctionButtons(GUIComponent):
 	def isAtEnd(self):
 		return self.selectedIndex == len(self.buttons) - 1
 
-	def convert_ticks_to_time(self, ticks):
-		seconds = ticks / 10_000_000
-		minutes = int(seconds // 60)
-		hours = int(minutes // 60)
-		minutes = minutes % 60
-		if hours == 0:
-			return f"{minutes}min"
-		return f"{hours}h {minutes}min"
-
 	def getSelectedButton(self):
 		return self.buttons[self.selectedIndex]
 
@@ -154,6 +147,14 @@ class EmbyItemFunctionButtons(GUIComponent):
 		else:
 			threads.deferToThread(EmbyApiClient.sendFavorite, self.item).addCallback(self.setFavoriteCallback)
 
+	def gotoSeries(self):
+		series_id = self.item.get("SeriesId")
+		threads.deferToThread(EmbyApiClient.getSingleItem, series_id).addCallback(self.seriesItemRetrieveCallback)
+
+	def seriesItemRetrieveCallback(self, result):
+		from .EmbySeriesItemView import EmbySeriesItemView
+		self.screen.session.open(EmbySeriesItemView, result)
+
 	def setWatchedCallback(self, result):
 		res, val = result
 		if res:
@@ -176,7 +177,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		played = item.get("UserData", {}).get("Played", False)
 		isFavorite = item.get("UserData", {}).get("IsFavorite", False)
 		if position_ticks:
-			self.buttons.append((len(self.buttons), self.resumeIcon, _("Resume (") + self.convert_ticks_to_time(position_ticks) + ")", self.resumePlay))
+			self.buttons.append((len(self.buttons), self.resumeIcon, _("Resume (") + convert_ticks_to_time(position_ticks, is_chapters=True) + ")", self.resumePlay))
 			self.buttons.append((len(self.buttons), self.playStartIcon, _("Play from start"), self.playFromBeguinning))
 		else:
 			self.buttons.append((len(self.buttons), self.playIcon, _("Play"), self.playFromBeguinning))
@@ -187,6 +188,8 @@ class EmbyItemFunctionButtons(GUIComponent):
 		self.buttons.append((len(self.buttons), self.watchedIcon if played else self.unWatchedIcon, _("Watched"), self.toggleWatched))
 
 		self.buttons.append((len(self.buttons), self.favoriteIcon if isFavorite else self.notFavoriteIcon, _("Favorite"), self.toggleFavorite))
+		if type == "Episode":
+			self.buttons.append((len(self.buttons), self.tvIcon, _("Go to series"), self.gotoSeries))
 		self.updateInfo()
 
 	def updateInfo(self):
