@@ -176,7 +176,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def updateEmbyProgress(self):
 		threads.deferToThread(self.updateEmbyProgressInternal, "TimeUpdate")
-	
+
 	def updateEmbyProgressInternal(self, event, pos=-1):
 		if pos == -1:
 			pos = self.getPosition()
@@ -274,7 +274,6 @@ class EmbyPlayer(MoviePlayer):
 			else:
 				subtitlesList.append((2, i, 4, index, stream.get("Language"), "", self.runSubtitles, subs_uri))
 			i += 1
-
 
 	def getSelectedAudioSubStreamFromEmby(self):
 		service = self.session.nav.getCurrentService()
@@ -411,7 +410,7 @@ class EmbyPlayer(MoviePlayer):
 			return
 		if not playing:
 			return
-		
+
 		self.clearHooks()
 		self.handleLeave("quit")
 
