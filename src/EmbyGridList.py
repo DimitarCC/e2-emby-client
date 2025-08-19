@@ -67,7 +67,7 @@ class EmbyGridList(GUIComponent):
 	def preWidgetRemove(self, instance):
 		instance.selectionChanged.get().remove(self.selectionChanged)
 		self.interupt = True
-	
+
 	def getIsAtFirstRow(self):
 		size = self.instance.size()
 		width = size.width()

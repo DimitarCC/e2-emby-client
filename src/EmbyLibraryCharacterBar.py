@@ -3,6 +3,7 @@ from skin import parseColor, parseFont
 from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryText, MultiContentEntryRectangle
 
+
 class EmbyLibraryCharacterBar(GUIComponent):
 	def __init__(self):
 		GUIComponent.__init__(self)
@@ -37,7 +38,7 @@ class EmbyLibraryCharacterBar(GUIComponent):
 
 	def selectionChanged(self):
 		self.selectedIndex = self.l.getCurrentSelectionIndex()
-	
+
 	def getCurrentItem(self):
 		cur = self.l.getCurrentSelection()
 		return cur and cur[1] or {}

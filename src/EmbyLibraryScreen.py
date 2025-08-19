@@ -26,6 +26,8 @@ from PIL import Image
 
 MODE_RECOMMENDATIONS = 1
 MODE_LIST = 2
+
+
 class E2EmbyLibrary(Screen):
 	skin = ["""<screen name="E2EmbyLibrary" position="fill">
 					<widget name="header" position="center,30" size="700,50" font="Bold;32" transparent="1"/>
@@ -182,8 +184,6 @@ class E2EmbyLibrary(Screen):
 	def up(self):
 		if self.selected_widget == "header":
 			return
-
-		
 
 		if (self.selected_widget == "list" and self["list"].getIsAtFirstRow()) or self.selected_widget == "list_watching":
 			self[self.selected_widget].toggleSelection(False)

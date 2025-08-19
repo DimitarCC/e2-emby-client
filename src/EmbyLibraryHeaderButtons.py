@@ -120,7 +120,7 @@ class EmbyLibraryHeaderButtons(GUIComponent):
 		else:
 			self.buttons.append((len(self.buttons), _("Recommendations"), "recommend"))
 			self.buttons.append((len(self.buttons), _("Series"), "list"))
-		
+
 		self.updateInfo()
 
 	def updateInfo(self):

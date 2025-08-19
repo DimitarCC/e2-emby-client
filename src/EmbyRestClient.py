@@ -38,13 +38,13 @@ class EmbyRestClient():
 		self.server_root = f"{server_url}:{server_port}"
 		if self.access_token:
 			return
-		
+
 		headers = self.constructHeaders()
 		payload = {
 			'Username': username,
 			'Pw': password
 		}
-		
+
 		url = f"{self.server_root}/emby/Users/AuthenticateByName"
 		try:
 			response = post(url, headers=headers, data=payload, timeout=10)  # set a timeout to prevent blocking
