@@ -8,7 +8,8 @@ from Components.Label import Label
 from Tools.LoadPixmap import LoadPixmap
 
 from .EmbyRestClient import EmbyApiClient
-from .HelperFunctions import embyDateToString, convert_ticks_to_time, find_index, plugin_dir
+from .HelperFunctions import embyDateToString, convert_ticks_to_time, find_index
+from .Variables import plugin_dir
 from . import _, PluginLanguageDomain
 
 
@@ -189,7 +190,7 @@ class EmbyList(GUIComponent):
 			req_width = self.iconWidth
 			req_height = self.iconHeight
 
-		icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type=self.icon_type, image_index=image_index, req_width=req_width, req_height=req_height)
+		icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type=self.icon_type, image_index=image_index, req_width=req_width, req_height=req_height, orig_item_id=orig_item_id)
 		if not icon_pix and self.type != "chapters":
 			backdrop_image_tags = item.get("BackdropImageTags")
 			parent_backdrop_image_tags = item.get("ParentBackdropImageTags")

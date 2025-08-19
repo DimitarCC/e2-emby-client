@@ -3,8 +3,12 @@
 		<item level="0" text="Timeouts"></item>
 		<item level="0" text="---"></item>
 		<item level="0" text="Connection reties count" description="Specify the connection retries count.">config.plugins.e2embyclient.conretries</item>
-		<item level="0" text="General connection timeout" description="Specify the timeout for general connections.">config.plugins.e2embyclient.regular_con_timeout</item>
-		<item level="0" text="Image retrieve connection timeout" description="Specify the timeout for connections that retrieve images.">config.plugins.e2embyclient.image_con_timeout</item>
+		<item level="0" text="Connection timeout" description="Specify the timeout for connect.">config.plugins.e2embyclient.con_timeout</item>
+		<item level="0" text="Connection read timeout" description="Specify the timeout for connections read operations.">config.plugins.e2embyclient.read_con_timeout</item>
+		<item level="0" text="---"></item>
+		<item level="0" text="UI Settings"></item>
+		<item level="0" text="---"></item>
+		<item level="0" text="UI scroll delay" description="Specify the delay between selection changed events.">config.plugins.e2embyclient.changedelay</item>
 		<item level="0" text="---"></item>
 		<item level="0" text="Connections"></item>
 		<item level="0" text="---"></item>

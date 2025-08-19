@@ -2,8 +2,6 @@ from typing import Iterable, Callable, TypeVar
 from datetime import datetime, timedelta
 from PIL import Image
 from io import BytesIO
-import os
-from sys import modules
 
 
 def convert_ticks_to_time(ticks, is_chapters=False):
@@ -91,6 +89,3 @@ T = TypeVar('T')
 
 def find_index(items: Iterable[T], predicate: Callable[[T], bool], default: int = -1) -> int:
     return next((i for i, x in enumerate(items) if predicate(x)), default)
-
-
-plugin_dir = os.path.dirname(modules[__name__].__file__)

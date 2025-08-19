@@ -57,7 +57,7 @@ class EmbySeriesItemView(EmbyItemView):
         #         "ok": self.processItem,
         #         # "yellow": self.keyYellow,
         #         # "blue": self.clearData,
-        #     }, -1)  # noqa: E123
+        #     }, -1)
     def getEpisodes(self):
         episodes = EmbyApiClient.getEpisodesForSeries(self.series_id)
         list = []

@@ -41,7 +41,14 @@ class EmbyBoxSetItemView(EmbyItemViewBase):
         if self.selected_widget == "f_buttons":
             self["f_buttons"].getSelectedButton()[3]()
         else:
-            self.session.open(EmbyMovieItemView, self[self.selected_widget].selectedItem, self.backdrop)
+            self.session.openWithCallback(self.exitCallback, EmbyMovieItemView, self[self.selected_widget].selectedItem, self.backdrop)
+
+    def exitCallback(self, *result):
+        if not len(result):
+            return
+        result = result[0]
+        self.exitResult = result
+        threads.deferToThread(self.loadBoxSetDetails)
 
     def up(self):
         if self.selected_widget == "f_buttons":

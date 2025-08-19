@@ -10,6 +10,7 @@ from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
 from Components.Label import Label
 from Components.Pixmap import Pixmap
 from Components.Sources.StaticText import StaticText
+from Components.config import config
 from Screens.Screen import Screen, ScreenSummary
 
 from .EmbyList import EmbyList
@@ -128,7 +129,7 @@ class E2EmbyHome(Screen):
                 "ok": self.processItem,
                 # "yellow": self.keyYellow,
                 # "blue": self.clearData,
-            }, -1)  # noqa: E123
+            }, -1)
 
         self["nav_actions"] = ActionMap(["NavigationActions",],
             {
@@ -137,12 +138,12 @@ class E2EmbyHome(Screen):
                 "left": self.left,
                 "right": self.right,
                 # "blue": self.clearData,
-            }, -2)  # noqa: E123
+            }, -2)
 
         # self["infoActions"] = ActionMap(["E2EmbyActions",],
         # 	{
         # 		"info": self.info,
-        # 	}, -1)  # noqa: E123
+        # 	}, -1)
 
     def __onLayoutFinished(self):
         pass
@@ -181,7 +182,7 @@ class E2EmbyHome(Screen):
             self.clearInfoPane()
 
         self.sel_timer.stop()
-        self.sel_timer.start(150, True)
+        self.sel_timer.start(config.plugins.e2embyclient.changedelay.value, True)
 
     def left(self):
         self.last_widget_info_load_success = None
@@ -240,7 +241,7 @@ class E2EmbyHome(Screen):
         widget = self[self.selected_widget]
         selected_item = widget.getCurrentItem()
         if widget.isLibrary:
-            self.session.open(E2EmbyLibrary, int(selected_item.get("Id", "0")))
+            self.session.openWithCallback(self.exitCallback, E2EmbyLibrary, selected_item)
         else:
             item_type = selected_item.get("Type")
             embyScreenClass = EmbyMovieItemView
@@ -461,7 +462,7 @@ class E2EmbyHome(Screen):
         if type == "Resume":
             type_part = "/Resume"
             sortBy = "DatePlayed"
-            includeItems = "Episode,Movie"
+            includeItems = "Video&IncludeNextUp=false"
         elif type == "LastMovies":
             sortBy = "DateCreated"
             includeItems = "Movie&IsMovie=true&Recursive=true&Filters=IsNotFolder"

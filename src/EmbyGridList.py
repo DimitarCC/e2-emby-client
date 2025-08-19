@@ -9,7 +9,8 @@ from Tools.Hex2strColor import Hex2strColor
 from Tools.LoadPixmap import LoadPixmap
 
 from .EmbyRestClient import EmbyApiClient
-from .HelperFunctions import embyDateToString, plugin_dir
+from .HelperFunctions import embyDateToString
+from .Variables import plugin_dir
 from . import _, PluginLanguageDomain
 
 
@@ -59,12 +60,27 @@ class EmbyGridList(GUIComponent):
 	def postWidgetCreate(self, instance):
 		instance.setContent(self.l)
 		instance.selectionChanged.get().append(self.selectionChanged)
+		instance.allowNativeKeys(False)
 		self.l.setSelectionClip(eRect(0, 0, 0, 0), False)
 		threads.deferToThread(self.runQueueProcess)
 
 	def preWidgetRemove(self, instance):
 		instance.selectionChanged.get().remove(self.selectionChanged)
 		self.interupt = True
+	
+	def getIsAtFirstRow(self):
+		size = self.instance.size()
+		width = size.width()
+		cols = width // self.itemWidth
+		curRow = self.currentSelectedIndex // cols
+		return curRow == 0
+
+	def getIsAtFirstColumn(self):
+		size = self.instance.size()
+		width = size.width()
+		cols = width // self.itemWidth
+		curCol = self.currentSelectedIndex % cols
+		return curCol == 0
 
 	def selectionChanged(self):
 		self.selectedItem = self.l.getCurrentSelection()

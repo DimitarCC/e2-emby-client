@@ -18,12 +18,14 @@ def initConnection(index):
 def initConfig():
 	config.plugins.e2embyclient = ConfigSubsection()
 	config.plugins.e2embyclient.conretries = ConfigInteger(default=5, limits=(5, 20))
-	config.plugins.e2embyclient.regular_con_timeout = ConfigInteger(default=4, limits=(1, 20))
-	config.plugins.e2embyclient.image_con_timeout = ConfigInteger(default=1, limits=(1, 20))
+	config.plugins.e2embyclient.con_timeout = ConfigInteger(default=2, limits=(1, 20))
+	config.plugins.e2embyclient.read_con_timeout = ConfigInteger(default=10, limits=(2, 20))
 	config.plugins.e2embyclient.nothing = ConfigNothing()
 	config.plugins.e2embyclient.connectioncount = ConfigInteger(0)
 	config.plugins.e2embyclient.activeconnection = ConfigInteger(0)
 	config.plugins.e2embyclient.connections = ConfigSubList()
+	choicelist = [(i, "%d ms" % i) for i in range(50, 1500, 50)]  # noqa: F821
+	config.plugins.e2embyclient.changedelay = ConfigSelection(default=150, choices=choicelist)
 	for idx in range(config.plugins.e2embyclient.connectioncount.value):
 		initConnection(idx)
 

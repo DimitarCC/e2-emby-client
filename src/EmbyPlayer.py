@@ -86,7 +86,7 @@ class EmbyPlayer(MoviePlayer):
 			"6": self.numberSeek,
 			"7": self.numberSeek,
 			"9": self.numberSeek,
-		}, -10)  # noqa: E123
+		}, -10)
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
 			iPlayableService.evStart: self.__evServiceStart,
 			iPlayableService.evEnd: self.__evServiceEnd, })
@@ -247,7 +247,7 @@ class EmbyPlayer(MoviePlayer):
 	def downloadAndRunSubs(self, subs_uri, subtitle):
 		result = self.loadAndParseSubs(subs_uri)
 		if result:
-			self.checkSubs.start(100)
+			self.checkSubs.start(10)
 			self.selected_subtitle = subtitle
 			self.curSubsIndex = subtitle[3]
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
@@ -276,16 +276,12 @@ class EmbyPlayer(MoviePlayer):
 			i += 1
 
 	def getSelectedAudioSubStreamFromEmby(self):
-		service = self.session.nav.getCurrentService()
-		subtitle = service and service.subtitle()
-		subtitlelist = subtitle and subtitle.getSubtitleList()
 		item_id = int(self.item.get("Id", "0"))
 		media_sources = self.item.get("MediaSources")
 		media_source = media_sources[0]
 		media_streams = media_source.get("MediaStreams")
 		defaultAudioIndex = media_source.get("DefaultAudioStreamIndex", -1)
 		defaultSubtitlendex = media_source.get("DefaultSubtitleStreamIndex", -1)
-		i = len(subtitlelist) + 1
 		aIndex = 0
 		subtitle = None
 		for stream in media_streams:
@@ -302,10 +298,9 @@ class EmbyPlayer(MoviePlayer):
 				if defaultSubtitlendex == index:
 					subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{index}/stream.srt?api_key={EmbyApiClient.access_token}"
 					if SUBTITLE_TUPLE_SIZE == 5:
-						subtitle = (2, i, 4, index, stream.get("Language"), self.runSubtitles, subs_uri)
+						subtitle = (2, index - self.firstSubIndex + 1, 4, index, stream.get("Language"), self.runSubtitles, subs_uri)
 					else:
-						subtitle = (2, i, 4, index, stream.get("Language"), "", self.runSubtitles, subs_uri)
-				i += 1
+						subtitle = (2, index - self.firstSubIndex + 1, 4, index, stream.get("Language"), "", self.runSubtitles, subs_uri)
 		return aIndex, subtitle
 
 	def onAudioSubTrackChanged(self):

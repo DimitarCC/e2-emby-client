@@ -59,7 +59,7 @@ class EmbyItemViewBase(Screen):
                 "ok": self.processItem,
                 # "yellow": self.keyYellow,
                 # "blue": self.clearData,
-            }, -1)  # noqa: E123
+            }, -1)
         self["nav_actions"] = ActionMap(["NavigationActions",],
             {
                 "up": self.up,
@@ -67,7 +67,7 @@ class EmbyItemViewBase(Screen):
                 "left": self.left,
                 "right": self.right,
                 # "blue": self.clearData,
-            }, -2)  # noqa: E123
+            }, -2)
 
     def __closeScreen(self):
         self.close(self.exitResult)

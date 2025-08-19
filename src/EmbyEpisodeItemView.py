@@ -47,7 +47,7 @@ class EmbyEpisodeItemView(EmbyItemView):
         #         "ok": self.processItem,
         #         # "yellow": self.keyYellow,
         #         # "blue": self.clearData,
-        #     }, -1)  # noqa: E123
+        #     }, -1)
 
     def onPlayerClosedResult(self):
         self.exitResult = EXIT_RESULT_EPISODE
