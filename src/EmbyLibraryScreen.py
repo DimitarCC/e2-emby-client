@@ -126,6 +126,8 @@ class E2EmbyLibrary(Screen):
 		self.plot_width_orig = plot_size.width()
 
 	def onSelectedIndexChanged(self, widget=None, item_id=None):
+		if isinstance(self[self.selected_widget].selectedItem, tuple):
+			return
 		self.last_item_id = self[self.selected_widget].selectedItem.get("Id")
 
 		if not item_id:

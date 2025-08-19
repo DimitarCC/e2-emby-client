@@ -58,6 +58,8 @@ class EmbyList(GUIComponent):
 		self.textRenderer = None
 
 	def selectionChanged(self):
+		if isinstance(self.selectedItem, tuple):
+			return
 		self.selectedIndex = self.l.getCurrentSelectionIndex()
 		self.lastSelectedItemId = self.selectedItem.get("Id")
 		for x in self.onSelectionChanged:
