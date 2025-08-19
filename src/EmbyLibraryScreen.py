@@ -32,8 +32,7 @@ class E2EmbyLibrary(Screen):
 	skin = ["""<screen name="E2EmbyLibrary" position="fill">
 					<widget name="header" position="center,30" size="700,50" font="Bold;32" transparent="1"/>
 					<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
-					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" 
-		 					source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
+					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
 						<convert type="ClockToText">Default</convert>
 					</widget>
 					<widget name="charbar" position="40,130" size="40,e-130-70" scrollbarMode="showNever" iconHeight="40" font="Regular;20" transparent="1" />
