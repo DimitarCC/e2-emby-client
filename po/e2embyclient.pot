@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-14 19:04+0200\n"
+"POT-Creation-Date: 2025-08-19 14:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,28 +29,36 @@ msgstr ""
 msgid "A client for Emby server setup"
 msgstr ""
 
-#: ../src/EmbySetup.py:49 ../src/EmbySetup.py:64
+#: ../src/EmbySetup.py:51 ../src/EmbySetup.py:66
 msgid "Add"
 msgstr ""
 
-#: ../src/EmbySetup.py:53
+#: ../src/EmbySetup.py:55
 msgid "Add Connection"
 msgstr ""
 
-#: ../src/EmbyHome.py:103
+#: ../src/EmbyHome.py:108
 msgid "Add provider"
 msgstr ""
 
-#: ../src/EmbyItemView.py:49
-msgid "Cast/Crew"
+#: ../src/EmbyItemView.py:15
+msgid "Cast and Crew"
 msgstr ""
 
-#: ../src/EmbyHome.py:105
+#: ../src/EmbyItemView.py:19
+msgid "Chapters"
+msgstr ""
+
+#: ../src/EmbyHome.py:110
 msgid "Clear all data"
 msgstr ""
 
-#: ../src/EmbyHome.py:102
+#: ../src/EmbyHome.py:107
 msgid "Close"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Connection read timeout"
 msgstr ""
 
 #: ../src/setup.xml
@@ -58,10 +66,14 @@ msgid "Connection reties count"
 msgstr ""
 
 #: ../src/setup.xml
+msgid "Connection timeout"
+msgstr ""
+
+#: ../src/setup.xml
 msgid "Connections"
 msgstr ""
 
-#: ../src/EmbyHome.py:96
+#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:82
 msgid "Continue watching"
 msgstr ""
 
@@ -81,40 +93,48 @@ msgstr ""
 msgid "E2EmbyClient Setup"
 msgstr ""
 
-#: ../src/EmbySetup.py:61
+#: ../src/EmbySetup.py:63
 msgid "Edit"
 msgstr ""
 
-#: ../src/EmbyEpisodeItemView.py:35 ../src/EmbyHome.py:57
-#: ../src/EmbyItemView.py:25 ../src/EmbyMovieItemView.py:37
+#: ../src/EmbyEpisodeItemView.py:40 ../src/EmbyHome.py:58
+#: ../src/EmbyItemViewBase.py:31 ../src/EmbyMovieItemView.py:31
 msgid "Emby"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:24
+#: ../src/EmbyLibraryScreen.py:65
 msgid "Emby Library"
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:136
+#: ../src/HelperFunctions.py:36
 msgid "Ends at"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:169
+#: ../src/EmbyItemView.py:23
+msgid "Extras"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:190
 msgid "Favorite"
 msgstr ""
 
-#: ../src/setup.xml
-msgid "General connection timeout"
-msgstr ""
-
-#: ../src/EmbyHome.py:104
+#: ../src/EmbyHome.py:109
 msgid "Generate bouquets"
 msgstr ""
 
-#: ../src/setup.xml
-msgid "Image retrieve connection timeout"
+#: ../src/EmbyItemFunctionButtons.py:192
+msgid "Go to series"
 msgstr ""
 
-#: ../src/EmbyHome.py:94
+#: ../src/EmbyMovieItemView.py:34
+msgid "Included in"
+msgstr ""
+
+#: ../src/EmbyLibraryHeaderButtons.py:119
+msgid "Movies"
+msgstr ""
+
+#: ../src/EmbyHome.py:99
 msgid "My Media"
 msgstr ""
 
@@ -134,15 +154,15 @@ msgstr ""
 msgid "Password for the Connection."
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:162
+#: ../src/EmbyItemFunctionButtons.py:183
 msgid "Play"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:160
+#: ../src/EmbyItemFunctionButtons.py:181
 msgid "Play from start"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:165
+#: ../src/EmbyItemFunctionButtons.py:186
 msgid "Play trailer"
 msgstr ""
 
@@ -154,27 +174,32 @@ msgstr ""
 msgid "Port of the Connection."
 msgstr ""
 
-#: ../src/EmbyHome.py:107
+#: ../src/EmbyHome.py:112
 msgid "Press OK to edit the currently selected provider"
 msgstr ""
 
-#: ../src/EmbyHome.py:98
-msgid "Recently released movies"
+#: ../src/EmbyHome.py:103
+msgid "Recently added movies"
 msgstr ""
 
-#: ../src/EmbyHome.py:100
-msgid "Recently released tvshows"
+#: ../src/EmbyHome.py:105
+msgid "Recently added tvshows"
 msgstr ""
 
-#: ../src/EmbySetup.py:50 ../src/EmbySetup.py:62
+#: ../src/EmbyLibraryHeaderButtons.py:118
+#: ../src/EmbyLibraryHeaderButtons.py:121
+msgid "Recommendations"
+msgstr ""
+
+#: ../src/EmbySetup.py:52 ../src/EmbySetup.py:64
 msgid "Remove"
 msgstr ""
 
-#: ../src/EmbySetup.py:54
+#: ../src/EmbySetup.py:56
 msgid "Remove Connection"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:159
+#: ../src/EmbyItemFunctionButtons.py:180
 msgid "Resume ("
 msgstr ""
 
@@ -182,7 +207,11 @@ msgstr ""
 msgid "Root URL address of the Connection."
 msgstr ""
 
-#: ../src/EmbySetup.py:55
+#: ../src/EmbyLibraryHeaderButtons.py:122
+msgid "Series"
+msgstr ""
+
+#: ../src/EmbySetup.py:57
 msgid "Setup Actions"
 msgstr ""
 
@@ -191,15 +220,27 @@ msgid "Specify the connection retries count."
 msgstr ""
 
 #: ../src/setup.xml
-msgid "Specify the timeout for connections that retrieve images."
+msgid "Specify the delay between selection changed events."
 msgstr ""
 
 #: ../src/setup.xml
-msgid "Specify the timeout for general connections."
+msgid "Specify the timeout for connect."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Specify the timeout for connections read operations."
 msgstr ""
 
 #: ../src/setup.xml
 msgid "Timeouts"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "UI Settings"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "UI scroll delay"
 msgstr ""
 
 #: ../src/setup.xml
@@ -214,6 +255,6 @@ msgstr ""
 msgid "User for the Connection."
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:167
+#: ../src/EmbyItemFunctionButtons.py:188
 msgid "Watched"
 msgstr ""
