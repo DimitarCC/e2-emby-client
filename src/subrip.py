@@ -38,7 +38,7 @@ class SubRipParser(BaseParser):
             colorText = colorText.replace("'", "").replace('"', '')
 
         if colorText:
-            hexColor = re.search("(\#[0-9,a-f,A-F]{6})", colorText)
+            hexColor = re.search("(" + r"#" + "[0-9,a-f,A-F]{6})", colorText)
             if hexColor:
                 color = hexColor.group(1)[1:]
             else:
