@@ -24,8 +24,8 @@ from . import _
 
 from PIL import Image
 
-MODE_RECOMMENDATIONS = 1
-MODE_LIST = 2
+MODE_RECOMMENDATIONS = 0
+MODE_LIST = 1
 
 
 class E2EmbyLibrary(Screen):
@@ -65,7 +65,7 @@ class E2EmbyLibrary(Screen):
 		self.setTitle(_("Emby Library"))
 		self.sel_timer = eTimer()
 		self.sel_timer.callback.append(self.trigger_sel_changed_event)
-		self.mask_alpha = Image.open(path.join(plugin_dir, "mask_l.png")).split()[3]
+		self.mask_alpha = Image.open(path.join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
 		if self.mask_alpha.mode != "L":
 			self.mask_alpha = self.mask_alpha.convert("L")
 		self.list_data = []
@@ -99,6 +99,8 @@ class E2EmbyLibrary(Screen):
                 "down": self.down,
                 "left": self.left,
                 "right": self.right,
+				"pageUp": self.pageUp,
+				"pageDown": self.pageDown,
 				"menu": self.menu
             }, -2)
 
@@ -141,6 +143,12 @@ class E2EmbyLibrary(Screen):
 
 	def trigger_sel_changed_event(self):
 		threads.deferToThread(self.loadSelectedItemDetails, self[self.selected_widget].selectedItem, self[self.selected_widget])
+
+	def pageUp(self):
+		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevPage)
+
+	def pageDown(self):
+		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextPage)
 
 	def menu(self):
 		if self.selected_widget == "charbar":
@@ -218,6 +226,7 @@ class E2EmbyLibrary(Screen):
 	def down(self):
 		if self.selected_widget == "header":
 			self[self.selected_widget].setFocused(False)
+			self[self.selected_widget].setSelectedIndex(self.mode)
 			self.selected_widget = "list_watching" if self.mode == MODE_RECOMMENDATIONS else "list"
 			self[self.selected_widget].toggleSelection(True)
 		else:

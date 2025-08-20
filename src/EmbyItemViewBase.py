@@ -38,7 +38,7 @@ class EmbyItemViewBase(Screen):
         self.onLayoutFinish.append(self.__onLayoutFinished)
         self.top_widget_pos_y = 0
 
-        self.mask_alpha = Image.open(os.path.join(plugin_dir, "mask_l.png")).split()[3]
+        self.mask_alpha = Image.open(os.path.join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
         if self.mask_alpha.mode != "L":
             self.mask_alpha = self.mask_alpha.convert("L")
 

@@ -95,6 +95,10 @@ class EmbyLibraryHeaderButtons(GUIComponent):
 		self.selectedIndex = nextPos
 		self.updateInfo()
 
+	def setSelectedIndex(self, index):
+		self.selectedIndex = index
+		self.updateInfo()
+
 	def moveNext(self):
 		self.moveSelection(1)
 
