@@ -1,271 +1,349 @@
 from twisted.internet import threads
+from twisted.internet.defer import inlineCallbacks
+from uuid import uuid4
 
-from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_CENTER, RT_BLEND, RT_WRAP, RT_ELLIPSIS
+from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP, RT_ELLIPSIS
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
-from Tools.Hex2strColor import Hex2strColor
 from Tools.LoadPixmap import LoadPixmap
 
 from .EmbyRestClient import EmbyApiClient
-from .HelperFunctions import embyDateToString
+from .HelperFunctions import embyDateToString, create_thumb_cache_dir, delete_thumb_cache_dir
 from .Variables import plugin_dir
 from . import _, PluginLanguageDomain
 
 
 class EmbyGridList(GUIComponent):
-	def __init__(self, isLibrary=False):
-		GUIComponent.__init__(self)
-		self.currentSelectedIndex = 0
-		self.isLibrary = isLibrary
-		self.data = []
-		self.itemsForThumbs = []
-		self.thumbs = {}
-		self.onSelectionChanged = []
-		self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
-		self.selectionEnabled = True
-		self.font = gFont("Regular", 18)
-		self.selectedItem = None
-		self.l = eListboxPythonMultiContent()  # noqa: E741
-		self.l.setBuildFunc(self.buildEntry)
-		self.spacing = 15
-		self.orientation = eListbox.orGrid
-		self.iconWidth = 200
-		self.iconHeight = 260
-		self.itemWidth = self.iconWidth + self.spacing * 2
-		self.itemHeight = self.iconHeight + 90 + self.spacing * 2
-		self.l.setItemHeight(self.itemHeight)
-		self.l.setItemWidth(self.itemWidth)
-		self.icon_type = "Primary"
-		self.refreshing = False
-		self.running = False
-		self.updatingIndexesInProgress = []
-		self.interupt = False
+    def __init__(self, isLibrary=False):
+        GUIComponent.__init__(self)
+        self.widget_id = uuid4()
+        self.currentSelectedIndex = 0
+        self.isLibrary = isLibrary
+        self.data = []
+        self.itemsForThumbs = []
+        self.thumbs = {}
+        self.onSelectionChanged = []
+        self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
+        self.selectionEnabled = True
+        self.font = gFont("Regular", 18)
+        self.badgeFont = gFont("Regular", 18)
+        self.selectedItem = None
+        self.l = eListboxPythonMultiContent()  # noqa: E741
+        self.l.setBuildFunc(self.buildEntry)
+        self.spacing = 15
+        self.orientation = eListbox.orGrid
+        self.iconWidth = 200
+        self.iconHeight = 260
+        self.itemWidth = self.iconWidth + self.spacing * 2
+        self.itemHeight = self.iconHeight + 90 + self.spacing * 2
+        self.l.setItemHeight(self.itemHeight)
+        self.l.setItemWidth(self.itemWidth)
+        self.icon_type = "Primary"
+        self.refreshing = False
+        self.running = False
+        self.updatingIndexesInProgress = []
+        self.interupt = False
+        self.currentPage = 0
+        self.items_per_page = 0
 
-	GUI_WIDGET = eListbox
+    GUI_WIDGET = eListbox
 
-	def getListCount(self):
-		max_columns = self.instance.size().width() // self.itemWidth
-		return (len(self.data) + max_columns - 1) // max_columns
+    def getListCount(self):
+        max_columns = self.instance.size().width() // self.itemWidth
+        return (len(self.data) + max_columns - 1) // max_columns
 
-	listCount = property(getListCount)  # for use with the pager addon. Returns total rows count
+    # for use with the pager addon. Returns total rows count
+    listCount = property(getListCount)
 
-	def getCurrentRow(self):
-		max_columns = self.instance.size().width() // self.itemWidth
-		return self.currentSelectedIndex // max_columns
+    def getCurrentRow(self):
+        max_columns = self.instance.size().width() // self.itemWidth
+        return self.currentSelectedIndex // max_columns
 
-	currentIndex = property(getCurrentRow)  # for use with the pager addon. Returns index of current row
+    # for use with the pager addon. Returns index of current row
+    currentIndex = property(getCurrentRow)
 
-	def postWidgetCreate(self, instance):
-		instance.setContent(self.l)
-		instance.selectionChanged.get().append(self.selectionChanged)
-		instance.allowNativeKeys(False)
-		self.l.setSelectionClip(eRect(0, 0, 0, 0), False)
-		threads.deferToThread(self.runQueueProcess)
+    def onShow(self):
+        pass
 
-	def preWidgetRemove(self, instance):
-		instance.selectionChanged.get().remove(self.selectionChanged)
-		self.interupt = True
+    def postWidgetCreate(self, instance):
+        create_thumb_cache_dir(self.widget_id)
+        instance.setContent(self.l)
+        instance.selectionChanged.get().append(self.selectionChanged)
+        instance.allowNativeKeys(False)
+        self.l.setSelectionClip(eRect(0, 0, 0, 0), False)
 
-	def getIsAtFirstRow(self):
-		size = self.instance.size()
-		width = size.width()
-		cols = width // self.itemWidth
-		curRow = self.currentSelectedIndex // cols
-		return curRow == 0
+        threads.deferToThread(self.runQueueProcess)
 
-	def getIsAtFirstColumn(self):
-		size = self.instance.size()
-		width = size.width()
-		cols = width // self.itemWidth
-		curCol = self.currentSelectedIndex % cols
-		return curCol == 0
+    def preWidgetRemove(self, instance):
+        instance.selectionChanged.get().remove(self.selectionChanged)
+        self.interupt = True
+        delete_thumb_cache_dir(self.widget_id)
 
-	def selectionChanged(self):
-		self.selectedItem = self.l.getCurrentSelection()
-		self.currentSelectedIndex = self.l.getCurrentSelectionIndex()
-		for x in self.onSelectionChanged:
-			x()
+    def getIndexCurrentPage(self, index):
+        return index // self.items_per_page
 
-	def applySkin(self, desktop, parent):
-		attribs = []
-		for (attrib, value) in self.skinAttributes[:]:
-			if attrib == "font":
-				self.font = parseFont(value, parent.scale)
-			elif attrib == "foregroundColor":
-				self.foreColor = parseColor(value).argb()
-			elif attrib == "iconType":
-				self.icon_type = value
-			elif attrib == "iconWidth":
-				self.iconWidth = int(value)
-			elif attrib == "iconHeight":
-				self.iconHeight = int(value)
-			elif attrib == "spacing":
-				self.spacing = int(value)
-			else:
-				attribs.append((attrib, value))
-		self.skinAttributes = attribs
-		self.l.setFont(0, self.font)
-		self.itemWidth = self.iconWidth + self.spacing * 2
-		self.itemHeight = self.iconHeight + 90 + self.spacing * 2
-		self.l.setItemHeight(self.itemHeight)
-		self.l.setItemWidth(self.itemWidth)
-		self.instance.setOrientation(self.orientation)
-		self.l.setOrientation(self.orientation)
-		return GUIComponent.applySkin(self, desktop, parent)
+    def isIndexInCurrentPage(self, index):
+        item_page_index = index // self.items_per_page
+        min = self.currentPage - 1
+        max = self.currentPage + 1
+        return item_page_index >= min and item_page_index <= max
 
-	def toggleSelection(self, enabled):
-		self.selectionEnabled = enabled
-		self.instance.setSelectionEnable(enabled)
+    def getIsAtFirstRow(self):
+        size = self.instance.size()
+        width = size.width()
+        cols = width // self.itemWidth
+        curRow = self.currentSelectedIndex // cols
+        return curRow == 0
 
-	def getCurrentItem(self):
-		cur = self.l.getCurrentSelection()
-		return cur and cur[1]
+    def getIsAtFirstColumn(self):
+        size = self.instance.size()
+        width = size.width()
+        cols = width // self.itemWidth
+        curCol = self.currentSelectedIndex % cols
+        return curCol == 0
 
-	def loadData(self, items):
-		self.data = items
-		self.l.setList(items)
+    def selectionChanged(self):
+        self.selectedItem = self.l.getCurrentSelection()
+        self.currentSelectedIndex = self.l.getCurrentSelectionIndex()
+        newPage = self.getIndexCurrentPage(self.currentSelectedIndex)
+        if self.currentPage != newPage:
+            self.currentPage = newPage
+        for x in self.onSelectionChanged:
+            x()
 
-	def runQueueProcess(self):
-		self.running = True
-		while len(self.itemsForThumbs) > 0:
-			if self.interupt:
-				self.interupt = False
-				break
-			item_popped = self.itemsForThumbs.pop(0)
-			item_index = item_popped[0]
-			item = item_popped[1]
-			icon_img = item.get("ImageTags").get("Primary")
-			item_id = item.get("Id")
-			parent_id = item.get("ParentThumbItemId")
-			parent_icon_img = item.get("ParentThumbImageTag")
-			if parent_id and parent_icon_img:
-				item_id = parent_id
-				icon_img = parent_icon_img
-				self.icon_type = "Thumb"
+    def applySkin(self, desktop, parent):
+        attribs = []
+        for (attrib, value) in self.skinAttributes[:]:
+            if attrib == "font":
+                self.font = parseFont(value, parent.scale)
+            elif attrib == "badgeFont":
+                self.badgeFont = parseFont(value, parent.scale)
+            elif attrib == "foregroundColor":
+                self.foreColor = parseColor(value).argb()
+            elif attrib == "iconType":
+                self.icon_type = value
+            elif attrib == "iconWidth":
+                self.iconWidth = int(value)
+            elif attrib == "iconHeight":
+                self.iconHeight = int(value)
+            elif attrib == "spacing":
+                self.spacing = int(value)
+            else:
+                attribs.append((attrib, value))
+        self.skinAttributes = attribs
+        self.l.setFont(0, self.font)
+        self.l.setFont(1, self.badgeFont)
+        self.itemWidth = self.iconWidth + self.spacing * 2
+        self.itemHeight = self.iconHeight + 90 + self.spacing * 2
+        self.l.setItemHeight(self.itemHeight)
+        self.l.setItemWidth(self.itemWidth)
+        self.instance.setOrientation(self.orientation)
+        self.l.setOrientation(self.orientation)
+        res = GUIComponent.applySkin(self, desktop, parent)
+        size = self.instance.size()
+        width = size.width()
+        height = size.height()
+        cols = width // self.itemWidth
+        rows = height // self.itemHeight
+        self.items_per_page = cols * rows
+        return res
 
-			threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img, False)
+    def toggleSelection(self, enabled):
+        self.selectionEnabled = enabled
+        self.instance.setSelectionEnable(enabled)
 
-		self.running = False
+    def getCurrentItem(self):
+        cur = self.l.getCurrentSelection()
+        return cur and cur[1]
 
-	def updateThumbnail(self, item_id, item_index, item, icon_img, fromRecursion):
-		icon_pix = None
+    def loadData(self, items):
+        self.data = items
+        self.l.setList(items)
 
-		orig_id = item.get("Id")
+    def get_page_item_ids(self, page_index):
+        start = page_index * self.items_per_page
+        end = min(start + self.items_per_page, len(self.data))
+        return [(item[0], item[1]) for item in self.data[start:end]]
 
-		if item_index not in self.updatingIndexesInProgress:
-			self.updatingIndexesInProgress.append(item_index)
+    def updateThumbCache(self):
+        next_page_items = self.get_page_item_ids(self.currentPage + 1)
+        for item_tuple in next_page_items:
+            found = any(item_tuple[0] in tup for tup in self.itemsForThumbs)
+            if item_tuple[1].get("Id") not in self.thumbs and not found:
+                self.itemsForThumbs.append(item_tuple)
 
-		icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type=self.icon_type)
-		if not icon_pix:
-			backdrop_image_tags = item.get("BackdropImageTags")
-			parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
-			if parent_backdrop_image_tags:
-				backdrop_image_tags = parent_backdrop_image_tags
+    @inlineCallbacks
+    def runQueueProcess(self):
+        self.running = True
+        while len(self.itemsForThumbs) > 0:
+            if self.interupt:
+                self.interupt = False
+                break
+            item_popped = self.itemsForThumbs.pop(0)
+            item_index = item_popped[0]
+            if not self.isIndexInCurrentPage(item_index):
+                continue
+            item = item_popped[1]
+            icon_img = item.get("ImageTags").get("Primary")
+            item_id = item.get("Id")
+            parent_id = item.get("ParentThumbItemId")
+            parent_icon_img = item.get("ParentThumbImageTag")
+            if parent_id and parent_icon_img:
+                item_id = parent_id
+                icon_img = parent_icon_img
+                self.icon_type = "Thumb"
 
-			if not backdrop_image_tags or len(backdrop_image_tags) == 0:
-				return False
+            yield self.updateThumbnail(item_id, item_index, item, icon_img, False)
 
-			icon_img = backdrop_image_tags[0]
-			parent_b_item_id = item.get("ParentBackdropItemId")
-			if parent_b_item_id:
-				item_id = parent_b_item_id
-			if not icon_pix:
-				icon_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
+        self.running = False
 
-		if not hasattr(self, "data"):
-			return False
-		if orig_id not in self.thumbs:
-			self.thumbs[orig_id] = icon_pix or True
+    @inlineCallbacks
+    def updateThumbnail(self, item_id, item_index, item, icon_img, fromRecursion):
+        icon_pix = None
 
-		if item_index in self.updatingIndexesInProgress:
-			self.updatingIndexesInProgress.remove(item_index)
+        if not self.isIndexInCurrentPage(item_index):
+            return
 
-		if icon_pix:
-			threads.deferToThread(self.instance.redrawItemByIndex, item_index)
-		return True
+        orig_id = item.get("Id")
 
-	def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
-		xPos = 0
-		yPos = 0
-		res = [None]
-		orig_id = item.get("Id")
-		selected = self.currentSelectedIndex == item_index
-		if orig_id in self.thumbs:
-			item_icon = self.thumbs[orig_id]
-		if selected and self.selectionEnabled:
-			res.append(MultiContentEntryRectangle(
-					pos=(self.spacing - 3, self.spacing - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
-					cornerRadius=8,
-					backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
-		is_icon = not isinstance(item_icon, bool)
-		if item_icon and is_icon:
-			res.append(MultiContentEntryPixmapAlphaBlend(
-							pos=(self.spacing, self.spacing),
-							size=(self.iconWidth, self.iconHeight),
-							png=item_icon,
-							backcolor=None, backcolor_sel=None,
-							cornerRadius=6,
-							flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
-		else:
-			found = any(item_index in tup for tup in self.itemsForThumbs)
-			if is_icon and not found:
-				self.itemsForThumbs.append((item_index, item))
-			if len(self.itemsForThumbs) > 0 and not self.running:
-				threads.deferToThread(self.runQueueProcess)
-			res.append(MultiContentEntryRectangle(
-					pos=(self.spacing, self.spacing),
-					size=(self.iconWidth, self.iconHeight),
-					cornerRadius=6,
-					backgroundColor=0x22222222))
+        if item_index not in self.updatingIndexesInProgress:
+            self.updatingIndexesInProgress.append(item_index)
 
-		played_perc = int(played_perc)
-		cornerEdges = 12
-		if played_perc < 90:
-			cornerEdges = 4
-		if played_perc > 0:
-			res.append(MultiContentEntryProgress(
-				pos=(self.spacing, self.spacing + self.iconHeight - 6), size=(self.iconWidth, 6),
-				percent=played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=cornerEdges
-			))
+        icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id,
+                                                         item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight,
+                                                         image_type=self.icon_type)
+        if not self.isIndexInCurrentPage(item_index):
+            return
+        if not icon_pix:
+            backdrop_image_tags = item.get("BackdropImageTags")
+            parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
+            if parent_backdrop_image_tags:
+                backdrop_image_tags = parent_backdrop_image_tags
 
-		premiereDate_str = item.get("PremiereDate", None)
-		premiereDate = premiereDate_str and embyDateToString(premiereDate_str, "Movie")
-		# color = Hex2strColor(0x003EA07E)
-		text = f"{item_name}"
-		text1 = ""
-		if premiereDate:
-			text1 = f"({premiereDate})"
+            if not backdrop_image_tags or len(backdrop_image_tags) == 0:
+                return
 
-		res.append(MultiContentEntryText(
-							pos=(self.spacing, self.iconHeight + 32), size=(self.iconWidth, 25),
-							font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
-							cornerRadius=6,
-							text=text,
-							color=0xffffff, color_sel=0xffffff))
-		if text1:
-			res.append(MultiContentEntryText(
-								pos=(self.spacing, self.iconHeight + 62), size=(self.iconWidth, 25),
-								font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
-								cornerRadius=6,
-								text=text1,
-								color=0xc2c2c2, color_sel=0xc2c2c2))
+            icon_img = backdrop_image_tags[0]
+            parent_b_item_id = item.get("ParentBackdropItemId")
+            if parent_b_item_id:
+                item_id = parent_b_item_id
 
-		played = item.get("UserData", {}).get("Played", False)
-		if played:
-			res.append(MultiContentEntryRectangle(
-					pos=(self.spacing + self.iconWidth - 34, self.spacing),
-					size=(34, 34),
-					cornerRadius=6,
-					cornerEdges=2 | 4,
-					backgroundColor=0x32772b))
-			res.append(MultiContentEntryPixmapAlphaBlend(
-							pos=(self.spacing + self.iconWidth - 34, self.spacing),
-							size=(34, 34),
-							png=self.check24,
-							backcolor=None, backcolor_sel=None,
-							cornerRadius=6,
-							flags=BT_HALIGN_CENTER | BT_VALIGN_CENTER))
+            icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id,
+                                                             item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight,
+                                                             image_type="Backdrop")
+            if not self.isIndexInCurrentPage(item_index):
+                return
 
-		return res
+        if not hasattr(self, "data"):
+            return
+        if orig_id not in self.thumbs:
+            self.thumbs[orig_id] = icon_pix or True
+
+        if item_index in self.updatingIndexesInProgress:
+            self.updatingIndexesInProgress.remove(item_index)
+
+        if icon_pix:
+            self.instance.redrawItemByIndex(item_index)
+
+    def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
+        xPos = 0
+        yPos = 0
+        res = [None]
+        orig_id = item.get("Id")
+        selected = self.currentSelectedIndex == item_index
+        if orig_id in self.thumbs:
+            item_icon = self.thumbs[orig_id]
+        if selected and self.selectionEnabled:
+            res.append(MultiContentEntryRectangle(
+                pos=(self.spacing - 3, self.spacing - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
+                cornerRadius=8,
+                backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
+        res.append(MultiContentEntryRectangle(
+            pos=(self.spacing, self.spacing),
+            size=(self.iconWidth, self.iconHeight),
+            cornerRadius=6,
+            backgroundColor=0x22222222))
+        is_icon = not isinstance(item_icon, bool)
+        if item_icon and is_icon:
+            res.append(MultiContentEntryPixmapAlphaBlend(
+                pos=(self.spacing, self.spacing),
+                size=(self.iconWidth, self.iconHeight),
+                png=LoadPixmap(item_icon),
+                backcolor=None, backcolor_sel=None,
+                cornerRadius=6,
+                flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
+        else:
+            found = any(item_index in tup for tup in self.itemsForThumbs)
+            if is_icon and not found:
+                self.itemsForThumbs.append((item_index, item))
+            self.updateThumbCache()
+            if len(self.itemsForThumbs) > 0 and not self.running:
+                threads.deferToThread(self.runQueueProcess)
+
+        played_perc = int(played_perc)
+        cornerEdges = 12
+        if played_perc < 90:
+            cornerEdges = 4
+        if played_perc > 0:
+            res.append(MultiContentEntryProgress(
+                pos=(self.spacing, self.spacing + self.iconHeight - 6), size=(self.iconWidth, 6),
+                percent=played_perc, foreColor=0x32772b, foreColorSelected=0x32772b, borderWidth=0, cornerRadius=6, cornerEdges=cornerEdges
+            ))
+
+        premiereDate_str = item.get("PremiereDate", None)
+        premiereDate = premiereDate_str and embyDateToString(
+            premiereDate_str, "Movie")
+
+        text = f"{item_name}"
+        text1 = ""
+        if premiereDate:
+            text1 = f"({premiereDate})"
+
+        res.append(MultiContentEntryText(
+            pos=(self.spacing, self.iconHeight + 32), size=(self.iconWidth, 25),
+            font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
+            cornerRadius=6,
+            text=text,
+            color=0xffffff, color_sel=0xffffff))
+        if text1:
+            res.append(MultiContentEntryText(
+                pos=(self.spacing, self.iconHeight + 62), size=(self.iconWidth, 25),
+                font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
+                cornerRadius=6,
+                text=text1,
+                color=0xc2c2c2, color_sel=0xc2c2c2))
+
+        played = item.get("UserData", {}).get("Played", False)
+        unplayed_items_count = item.get(
+            "UserData", {}).get("UnplayedItemCount", -1)
+        if played:
+            res.append(MultiContentEntryRectangle(
+                pos=(self.spacing + self.iconWidth - 45, self.spacing),
+                size=(45, 45),
+                cornerRadius=6,
+                cornerEdges=2 | 4,
+                backgroundColor=0x32772b))
+            res.append(MultiContentEntryPixmapAlphaBlend(
+                pos=(self.spacing + self.iconWidth - 45, self.spacing),
+                size=(45, 45),
+                png=self.check24,
+                backcolor=None, backcolor_sel=None,
+                cornerRadius=6,
+                flags=BT_HALIGN_CENTER | BT_VALIGN_CENTER))
+        elif unplayed_items_count > 0:
+            res.append(MultiContentEntryRectangle(
+                pos=(self.spacing + self.iconWidth - 45, self.spacing),
+                size=(45, 45),
+                cornerRadius=6,
+                cornerEdges=2 | 4,
+                backgroundColor=0x32772b))
+            res.append(MultiContentEntryText(
+                pos=(self.spacing + self.iconWidth - 45, self.spacing), size=(45, 45),
+                font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+                cornerRadius=6,
+                text=str(unplayed_items_count),
+                color=0xffffff, color_sel=0xffffff))
+
+        return res

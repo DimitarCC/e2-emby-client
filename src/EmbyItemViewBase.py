@@ -1,7 +1,4 @@
-from . import _
-
-import os
-from sys import modules
+from os import path
 from twisted.internet import threads
 from Screens.Screen import Screen, ScreenSummary
 from Components.ActionMap import ActionMap
@@ -11,12 +8,11 @@ from Components.Pixmap import Pixmap
 from .EmbyRestClient import EmbyApiClient
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyItemFunctionButtons import EmbyItemFunctionButtons
-from .EmbyList import EmbyList
-from .EmbyListController import EmbyListController
+from .Variables import plugin_dir
+from . import _
 
 from PIL import Image
 
-plugin_dir = os.path.dirname(modules[__name__].__file__)
 
 EXIT_RESULT_MOVIE = 1
 EXIT_RESULT_SERIES = 2
@@ -38,7 +34,8 @@ class EmbyItemViewBase(Screen):
         self.onLayoutFinish.append(self.__onLayoutFinished)
         self.top_widget_pos_y = 0
 
-        self.mask_alpha = Image.open(os.path.join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
+        self.mask_alpha = Image.open(
+            path.join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
         if self.mask_alpha.mode != "L":
             self.mask_alpha = self.mask_alpha.convert("L")
 
@@ -53,21 +50,21 @@ class EmbyItemViewBase(Screen):
         self["f_buttons"].onPlayerExit.append(self.__onPlayerClosed)
         self.lists = {}
         self["actions"] = ActionMap(["E2EmbyActions",],
-            {
-                "cancel": self.__closeScreen,  # KEY_RED / KEY_EXIT
-                # "save": self.addProvider,  # KEY_GREEN
-                "ok": self.processItem,
-                # "yellow": self.keyYellow,
-                # "blue": self.clearData,
-            }, -1)
+                                    {
+            "cancel": self.__closeScreen,  # KEY_RED / KEY_EXIT
+            # "save": self.addProvider,  # KEY_GREEN
+            "ok": self.processItem,
+            # "yellow": self.keyYellow,
+            # "blue": self.clearData,
+        }, -1)
         self["nav_actions"] = ActionMap(["NavigationActions",],
-            {
-                "up": self.up,
-                "down": self.down,
-                "left": self.left,
-                "right": self.right,
-                # "blue": self.clearData,
-            }, -2)
+                                        {
+            "up": self.up,
+            "down": self.down,
+            "left": self.left,
+            "right": self.right,
+            # "blue": self.clearData,
+        }, -2)
 
     def __closeScreen(self):
         self.close(self.exitResult)
@@ -89,9 +86,11 @@ class EmbyItemViewBase(Screen):
             keys = list(self.lists.keys())
             top_widget = keys[0] if len(keys) > 1 else self.availableWidgets[0]
             if top_widget != "f_buttons":
-                self.top_widget_pos_y = self.lists[top_widget].getTopLeftCornerPos()[1]
+                self.top_widget_pos_y = self.lists[top_widget].getTopLeftCornerPos()[
+                    1]
             else:
-                self.top_widget_pos_y = self[top_widget].instance.position().y()
+                self.top_widget_pos_y = self[top_widget].instance.position(
+                ).y()
             load_res = self.loadItemInfoFromServer(self.item_id)
             self.preLayoutFinished()
             self.loadItemInUI(load_res)
@@ -151,27 +150,31 @@ class EmbyItemViewBase(Screen):
                     self.selected_widget = item
                 selEnabled = False
         else:
-           self.selected_widget = keys[0]
-           self.lists[self.selected_widget].enableSelection(True)
-           self["f_buttons"].enableSelection(False)
+            self.selected_widget = keys[0]
+            self.lists[self.selected_widget].enableSelection(True)
+            self["f_buttons"].enableSelection(False)
 
     def left(self):
         if self.selected_widget == "f_buttons":
             self["f_buttons"].movePrevious()
         else:
             if hasattr(self[self.selected_widget].instance, "prevItem"):
-                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
+                self[self.selected_widget].instance.moveSelection(
+                    self[self.selected_widget].instance.prevItem)
             else:
-                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
+                self[self.selected_widget].instance.moveSelection(
+                    self[self.selected_widget].instance.moveLeft)
 
     def right(self):
         if self.selected_widget == "f_buttons":
             self["f_buttons"].moveNext()
         else:
             if hasattr(self[self.selected_widget].instance, "nextItem"):
-                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
+                self[self.selected_widget].instance.moveSelection(
+                    self[self.selected_widget].instance.nextItem)
             else:
-                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
+                self[self.selected_widget].instance.moveSelection(
+                    self[self.selected_widget].instance.moveRight)
 
     def infoRetrieveInject(self, item):
         pass
@@ -200,21 +203,26 @@ class EmbyItemViewBase(Screen):
             logo_widget_size = self["title_logo"].instance.size()
             max_w = logo_widget_size.width()
             max_h = logo_widget_size.height()
-            logo_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
+            logo_pix = EmbyApiClient.getItemImage(
+                item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
             if logo_pix:
                 self["title_logo"].setPixmap(logo_pix)
                 self["title"].text = ""
             else:
                 if itemType == "Episode":
-                    self["title"].text = " ".join(item.get("SeriesName", "").splitlines())
+                    self["title"].text = " ".join(
+                        item.get("SeriesName", "").splitlines())
                 else:
-                    self["title"].text = " ".join(item.get("Name", "").splitlines())
+                    self["title"].text = " ".join(
+                        item.get("Name", "").splitlines())
                 self["title_logo"].setPixmap(None)
         else:
             if itemType == "Episode":
-                self["title"].text = " ".join(item.get("SeriesName", "").splitlines())
+                self["title"].text = " ".join(
+                    item.get("SeriesName", "").splitlines())
             else:
-                self["title"].text = " ".join(item.get("Name", "").splitlines())
+                self["title"].text = " ".join(
+                    item.get("Name", "").splitlines())
             self["title_logo"].setPixmap(None)
 
         self["infoline"].updateInfo(item)
@@ -227,7 +235,8 @@ class EmbyItemViewBase(Screen):
             self["backdrop"].setPixmap(backdrop_pix)
         else:
             backdrop_image_tags = item.get("BackdropImageTags", [])
-            parent_backdrop_image_tags = item.get("ParentBackdropImageTags", [])
+            parent_backdrop_image_tags = item.get(
+                "ParentBackdropImageTags", [])
             if parent_backdrop_image_tags:
                 backdrop_image_tags = parent_backdrop_image_tags
 
@@ -244,7 +253,8 @@ class EmbyItemViewBase(Screen):
         self.injectAfterLoad(item)
 
     def downloadCover(self, item_id, icon_img):
-        backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
+        backdrop_pix = EmbyApiClient.getItemImage(
+            item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
         if backdrop_pix:
             self["backdrop"].setPixmap(backdrop_pix)
         else:

@@ -1,5 +1,6 @@
 from sys import modules
 from os import path
+
 # User Agents
 USER_AGENTS = {"android": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.6834.79 Mobile Safari/537.36",
                "ios": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_7_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/132.0.6834.78 Mobile/15E148 Safari/604.1",
@@ -9,3 +10,5 @@ USER_AGENTS = {"android": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 (K
 REQUEST_USER_AGENT = USER_AGENTS["windows"]
 
 plugin_dir = path.dirname(modules[__name__].__file__)
+
+THUMB_CACHE_LOCATION = "/tmp/emby/thumbCache"

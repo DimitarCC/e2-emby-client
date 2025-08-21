@@ -1,12 +1,5 @@
-import os
-from sys import modules
-from PIL import Image
-
 from twisted.internet import threads
-from Screens.Screen import Screen, ScreenSummary
-from Components.ActionMap import ActionMap
 from Components.Label import Label
-from Components.Pixmap import Pixmap
 
 from .EmbyItemView import EmbyItemView
 from .EmbyList import EmbyList
@@ -16,9 +9,6 @@ from .EmbyEpisodeItemView import EmbyEpisodeItemView
 from .EmbyItemViewBase import EXIT_RESULT_EPISODE, EXIT_RESULT_SERIES
 from .HelperFunctions import insert_at_position
 from . import _
-
-
-plugin_dir = os.path.dirname(modules[__name__].__file__)
 
 
 class EmbySeriesItemView(EmbyItemView):
@@ -47,8 +37,10 @@ class EmbySeriesItemView(EmbyItemView):
         self["subtitle"] = Label()
         self["seasons_list"] = EmbyList()
         self["episodes_list"] = EmbyList(type="episodes")
-        self.episodes_controller = EmbyListController(self["episodes_list"], None)
-        self.lists = insert_at_position(self.lists, "episodes_list", self.episodes_controller, 0)
+        self.episodes_controller = EmbyListController(
+            self["episodes_list"], None)
+        self.lists = insert_at_position(
+            self.lists, "episodes_list", self.episodes_controller, 0)
 
         # self["actions"] = ActionMap(["E2EmbyActions",],
         #     {
@@ -66,13 +58,15 @@ class EmbySeriesItemView(EmbyItemView):
             for ep in episodes:
                 if ep.get("ParentIndexNumber", 0) == 0:
                     continue
-                played_perc = ep.get("UserData", {}).get("PlayedPercentage", "0")
+                played_perc = ep.get("UserData", {}).get(
+                    "PlayedPercentage", "0")
                 title = f"S{ep.get("ParentIndexNumber", 0)}:E{ep.get("IndexNumber", 0)} - {" ".join(ep.get("Name", "").splitlines())}"
                 list.append((i, ep, title, None, played_perc, True))
                 i += 1
             self["episodes_list"].loadData(list)
             self.availableWidgets.insert(1, "episodes_list")
-            self.lists["episodes_list"].visible(True).enableSelection(self.selected_widget == "episodes_list")
+            self.lists["episodes_list"].visible(True).enableSelection(
+                self.selected_widget == "episodes_list")
 
     def infoRetrieveInject(self, item):
         # sub_title = f"S{item.get("ParentIndexNumber", 0)}:E{item.get("IndexNumber", 0)} - {" ".join(item.get("Name", "").splitlines())}"
@@ -86,7 +80,8 @@ class EmbySeriesItemView(EmbyItemView):
         EmbyItemView.processItem(self)
         if self.selected_widget == "episodes_list":
             selected_item = self["episodes_list"].selectedItem
-            self.session.openWithCallback(self.exitCallback, EmbyEpisodeItemView, selected_item, self.backdrop)
+            self.session.openWithCallback(
+                self.exitCallback, EmbyEpisodeItemView, selected_item, self.backdrop)
 
     def exitCallback(self, *result):
         if not len(result):

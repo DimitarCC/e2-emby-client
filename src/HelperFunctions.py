@@ -2,6 +2,10 @@ from typing import Iterable, Callable, TypeVar
 from datetime import datetime, timedelta
 from PIL import Image
 from io import BytesIO
+from os import makedirs
+from shutil import rmtree
+
+from .Variables import THUMB_CACHE_LOCATION
 
 
 def convert_ticks_to_time(ticks, is_chapters=False):
@@ -72,7 +76,8 @@ def resize_and_center_image(image_bytes, target_size, dest_file, background_colo
     # Paste resized image onto background
     background.paste(resized_img, (x, y), resized_img)
 
-    background.convert("RGB").save(dest_file, format='JPEG')  # Convert to RGB if you don't need alpha
+    # Convert to RGB if you don't need alpha
+    background.convert("RGB").save(dest_file, format='JPEG')
 
 
 def insert_at_position(d, key, value, index):
@@ -89,3 +94,11 @@ T = TypeVar('T')
 
 def find_index(items: Iterable[T], predicate: Callable[[T], bool], default: int = -1) -> int:
     return next((i for i, x in enumerate(items) if predicate(x)), default)
+
+
+def create_thumb_cache_dir(widget_id):
+    makedirs(f"{THUMB_CACHE_LOCATION}/{widget_id}", exist_ok=True)
+
+
+def delete_thumb_cache_dir(widget_id):
+    rmtree(f"{THUMB_CACHE_LOCATION}/{widget_id}", ignore_errors=True)

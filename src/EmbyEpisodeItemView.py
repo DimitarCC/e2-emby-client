@@ -1,19 +1,8 @@
-import os
-from sys import modules
-from PIL import Image
-
-from twisted.internet import threads
-from Screens.Screen import Screen, ScreenSummary
-from Components.ActionMap import ActionMap
 from Components.Label import Label
-from Components.Pixmap import Pixmap
 
 from .EmbyItemView import EmbyItemView
 from .EmbyItemViewBase import EXIT_RESULT_EPISODE
 from . import _
-
-
-plugin_dir = os.path.dirname(modules[__name__].__file__)
 
 
 class EmbyEpisodeItemView(EmbyItemView):
