@@ -73,6 +73,9 @@ class EmbyList(GUIComponent):
         new_page = self.selectedIndex // self.items_per_page
         if new_page != self.currentPage:
             self.currentPage = new_page
+            self.updateThumbCache()
+            if len(self.itemsForThumbs) > 0 and not self.running:
+                threads.deferToThread(self.runQueueProcess)
         self.lastSelectedItemId = self.selectedItem.get("Id")
         for x in self.onSelectionChanged:
             x(self, self.selectedItem and self.selectedItem.get("Id"))

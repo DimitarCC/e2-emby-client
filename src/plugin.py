@@ -1,13 +1,49 @@
 from .EmbySetup import initConfig, EmbySetup
 from Plugins.Plugin import PluginDescriptor
-from os import makedirs
+from os import makedirs, path
 from .EmbyHome import E2EmbyHome
 from . import _, PluginLanguageDomain
 from . import EmbyRestClient
+from .Variables import EMBY_THUMB_CACHE_DIR
+from Components.Harddisk import harddiskmanager
+from Components.config import config, ConfigSelection
 
 initConfig()
 
 EmbyRestClient.set_agent()
+
+
+class MountChoices:
+    def __init__(self):
+        choices = self.getMountChoices()
+        config.plugins.e2embyclient.thumbcache_loc = ConfigSelection(choices=choices, default=self.getMountDefault(choices))
+        harddiskmanager.on_partition_list_change.append(MountChoices.__onPartitionChange)  # to update data location choices on mountpoint change
+
+    @staticmethod
+    def getMountChoices():
+        choices = []
+        for p in harddiskmanager.getMountedPartitions():
+            if path.exists(p.mountpoint):
+                d = path.normpath(p.mountpoint)
+                if p.mountpoint != "/":
+                    choices.append((d, p.mountpoint))
+        choices.sort()
+        choices.insert(0, ("/tmp", "Internal FLASH"))
+        return choices
+
+    @staticmethod
+    def getMountDefault(choices):
+        choices = {x[1]: x[0] for x in choices}
+        default = "/tmp"  # choices.get("/media/hdd") or choices.get("/media/usb") or ""
+        return default
+
+    @staticmethod
+    def __onPartitionChange(*args, **kwargs):
+        choices = MountChoices.getMountChoices()
+        config.plugins.e2embyclient.thumbcache_loc.setChoices(choices=choices, default=MountChoices.getMountDefault(choices))
+
+
+MountChoices()
 
 
 def setup(session, **kwargs):
@@ -25,7 +61,7 @@ def startHome(menuid):
 
 
 def sessionstart(reason, session, **kwargs):
-    makedirs("/tmp/emby/", exist_ok=True)
+    makedirs(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
 
 
 def Plugins(path, **kwargs):

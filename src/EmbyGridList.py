@@ -110,6 +110,9 @@ class EmbyGridList(GUIComponent):
         newPage = self.getIndexCurrentPage(self.currentSelectedIndex)
         if self.currentPage != newPage:
             self.currentPage = newPage
+            self.updateThumbCache()
+            if len(self.itemsForThumbs) > 0 and not self.running:
+                threads.deferToThread(self.runQueueProcess)
         for x in self.onSelectionChanged:
             x()
 
@@ -211,9 +214,7 @@ class EmbyGridList(GUIComponent):
         if item_index not in self.updatingIndexesInProgress:
             self.updatingIndexesInProgress.append(item_index)
 
-        icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id,
-                                                         item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight,
-                                                         image_type=self.icon_type)
+        icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type=self.icon_type)
         if not self.isIndexInCurrentPage(item_index):
             return
         if not icon_pix:
@@ -230,9 +231,7 @@ class EmbyGridList(GUIComponent):
             if parent_b_item_id:
                 item_id = parent_b_item_id
 
-            icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id,
-                                                             item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight,
-                                                             image_type="Backdrop")
+            icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
             if not self.isIndexInCurrentPage(item_index):
                 return
 

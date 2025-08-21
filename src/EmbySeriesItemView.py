@@ -58,8 +58,7 @@ class EmbySeriesItemView(EmbyItemView):
             for ep in episodes:
                 if ep.get("ParentIndexNumber", 0) == 0:
                     continue
-                played_perc = ep.get("UserData", {}).get(
-                    "PlayedPercentage", "0")
+                played_perc = ep.get("UserData", {}).get("PlayedPercentage", "0")
                 title = f"S{ep.get("ParentIndexNumber", 0)}:E{ep.get("IndexNumber", 0)} - {" ".join(ep.get("Name", "").splitlines())}"
                 list.append((i, ep, title, None, played_perc, True))
                 i += 1
@@ -80,8 +79,7 @@ class EmbySeriesItemView(EmbyItemView):
         EmbyItemView.processItem(self)
         if self.selected_widget == "episodes_list":
             selected_item = self["episodes_list"].selectedItem
-            self.session.openWithCallback(
-                self.exitCallback, EmbyEpisodeItemView, selected_item, self.backdrop)
+            self.session.openWithCallback(self.exitCallback, EmbyEpisodeItemView, selected_item, self.backdrop)
 
     def exitCallback(self, *result):
         if not len(result):

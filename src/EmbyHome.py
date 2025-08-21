@@ -122,12 +122,9 @@ class E2EmbyHome(Screen):
             self["list_recent_tvshows"], self["list_recent_tvshows_header"])
 
         self["list"].onSelectionChanged.append(self.onSelectedIndexChanged)
-        self["list_watching"].onSelectionChanged.append(
-            self.onSelectedIndexChanged)
-        self["list_recent_movies"].onSelectionChanged.append(
-            self.onSelectedIndexChanged)
-        self["list_recent_tvshows"].onSelectionChanged.append(
-            self.onSelectedIndexChanged)
+        self["list_watching"].onSelectionChanged.append(self.onSelectedIndexChanged)
+        self["list_recent_movies"].onSelectionChanged.append(self.onSelectedIndexChanged)
+        self["list_recent_tvshows"].onSelectionChanged.append(self.onSelectedIndexChanged)
 
         self["actions"] = ActionMap(["E2EmbyActions",],
                                     {
@@ -157,12 +154,9 @@ class E2EmbyHome(Screen):
 
     def __onShown(self):
         activeConnection = getActiveConnection()
-        self.lists["list_watching"].enableSelection(
-            self.selected_widget == "list_watching")
-        self.lists["list_recent_movies"].enableSelection(
-            self.selected_widget == "list_recent_movies")
-        self.lists["list_recent_tvshows"].enableSelection(
-            self.selected_widget == "list_recent_tvshows")
+        self.lists["list_watching"].enableSelection(self.selected_widget == "list_watching")
+        self.lists["list_recent_movies"].enableSelection(self.selected_widget == "list_recent_movies")
+        self.lists["list_recent_tvshows"].enableSelection(self.selected_widget == "list_recent_tvshows")
         if not self.home_loaded:
             self.lists["list_watching"].visible(False)
             self.lists["list_recent_movies"].visible(False)
@@ -170,8 +164,7 @@ class E2EmbyHome(Screen):
             threads.deferToThread(self.loadHome, activeConnection)
 
     def trigger_sel_changed_event(self):
-        threads.deferToThread(self.loadSelectedItemDetails,
-                              self[self.selected_widget].selectedItem, self[self.selected_widget])
+        threads.deferToThread(self.loadSelectedItemDetails, self[self.selected_widget].selectedItem, self[self.selected_widget])
 
     def onSelectedIndexChanged(self, widget=None, item_id=None):
         self.last_item_id = self[self.selected_widget].selectedItem.get("Id")
@@ -193,26 +186,21 @@ class E2EmbyHome(Screen):
             self.clearInfoPane()
 
         self.sel_timer.stop()
-        self.sel_timer.start(
-            config.plugins.e2embyclient.changedelay.value, True)
+        self.sel_timer.start(config.plugins.e2embyclient.changedelay.value, True)
 
     def left(self):
         self.last_widget_info_load_success = None
         if hasattr(self[self.selected_widget].instance, "prevItem"):
-            self[self.selected_widget].instance.moveSelection(
-                self[self.selected_widget].instance.prevItem)
+            self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
         else:
-            self[self.selected_widget].instance.moveSelection(
-                self[self.selected_widget].instance.moveLeft)
+            self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
 
     def right(self):
         self.last_widget_info_load_success = None
         if hasattr(self[self.selected_widget].instance, "nextItem"):
-            self[self.selected_widget].instance.moveSelection(
-                self[self.selected_widget].instance.nextItem)
+            self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
         else:
-            self[self.selected_widget].instance.moveSelection(
-                self[self.selected_widget].instance.moveRight)
+            self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
 
     def up(self):
         current_widget_index = self.availableWidgets.index(
@@ -259,8 +247,7 @@ class E2EmbyHome(Screen):
         widget = self[self.selected_widget]
         selected_item = widget.getCurrentItem()
         if widget.isLibrary:
-            self.session.openWithCallback(
-                self.exitCallback, E2EmbyLibrary, selected_item)
+            self.session.openWithCallback(self.exitCallback, E2EmbyLibrary, selected_item)
         else:
             item_type = selected_item.get("Type")
             embyScreenClass = EmbyMovieItemView
@@ -270,8 +257,7 @@ class E2EmbyHome(Screen):
                 embyScreenClass = EmbyBoxSetItemView
             elif item_type == "Series":
                 embyScreenClass = EmbySeriesItemView
-            self.session.openWithCallback(
-                self.exitCallback, embyScreenClass, selected_item, self.backdrop_pix)
+            self.session.openWithCallback(self.exitCallback, embyScreenClass, selected_item, self.backdrop_pix)
 
     def exitCallback(self, *result):
         if not len(result):
@@ -302,8 +288,7 @@ class E2EmbyHome(Screen):
 
     def downloadCover(self, item_id, icon_img, orig_item_id):
         try:
-            backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280,
-                                                      image_type="Backdrop", alpha_channel=self.mask_alpha)
+            backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
             if orig_item_id != self.last_item_id:
                 return
             if backdrop_pix:
@@ -363,8 +348,7 @@ class E2EmbyHome(Screen):
             logo_widget_size = self["title_logo"].instance.size()
             max_w = logo_widget_size.width()
             max_h = logo_widget_size.height()
-            logo_pix = EmbyApiClient.getItemImage(
-                item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
+            logo_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
             if logo_pix:
                 self["title_logo"].setPixmap(logo_pix)
                 self["title"].text = ""
@@ -431,9 +415,7 @@ class E2EmbyHome(Screen):
         self.downloadCover(item_id, icon_img, orig_item_id)
 
     def loadHome(self, activeConnection):
-        EmbyApiClient.authorizeUser(
-            activeConnection[1], activeConnection[2], activeConnection[3], activeConnection[4])
-
+        EmbyApiClient.authorizeUser(activeConnection[1], activeConnection[2], activeConnection[3], activeConnection[4])
         libs = EmbyApiClient.getLibraries()
         libs_list = []
         i = 0
@@ -470,16 +452,13 @@ class E2EmbyHome(Screen):
             self.lists["list"].move(40, y).visible(True)
             y += self.lists["list"].getHeight() + 40
             if "list_watching" in self.availableWidgets:
-                self.lists["list_watching"].move(40, y).visible(
-                    True).enableSelection(self.selected_widget == "list_watching")
+                self.lists["list_watching"].move(40, y).visible(True).enableSelection(self.selected_widget == "list_watching")
                 y += self.lists["list_watching"].getHeight() + 40
             if "list_recent_movies" in self.availableWidgets:
-                self.lists["list_recent_movies"].move(40, y).visible(
-                    True).enableSelection(self.selected_widget == "list_recent_movies")
+                self.lists["list_recent_movies"].move(40, y).visible(True).enableSelection(self.selected_widget == "list_recent_movies")
                 y += self.lists["list_recent_movies"].getHeight() + 40
             if "list_recent_tvshows" in self.availableWidgets:
-                self.lists["list_recent_tvshows"].move(40, y).visible(
-                    True).enableSelection(self.selected_widget == "list_recent_tvshows")
+                self.lists["list_recent_tvshows"].move(40, y).visible(True).enableSelection(self.selected_widget == "list_recent_tvshows")
                 y += self.lists["list_recent_tvshows"].getHeight() + 40
         except:
             pass
@@ -511,20 +490,16 @@ class E2EmbyHome(Screen):
         else:
             for parent_id in parent_ids:
                 parent_part = f"&ParentId={parent_id}"
-                part_items = EmbyApiClient.getItems(
-                    type_part, sortBy, includeItems, parent_part)
+                part_items = EmbyApiClient.getItems(type_part, sortBy, includeItems, parent_part)
                 items.extend(part_items)
             if len(parent_ids) > 1:
-                items = sorted(items, key=lambda x: x.get(
-                    "DateCreated"), reverse=True)
+                items = sorted(items, key=lambda x: x.get("DateCreated"), reverse=True)
         list = []
         if items:
             i = 0
             for item in items:
-                played_perc = item.get("UserData", {}).get(
-                    "PlayedPercentage", "0")
-                list.append((i, item, item.get('Name'),
-                            None, played_perc, True))
+                played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+                list.append((i, item, item.get('Name'), None, played_perc, True))
                 i += 1
             widget.loadData(list)
         return len(list) > 0

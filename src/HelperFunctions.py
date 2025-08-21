@@ -5,7 +5,9 @@ from io import BytesIO
 from os import makedirs
 from shutil import rmtree
 
-from .Variables import THUMB_CACHE_LOCATION
+from Components.config import config
+
+from .Variables import EMBY_THUMB_CACHE_DIR
 
 
 def convert_ticks_to_time(ticks, is_chapters=False):
@@ -97,8 +99,10 @@ def find_index(items: Iterable[T], predicate: Callable[[T], bool], default: int 
 
 
 def create_thumb_cache_dir(widget_id):
-    makedirs(f"{THUMB_CACHE_LOCATION}/{widget_id}", exist_ok=True)
+    print("THUMB CACHE DIRRRRR!!!!!!")
+    print(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}")
+    makedirs(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}", exist_ok=True)
 
 
 def delete_thumb_cache_dir(widget_id):
-    rmtree(f"{THUMB_CACHE_LOCATION}/{widget_id}", ignore_errors=True)
+    rmtree(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}", ignore_errors=True)

@@ -1,5 +1,5 @@
 from Components.ActionMap import HelpableActionMap
-from Components.config import config, ConfigSelection, ConfigSubsection, ConfigSubList, ConfigInteger, ConfigYesNo, ConfigText, ConfigNothing
+from Components.config import config, ConfigSelection, ConfigSubsection, ConfigSubList, ConfigInteger, ConfigYesNo, ConfigText, ConfigNothing, ConfigDirectory
 from Components.Sources.StaticText import StaticText
 from Screens.Setup import Setup
 from Tools.BoundFunction import boundFunction

@@ -9,7 +9,7 @@ from Components.config import config
 from Components.SystemInfo import BoxInfo
 from Tools.LoadPixmap import LoadPixmap
 
-from .Variables import REQUEST_USER_AGENT
+from .Variables import REQUEST_USER_AGENT, EMBY_THUMB_CACHE_DIR
 from .HelperFunctions import crop_image_from_bytes, resize_and_center_image
 
 from twisted.web.client import Agent, readBody
@@ -448,8 +448,7 @@ class EmbyRestClient():
                     filename = logo_tag
                     if orig_image_type == "Chapter":
                         filename = f"{filename}_{image_index}"
-                    im_tmp_path = "/tmp/emby/%s_%s.%s" % (
-                        filename, orig_item_id, format)
+                    im_tmp_path = "%s%s/%s_%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, filename, orig_item_id, format)
                     if req_width > 0 and req_height > 0:
                         resize_and_center_image(
                             response.content, (req_width, req_height), im_tmp_path)
@@ -467,8 +466,8 @@ class EmbyRestClient():
                             alpha_channel = alpha_channel.resize(
                                 im.size, Image.BOX)
                         im.putalpha(alpha_channel)
-                        im.save("/tmp/emby/backdrop.png", compress_type=3)
-                        pix = LoadPixmap("/tmp/emby/backdrop.png")
+                        im.save(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/backdrop.png", compress_type=3)
+                        pix = LoadPixmap(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/backdrop.png")
                     else:
                         pix = LoadPixmap(im_tmp_path)
                     try:
@@ -504,8 +503,7 @@ class EmbyRestClient():
             image_type = f"{image_type}/{image_index if image_index > -1 else 0}"
 
         logo_url = (
-            f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}"
-            f"?tag={logo_tag}&quality=60&format={format}{addon}"
+            f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
         )
 
         headers = Headers({
@@ -523,7 +521,7 @@ class EmbyRestClient():
                 if orig_image_type == "Chapter":
                     filename = f"{filename}_{image_index}"
 
-                im_tmp_path = f"/tmp/emby/thumbCache/{widget_id}/{filename}_{orig_item_id}.{format}"
+                im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{filename}_{orig_item_id}.{format}"
 
                 if req_width > 0 and req_height > 0:
                     resize_and_center_image(
@@ -542,8 +540,8 @@ class EmbyRestClient():
                         alpha_channel = alpha_channel.resize(
                             im.size, Image.BOX)
                     im.putalpha(alpha_channel)
-                    im.save("/tmp/emby/thumbCache/backdrop.png", compress_type=3)
-                    im_tmp_path = "/tmp/emby/thumbCache/backdrop.png"
+                    im.save(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/backdrop.png", compress_type=3)
+                    im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/backdrop.png"
 
                 returnValue(im_tmp_path)
 
@@ -576,7 +574,7 @@ class EmbyRestClient():
                 response = get(logo_url, timeout=(
                     config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
                 if response.status_code != 404:
-                    im_tmp_path = "/tmp/emby/%s.%s" % (logo_tag, format)
+                    im_tmp_path = "%s%s/%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, logo_tag, format)
                     if req_width > 0 and req_height > 0:
                         crop_image_from_bytes(
                             response.content, req_width, req_height, im_tmp_path)
@@ -639,7 +637,7 @@ class EmbyRestClient():
                     break
 
                 body = yield readBody(response)
-                im_tmp_path = f"/tmp/emby/thumbCache/{widget_id}/{logo_tag}.{format}"
+                im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{logo_tag}.{format}"
 
                 if req_width > 0 and req_height > 0:
                     crop_image_from_bytes(

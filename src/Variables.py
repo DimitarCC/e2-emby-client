@@ -11,4 +11,5 @@ REQUEST_USER_AGENT = USER_AGENTS["windows"]
 
 plugin_dir = path.dirname(modules[__name__].__file__)
 
-THUMB_CACHE_LOCATION = "/tmp/emby/thumbCache"
+EMBY_DATA_DIR = "/emby"
+EMBY_THUMB_CACHE_DIR = EMBY_DATA_DIR + "/thumbCache"
