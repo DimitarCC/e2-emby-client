@@ -15,7 +15,7 @@ from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbySetup import getActiveConnection
-from .EmbyRestClient import EmbyApiClient
+from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .EmbyLibraryScreen import E2EmbyLibrary
 from .EmbyMovieItemView import EmbyMovieItemView
 from .EmbyEpisodeItemView import EmbyEpisodeItemView
@@ -415,6 +415,7 @@ class E2EmbyHome(Screen):
         self.downloadCover(item_id, icon_img, orig_item_id)
 
     def loadHome(self, activeConnection):
+        DIRECTORY_PARSER.listDirectory()
         EmbyApiClient.authorizeUser(activeConnection[1], activeConnection[2], activeConnection[3], activeConnection[4])
         libs = EmbyApiClient.getLibraries()
         libs_list = []

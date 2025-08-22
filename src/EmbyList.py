@@ -7,12 +7,12 @@ from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
-from Components.Label import Label
+from Components.config import config
 from Tools.LoadPixmap import LoadPixmap
 
-from .EmbyRestClient import EmbyApiClient
+from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .HelperFunctions import embyDateToString, convert_ticks_to_time, find_index, create_thumb_cache_dir, delete_thumb_cache_dir
-from .Variables import plugin_dir
+from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR
 from . import _, PluginLanguageDomain
 
 
@@ -73,9 +73,6 @@ class EmbyList(GUIComponent):
         new_page = self.selectedIndex // self.items_per_page
         if new_page != self.currentPage:
             self.currentPage = new_page
-            self.updateThumbCache()
-            if len(self.itemsForThumbs) > 0 and not self.running:
-                threads.deferToThread(self.runQueueProcess)
         self.lastSelectedItemId = self.selectedItem.get("Id")
         for x in self.onSelectionChanged:
             x(self, self.selectedItem and self.selectedItem.get("Id"))
@@ -139,6 +136,53 @@ class EmbyList(GUIComponent):
                 "Id") == self.lastSelectedItemId)
 
         self.data = items
+        if config.plugins.e2embyclient.thumbcache_loc.value != "/tmp":
+            for itm in items:
+                item = itm[1]
+                if self.type == "item":
+                    icon_img = item.get("ImageTags").get("Primary")
+                    item_id = item.get("Id")
+                    parent_id = item.get("ParentThumbItemId")
+                    parent_icon_img = item.get("ParentThumbImageTag")
+                    if parent_id and parent_icon_img:
+                        item_id = parent_id
+                        icon_img = parent_icon_img
+                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+                elif self.type == "episodes":
+                    icon_img = item.get("ImageTags").get("Primary")
+                    item_id = item.get("Id")
+                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+                elif self.type == "chapters":
+                    item_id = item.get("Id")
+                    icon_img = item.get("ImageTag")
+                    image_index = item.get("ChapterIndex", -1)
+                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}_{image_index}__{self.iconWidth}_{self.iconHeight}.jpg"
+                else:
+                    icon_img = item.get("PrimaryImageTag")
+                    item_id = item.get("Id")
+                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}.jpg"
+
+                if f_name in DIRECTORY_PARSER.THUMBS:
+                    self.thumbs[item_id] = f_name
+                else:
+                    if self.type != "chapters":
+                        backdrop_image_tags = item.get("BackdropImageTags")
+                        parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
+                        if parent_backdrop_image_tags:
+                            backdrop_image_tags = parent_backdrop_image_tags
+
+                        if not backdrop_image_tags or len(backdrop_image_tags) == 0:
+                            continue
+
+                        icon_img = backdrop_image_tags[0]
+                        parent_b_item_id = item.get("ParentBackdropItemId")
+                        if parent_b_item_id:
+                            item_id = parent_b_item_id
+
+                        f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+                        if f_name in DIRECTORY_PARSER.THUMBS:
+                            self.thumbs[item_id] = f_name
+
         self.l.setList(items)
         if new_index > -1:
             self.instance.moveSelectionTo(new_index)
@@ -147,13 +191,6 @@ class EmbyList(GUIComponent):
         start = page_index * self.items_per_page
         end = min(start + self.items_per_page, len(self.data))
         return [(item[0], item[1]) for item in self.data[start:end]]
-
-    def updateThumbCache(self):
-        next_page_items = self.get_page_item_ids(self.currentPage + 1)
-        for item_tuple in next_page_items:
-            found = any(item_tuple[0] in tup for tup in self.itemsForThumbs)
-            if item_tuple[1].get("Id") not in self.thumbs and not found:
-                self.itemsForThumbs.append(item_tuple)
 
     @inlineCallbacks
     def runQueueProcess(self):
@@ -210,6 +247,7 @@ class EmbyList(GUIComponent):
             self.updatingIndexesInProgress.remove(item_index)
 
         if icon_pix:
+            DIRECTORY_PARSER.addToSet(icon_pix)
             self.instance.redrawItemByIndex(item_index)
         returnValue(True)
 
@@ -256,6 +294,7 @@ class EmbyList(GUIComponent):
             self.updatingIndexesInProgress.remove(item_index)
 
         if icon_pix:
+            DIRECTORY_PARSER.addToSet(icon_pix)
             self.instance.redrawItemByIndex(item_index)
         returnValue(True)
 
@@ -293,7 +332,6 @@ class EmbyList(GUIComponent):
             found = any(item_index in tup for tup in self.itemsForThumbs)
             if is_icon and not found:
                 self.itemsForThumbs.append((item_index, item))
-            self.updateThumbCache()
             if len(self.itemsForThumbs) > 0 and not self.running:
                 threads.deferToThread(self.runQueueProcess)
 

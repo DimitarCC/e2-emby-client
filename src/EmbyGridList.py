@@ -7,11 +7,12 @@ from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
+from Components.config import config
 from Tools.LoadPixmap import LoadPixmap
 
-from .EmbyRestClient import EmbyApiClient
+from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .HelperFunctions import embyDateToString, create_thumb_cache_dir, delete_thumb_cache_dir
-from .Variables import plugin_dir
+from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR
 from . import _, PluginLanguageDomain
 
 
@@ -86,8 +87,8 @@ class EmbyGridList(GUIComponent):
 
     def isIndexInCurrentPage(self, index):
         item_page_index = index // self.items_per_page
-        min = self.currentPage - 1
-        max = self.currentPage + 1
+        min = self.currentPage
+        max = self.currentPage
         return item_page_index >= min and item_page_index <= max
 
     def getIsAtFirstRow(self):
@@ -110,9 +111,6 @@ class EmbyGridList(GUIComponent):
         newPage = self.getIndexCurrentPage(self.currentSelectedIndex)
         if self.currentPage != newPage:
             self.currentPage = newPage
-            self.updateThumbCache()
-            if len(self.itemsForThumbs) > 0 and not self.running:
-                threads.deferToThread(self.runQueueProcess)
         for x in self.onSelectionChanged:
             x()
 
@@ -163,19 +161,23 @@ class EmbyGridList(GUIComponent):
 
     def loadData(self, items):
         self.data = items
+        if config.plugins.e2embyclient.thumbcache_loc.value != "off":
+            for item in items:
+                itm = item[1]
+                item_id = itm.get("Id")
+                icon_img = itm.get("ImageTags").get("Primary")
+                parent_icon_img = itm.get("ParentThumbImageTag")
+                if parent_icon_img:
+                    icon_img = parent_icon_img
+                f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+                if f_name in DIRECTORY_PARSER.THUMBS:
+                    self.thumbs[item_id] = f_name
         self.l.setList(items)
 
     def get_page_item_ids(self, page_index):
         start = page_index * self.items_per_page
         end = min(start + self.items_per_page, len(self.data))
         return [(item[0], item[1]) for item in self.data[start:end]]
-
-    def updateThumbCache(self):
-        next_page_items = self.get_page_item_ids(self.currentPage + 1)
-        for item_tuple in next_page_items:
-            found = any(item_tuple[0] in tup for tup in self.itemsForThumbs)
-            if item_tuple[1].get("Id") not in self.thumbs and not found:
-                self.itemsForThumbs.append(item_tuple)
 
     @inlineCallbacks
     def runQueueProcess(self):
@@ -244,6 +246,7 @@ class EmbyGridList(GUIComponent):
             self.updatingIndexesInProgress.remove(item_index)
 
         if icon_pix:
+            DIRECTORY_PARSER.addToSet(icon_pix)
             self.instance.redrawItemByIndex(item_index)
 
     def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
@@ -277,7 +280,6 @@ class EmbyGridList(GUIComponent):
             found = any(item_index in tup for tup in self.itemsForThumbs)
             if is_icon and not found:
                 self.itemsForThumbs.append((item_index, item))
-            self.updateThumbCache()
             if len(self.itemsForThumbs) > 0 and not self.running:
                 threads.deferToThread(self.runQueueProcess)
 
@@ -315,8 +317,7 @@ class EmbyGridList(GUIComponent):
                 color=0xc2c2c2, color_sel=0xc2c2c2))
 
         played = item.get("UserData", {}).get("Played", False)
-        unplayed_items_count = item.get(
-            "UserData", {}).get("UnplayedItemCount", -1)
+        unplayed_items_count = item.get("UserData", {}).get("UnplayedItemCount", -1)
         if played:
             res.append(MultiContentEntryRectangle(
                 pos=(self.spacing + self.iconWidth - 45, self.spacing),
