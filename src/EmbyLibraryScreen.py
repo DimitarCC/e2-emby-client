@@ -161,7 +161,10 @@ class E2EmbyLibrary(Screen):
         if self.selected_widget == "charbar":
             self["charbar"].enableSelection(False)
         else:
-            self[self.selected_widget].toggleSelection(False)
+            if hasattr(self[self.selected_widget], "enableSelection"):
+                self[self.selected_widget].enableSelection(False)
+            else:
+                self[self.selected_widget].toggleSelection(False)
         self.selected_widget = "header"
         self[self.selected_widget].setFocused(True)
 
@@ -212,11 +215,9 @@ class E2EmbyLibrary(Screen):
             self[self.selected_widget].setFocused(True)
         else:
             if self.selected_widget == "list":
-                self[self.selected_widget].instance.moveSelection(
-                    self[self.selected_widget].instance.moveUp)
+                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveUp)
             elif self.selected_widget == "charbar":
-                self[self.selected_widget].instance.moveSelection(
-                    self[self.selected_widget].instance.prevItem)
+                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
         # current_widget_index = self.availableWidgets.index(self.selected_widget)
         # if current_widget_index == 0:
         # 	return
@@ -245,11 +246,9 @@ class E2EmbyLibrary(Screen):
             self[self.selected_widget].toggleSelection(True)
         else:
             if self.selected_widget == "list":
-                self[self.selected_widget].instance.moveSelection(
-                    self[self.selected_widget].instance.moveDown)
+                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveDown)
             elif self.selected_widget == "charbar":
-                self[self.selected_widget].instance.moveSelection(
-                    self[self.selected_widget].instance.nextItem)
+                self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
         # current_widget_index = self.availableWidgets.index(self.selected_widget)
         # if current_widget_index == len(self.availableWidgets) - 1:
         # 	return
