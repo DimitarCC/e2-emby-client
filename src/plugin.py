@@ -62,7 +62,9 @@ def startHome(menuid):
 
 
 def sessionstart(reason, session, **kwargs):
-    makedirs(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
+    makedirs(f"/tmp{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
+    if config.plugins.e2embyclient.thumbcache_loc.value != "off":
+        makedirs(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
 
 
 def Plugins(path, **kwargs):
