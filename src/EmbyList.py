@@ -140,7 +140,7 @@ class EmbyList(GUIComponent):
             for itm in items:
                 item = itm[1]
                 if self.type == "item":
-                    icon_img = item.get("ImageTags").get("Primary")
+                    icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
                     item_id = item.get("Id")
                     parent_id = item.get("ParentThumbItemId")
                     parent_icon_img = item.get("ParentThumbImageTag")
@@ -203,7 +203,7 @@ class EmbyList(GUIComponent):
             item_index = item_popped[0]
             item = item_popped[1]
             if self.type == "item":
-                icon_img = item.get("ImageTags").get("Primary")
+                icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
                 item_id = item.get("Id")
                 parent_id = item.get("ParentThumbItemId")
                 parent_icon_img = item.get("ParentThumbImageTag")
