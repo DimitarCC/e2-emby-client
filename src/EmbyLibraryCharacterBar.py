@@ -1,4 +1,4 @@
-from enigma import eListbox, eListboxPythonMultiContent, RT_VALIGN_CENTER, RT_HALIGN_CENTER, eRect, RT_BLEND
+from enigma import eListbox, eListboxPythonMultiContent, RT_VALIGN_CENTER, RT_HALIGN_CENTER, eRect, RT_BLEND, gFont
 from skin import parseColor, parseFont
 from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryText, MultiContentEntryRectangle
@@ -13,6 +13,7 @@ class EmbyLibraryCharacterBar(GUIComponent):
 		self.data = []
 		self.l = eListboxPythonMultiContent()  # noqa: E741
 		self.l.setBuildFunc(self.buildEntry)
+		self.font = gFont("Regular", 18)
 		self.spacing = 10
 		self.itemHeight = 35
 		self.foreColor = None
