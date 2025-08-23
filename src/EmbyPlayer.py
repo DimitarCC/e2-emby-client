@@ -133,6 +133,11 @@ class EmbyPlayer(MoviePlayer):
 		self.updateEmbyProgress()
 
 	def setProgress(self, pos):
+		if pos > 0:
+			self.lastPos = pos
+		else:
+			self.lastPos = self.init_seek_to
+
 		lenght = self.getLength()
 		if not lenght or pos is None:
 			self["progress"].value = 0
@@ -151,7 +156,6 @@ class EmbyPlayer(MoviePlayer):
 			self["time_remaining_summary"].setText(text_remaining)
 			return
 
-		self.lastPos = pos
 		r = self.getLength() - pos  # Remaining
 		progress_val = i if (i := int((pos / lenght) * 100)) and i >= 0 else 0
 		self["progress"].value = progress_val

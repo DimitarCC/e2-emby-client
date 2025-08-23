@@ -1,6 +1,6 @@
 from twisted.internet import threads
-from twisted.internet.defer import inlineCallbacks, returnValue
 from uuid import uuid4
+from time import sleep
 
 from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP
 from skin import parseColor, parseFont
@@ -136,30 +136,25 @@ class EmbyList(GUIComponent):
                 "Id") == self.lastSelectedItemId)
 
         self.data = items
-        if config.plugins.e2embyclient.thumbcache_loc.value != "/tmp":
+        if config.plugins.e2embyclient.thumbcache_loc.value != "off" and config.plugins.e2embyclient.thumbcache_loc.value != "/tmp":
             for itm in items:
                 item = itm[1]
+                item_id = item.get("Id")
                 if self.type == "item":
                     icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
-                    item_id = item.get("Id")
-                    parent_id = item.get("ParentThumbItemId")
                     parent_icon_img = item.get("ParentThumbImageTag")
-                    if parent_id and parent_icon_img:
-                        item_id = parent_id
+                    if parent_icon_img:
                         icon_img = parent_icon_img
                     f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
                 elif self.type == "episodes":
                     icon_img = item.get("ImageTags").get("Primary")
-                    item_id = item.get("Id")
                     f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
                 elif self.type == "chapters":
-                    item_id = item.get("Id")
                     icon_img = item.get("ImageTag")
                     image_index = item.get("ChapterIndex", -1)
                     f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}_{image_index}__{self.iconWidth}_{self.iconHeight}.jpg"
                 else:
                     icon_img = item.get("PrimaryImageTag")
-                    item_id = item.get("Id")
                     f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}.jpg"
 
                 if f_name in DIRECTORY_PARSER.THUMBS:
@@ -175,9 +170,6 @@ class EmbyList(GUIComponent):
                             continue
 
                         icon_img = backdrop_image_tags[0]
-                        parent_b_item_id = item.get("ParentBackdropItemId")
-                        if parent_b_item_id:
-                            item_id = parent_b_item_id
 
                         f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
                         if f_name in DIRECTORY_PARSER.THUMBS:
@@ -192,7 +184,6 @@ class EmbyList(GUIComponent):
         end = min(start + self.items_per_page, len(self.data))
         return [(item[0], item[1]) for item in self.data[start:end]]
 
-    @inlineCallbacks
     def runQueueProcess(self):
         self.running = True
         while len(self.itemsForThumbs) > 0:
@@ -212,34 +203,33 @@ class EmbyList(GUIComponent):
                     icon_img = parent_icon_img
                     self.icon_type = "Thumb"
 
-                yield self.updateThumbnail(item_id, item_index, item, icon_img)
+                threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img)
             elif self.type == "episodes":
                 icon_img = item.get("ImageTags").get("Primary")
                 item_id = item.get("Id")
-                yield self.updateThumbnail(item_id, item_index, item, icon_img)
+                threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img)
             elif self.type == "chapters":
                 item_id = item.get("Id").split("_")[0]
                 icon_img = item.get("ImageTag")
-                yield self.updateThumbnail(item_id, item_index, item, icon_img)
+                threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img)
             else:
                 icon_img = item.get("PrimaryImageTag")
                 item_id = item.get("Id")
                 person_name = item.get("Name")
-                yield self.updateCastThumbnail(item_id, person_name, item_index, icon_img)
+                threads.deferToThread(self.updateCastThumbnail, item_id, person_name, item_index, icon_img)
 
         self.running = False
 
-    @inlineCallbacks
     def updateCastThumbnail(self, item_id, person_name, item_index, icon_img):
         icon_pix = None
 
         if item_index not in self.updatingIndexesInProgress:
             self.updatingIndexesInProgress.append(item_index)
 
-        icon_pix = yield EmbyApiClient.getPersonImageAsync(widget_id=self.widget_id, person_name=person_name, logo_tag=icon_img,
+        icon_pix = EmbyApiClient.getPersonImage(widget_id=self.widget_id, person_name=person_name, logo_tag=icon_img,
                                                            height=self.iconHeight, req_width=self.iconWidth, req_height=self.iconHeight)
         if not hasattr(self, "data"):
-            returnValue(False)
+            return False
         if item_id not in self.thumbs:
             self.thumbs[item_id] = icon_pix or True
 
@@ -248,10 +238,9 @@ class EmbyList(GUIComponent):
 
         if icon_pix:
             DIRECTORY_PARSER.addToSet(icon_pix)
-            self.instance.redrawItemByIndex(item_index)
-        returnValue(True)
+            threads.deferToThread(self.instance.redrawItemByIndex, item_index)
+        return True
 
-    @inlineCallbacks
     def updateThumbnail(self, item_id, item_index, item, icon_img):
         icon_pix = None
         orig_item_id = item.get("Id")
@@ -267,7 +256,7 @@ class EmbyList(GUIComponent):
             req_width = self.iconWidth
             req_height = self.iconHeight
 
-        icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight,
+        icon_pix = EmbyApiClient.getItemImage(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight,
                                                          image_type=self.icon_type, image_index=image_index, req_width=req_width, req_height=req_height, orig_item_id=orig_item_id)
         if not icon_pix and self.type != "chapters":
             backdrop_image_tags = item.get("BackdropImageTags")
@@ -276,7 +265,7 @@ class EmbyList(GUIComponent):
                 backdrop_image_tags = parent_backdrop_image_tags
 
             if not backdrop_image_tags or len(backdrop_image_tags) == 0:
-                returnValue(False)
+                return False
 
             icon_img = backdrop_image_tags[0]
             parent_b_item_id = item.get("ParentBackdropItemId")
@@ -284,8 +273,7 @@ class EmbyList(GUIComponent):
                 item_id = parent_b_item_id
 
             if not icon_pix:
-                icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id,
-                                                                 item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
+                icon_pix = EmbyApiClient.getItemImage(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
 
         if orig_item_id not in self.thumbs:
             self.thumbs[orig_item_id] = icon_pix or True
@@ -295,8 +283,12 @@ class EmbyList(GUIComponent):
 
         if icon_pix:
             DIRECTORY_PARSER.addToSet(icon_pix)
-            self.instance.redrawItemByIndex(item_index)
-        returnValue(True)
+            threads.deferToThread(self.redrawItem, item_index)
+        return True
+    
+    def redrawItem(self, index):
+        sleep(0.1)
+        self.instance.redrawItemByIndex(index)
 
     def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
         xPos = 0

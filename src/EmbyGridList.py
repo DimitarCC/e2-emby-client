@@ -1,6 +1,6 @@
 from twisted.internet import threads
-from twisted.internet.defer import inlineCallbacks
 from uuid import uuid4
+from time import sleep
 
 from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP, RT_ELLIPSIS
 from skin import parseColor, parseFont
@@ -24,6 +24,7 @@ class EmbyGridList(GUIComponent):
         self.isLibrary = isLibrary
         self.data = []
         self.itemsForThumbs = []
+        self.itemsForRedraw = []
         self.thumbs = {}
         self.onSelectionChanged = []
         self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
@@ -44,6 +45,8 @@ class EmbyGridList(GUIComponent):
         self.icon_type = "Primary"
         self.refreshing = False
         self.running = False
+        self.redrawing_thread_running = False
+        self.index_currently_redrawing = -1
         self.updatingIndexesInProgress = []
         self.interupt = False
         self.currentPage = 0
@@ -179,7 +182,6 @@ class EmbyGridList(GUIComponent):
         end = min(start + self.items_per_page, len(self.data))
         return [(item[0], item[1]) for item in self.data[start:end]]
 
-    @inlineCallbacks
     def runQueueProcess(self):
         self.running = True
         while len(self.itemsForThumbs) > 0:
@@ -200,11 +202,25 @@ class EmbyGridList(GUIComponent):
                 icon_img = parent_icon_img
                 self.icon_type = "Thumb"
 
-            yield self.updateThumbnail(item_id, item_index, item, icon_img, False)
+            threads.deferToThread(self.updateThumbnail, item_id, item_index, item, icon_img, False)
 
         self.running = False
 
-    @inlineCallbacks
+    def runRedrawingQueueProcess(self):
+        self.redrawing_thread_running = True
+        while len(self.itemsForRedraw) > 0:
+            if self.interupt:
+                self.interupt = False
+                break
+            item_index = self.itemsForRedraw.pop(0)
+            while self.index_currently_redrawing > -1:
+                sleep(0.1)
+                continue
+            print("[E2Emby][EmbyGridList] DELAYED REDRAW OF THUMB")
+            self.instance.redrawItemByIndex(item_index)
+
+        self.redrawing_thread_running = False
+
     def updateThumbnail(self, item_id, item_index, item, icon_img, fromRecursion):
         icon_pix = None
 
@@ -216,7 +232,7 @@ class EmbyGridList(GUIComponent):
         if item_index not in self.updatingIndexesInProgress:
             self.updatingIndexesInProgress.append(item_index)
 
-        icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type=self.icon_type)
+        icon_pix = EmbyApiClient.getItemImage(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type=self.icon_type)
         if not self.isIndexInCurrentPage(item_index):
             return
         if not icon_pix:
@@ -233,7 +249,7 @@ class EmbyGridList(GUIComponent):
             if parent_b_item_id:
                 item_id = parent_b_item_id
 
-            icon_pix = yield EmbyApiClient.getItemImageAsync(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
+            icon_pix = EmbyApiClient.getItemImage(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
             if not self.isIndexInCurrentPage(item_index):
                 return
 
@@ -247,11 +263,18 @@ class EmbyGridList(GUIComponent):
 
         if icon_pix:
             DIRECTORY_PARSER.addToSet(icon_pix)
-            self.instance.redrawItemByIndex(item_index)
+            threads.deferToThread(self.redrawItem, item_index)
+
+    def redrawItem(self, index):
+        if self.index_currently_redrawing > -1:
+            self.itemsForRedraw.append(index)
+            if len(self.itemsForRedraw) == 1 and not self.redrawing_thread_running:
+                threads.deferToThread(self.runRedrawingQueueProcess)
+        else:
+            self.instance.redrawItemByIndex(index)
 
     def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
-        xPos = 0
-        yPos = 0
+        self.index_currently_redrawing = item_index
         res = [None]
         orig_id = item.get("Id")
         selected = self.currentSelectedIndex == item_index
@@ -345,5 +368,5 @@ class EmbyGridList(GUIComponent):
                 cornerRadius=6,
                 text=str(unplayed_items_count),
                 color=0xffffff, color_sel=0xffffff))
-
+        self.index_currently_redrawing = -1
         return res

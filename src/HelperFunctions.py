@@ -100,11 +100,13 @@ def find_index(items: Iterable[T], predicate: Callable[[T], bool], default: int 
 
 def create_thumb_cache_dir(widget_id):
     if config.plugins.e2embyclient.thumbcache_loc.value == "off":
+        return
+    elif config.plugins.e2embyclient.thumbcache_loc.value == "/tmp":
         makedirs(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}", exist_ok=True)
     else:
         makedirs(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
 
 
 def delete_thumb_cache_dir(widget_id):
-    if config.plugins.e2embyclient.thumbcache_loc.value == "off":
+    if config.plugins.e2embyclient.thumbcache_loc.value == "off" or config.plugins.e2embyclient.thumbcache_loc.value == "/tmp":
         rmtree(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}", ignore_errors=True)

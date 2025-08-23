@@ -12,12 +12,6 @@ from Tools.LoadPixmap import LoadPixmap
 from .Variables import REQUEST_USER_AGENT, EMBY_THUMB_CACHE_DIR
 from .HelperFunctions import crop_image_from_bytes, resize_and_center_image
 
-from twisted.web.client import Agent, readBody
-from twisted.web.http_headers import Headers
-from twisted.internet.defer import inlineCallbacks, returnValue
-from twisted.internet import reactor
-from twisted.internet.defer import DeferredSemaphore
-
 from PIL import Image
 
 
@@ -52,8 +46,6 @@ class EmbyRestClient():
         self.device_name = device_name
         self.device_id = device_id
         self.userSettings = {}
-        self.agent = None
-        self.image_semaphore = DeferredSemaphore(tokens=40)
 
     def constructHeaders(self):
         headers = {'User-Agent': REQUEST_USER_AGENT}
@@ -440,76 +432,7 @@ class EmbyRestClient():
                               f"&ParentId={parent_id}", limit)
         return items and choice(items) or {}
 
-    def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id=""):
-        addon = ""
-        orig_image_type = image_type
-        if width > 0:
-            addon += f"&Width={width}"
-        if height > 0:
-            addon += f"&Height={height}"
-        if max_width > 0:
-            addon += f"&MaxWidth={max_width}"
-        if max_height > 0:
-            addon += f"&MaxHeight={max_height}"
-        if image_type == "Backdrop":
-            if image_index > -1:
-                image_type = f"{image_type}/{image_index}"
-            else:
-                image_type = f"{image_type}/0"
-        if image_type == "Chapter":
-            if image_index > -1:
-                image_type = f"{image_type}/{image_index}"
-            else:
-                image_type = f"{image_type}/0"
-
-        logo_url = f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
-        for attempt in range(config.plugins.e2embyclient.conretries.value):
-            try:
-                response = get(logo_url, timeout=(
-                    config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
-                if response.status_code != 404:
-                    filename = logo_tag
-                    if orig_image_type == "Chapter":
-                        filename = f"{filename}_{image_index}"
-                    im_tmp_path = "%s%s/%s_%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, filename, orig_item_id, format)
-                    if req_width > 0 and req_height > 0:
-                        resize_and_center_image(
-                            response.content, (req_width, req_height), im_tmp_path)
-                    else:
-                        with open(im_tmp_path, "wb") as f:
-                            f.write(response.content)
-
-                    if alpha_channel:
-                        im = Image.open(im_tmp_path).convert("RGBA")
-                        im_width, im_height = im.size
-                        required_height = im_width // 1.77
-                        if im_height > required_height:
-                            im = im.crop((0, 0, im_width, required_height))
-                        if alpha_channel.size != im.size:
-                            alpha_channel = alpha_channel.resize(
-                                im.size, Image.BOX)
-                        im.putalpha(alpha_channel)
-                        im.save(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png", compress_type=3)
-                        pix = LoadPixmap(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png")
-                    else:
-                        pix = LoadPixmap(im_tmp_path)
-                    try:
-                        remove(im_tmp_path)
-                    except:
-                        pass
-                    return pix
-            except TimeoutError:
-                pass
-            except ReadTimeout:
-                pass
-            except Exception as ex:
-                print("EXEPTION: " + str(ex))
-        return None
-
-    @inlineCallbacks
-    def getItemImageAsync(self, widget_id, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1,
-                          format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id=""):
-
+    def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id="", widget_id=""):
         filename_suffix = ""
 
         addon = ""
@@ -531,60 +454,62 @@ class EmbyRestClient():
         if image_type in ["Backdrop", "Chapter"]:
             image_type = f"{image_type}/{image_index if image_index > -1 else 0}"
 
-        logo_url = (
-            f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
-        )
-
-        headers = Headers({
-            "Accept": ["image/*"]
-        })
-
+        logo_url = f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
+        im_tmp_path = ""
         for attempt in range(config.plugins.e2embyclient.conretries.value):
             try:
-                filename = logo_tag
-                if orig_image_type == "Chapter":
-                    filename = f"{filename}_{image_index}"
-                im_tmp_path = ""
-                if config.plugins.e2embyclient.thumbcache_loc.value == "/tmp":
-                    im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{filename}_{orig_item_id}.{format}"
+                response = get(logo_url, timeout=(
+                    config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+                if response.status_code != 404:
+                    filename = logo_tag
+                    if orig_image_type == "Chapter":
+                        filename = f"{filename}_{image_index}"
+                    # im_tmp_path = "%s%s/%s_%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, filename, orig_item_id, format)
+                    
+                    if config.plugins.e2embyclient.thumbcache_loc.value == "/tmp":
+                        im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{filename}_{orig_item_id}.{format}"
+                    else:
+                        im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{filename}_{filename_suffix}.{format}"
+                    if req_width > 0 and req_height > 0:
+                        resize_and_center_image(
+                            response.content, (req_width, req_height), im_tmp_path)
+                    else:
+                        with open(im_tmp_path, "wb") as f:
+                            f.write(response.content)
+
+                    if alpha_channel:
+                        im = Image.open(im_tmp_path).convert("RGBA")
+                        im_width, im_height = im.size
+                        required_height = im_width // 1.77
+                        if im_height > required_height:
+                            im = im.crop((0, 0, im_width, required_height))
+                        if alpha_channel.size != im.size:
+                            alpha_channel = alpha_channel.resize(
+                                im.size, Image.BOX)
+                        im.putalpha(alpha_channel)
+                        im.save(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png", compress_type=3)
+                        result = LoadPixmap(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png")
+                        # pix = LoadPixmap(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png")
+                    else:
+                        # pix = LoadPixmap(im_tmp_path)
+                        result = im_tmp_path if image_type != "Logo" else LoadPixmap(im_tmp_path)
+                    if image_type in ["Logo", "Backdrop"] or config.plugins.e2embyclient.thumbcache_loc.value == "off":
+                        try:
+                            remove(im_tmp_path)
+                        except:
+                            pass
+                    return result
                 else:
-                    im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{filename}_{filename_suffix}.{format}"
-
-                response = yield self.agent.request(b"GET", logo_url.encode("utf-8"), headers, None)
-                if response.code == 404:
-                    break
-
-                body = yield readBody(response)
-
-                if req_width > 0 and req_height > 0:
-                    resize_and_center_image(
-                        body, (req_width, req_height), im_tmp_path)
-                else:
-                    with open(im_tmp_path, "wb") as f:
-                        f.write(body)
-
-                if alpha_channel:
-                    im = Image.open(im_tmp_path).convert("RGBA")
-                    im_width, im_height = im.size
-                    required_height = im_width // 1.77
-                    if im_height > required_height:
-                        im = im.crop((0, 0, im_width, required_height))
-                    if alpha_channel.size != im.size:
-                        alpha_channel = alpha_channel.resize(
-                            im.size, Image.BOX)
-                    im.putalpha(alpha_channel)
-                    im.save(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png", compress_type=3)
-                    im_tmp_path = f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png"
-
-                returnValue(im_tmp_path)
-
+                    return None
+            except TimeoutError:
+                pass
+            except ReadTimeout:
+                pass
             except Exception as ex:
-                print("EXCEPTION:", str(ex))
-                continue
+                print("EXEPTION: " + str(ex))
+        return None
 
-        returnValue(None)
-
-    def getPersonImage(self, person_name, logo_tag, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, req_width=-1, req_height=-1):
+    def getPersonImage(self, person_name, logo_tag, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, req_width=-1, req_height=-1, widget_id=""):
         image_type = "Primary"
         addon = ""
         if width > 0:
@@ -607,18 +532,23 @@ class EmbyRestClient():
                 response = get(logo_url, timeout=(
                     config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
                 if response.status_code != 404:
-                    im_tmp_path = "%s%s/%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, logo_tag, format)
+                    # im_tmp_path = "%s%s/%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, logo_tag, format)
+                    if config.plugins.e2embyclient.thumbcache_loc.value == "off":
+                        im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{logo_tag}.{format}"
+                    else:
+                        im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{logo_tag}.{format}"
                     if req_width > 0 and req_height > 0:
                         crop_image_from_bytes(
                             response.content, req_width, req_height, im_tmp_path)
                     else:
                         with open(im_tmp_path, "wb") as f:
                             f.write(response.content)
-                    pix = LoadPixmap(im_tmp_path)
-                    try:
-                        remove(im_tmp_path)
-                    except:
-                        pass
+                    pix = im_tmp_path
+                    if config.plugins.e2embyclient.thumbcache_loc.value == "off":
+                        try:
+                            remove(im_tmp_path)
+                        except:
+                            pass
                     return pix
             except TimeoutError:
                 pass
@@ -627,68 +557,6 @@ class EmbyRestClient():
             except:
                 pass
         return None
-
-    @inlineCallbacks
-    def getPersonImageAsync(self, widget_id, person_name, logo_tag, width=-1, height=-1, max_width=-1, max_height=-1,
-                            format="jpg", image_index=-1, req_width=-1, req_height=-1):
-
-        image_type = "Primary"
-        if image_index > -1:
-            image_type = f"{image_type}/{image_index}"
-        else:
-            image_type = f"{image_type}/0"
-
-        addon = ""
-        if width > 0:
-            addon += f"&Width={width}"
-        if height > 0:
-            addon += f"&Height={height}"
-        if max_width > 0:
-            addon += f"&MaxWidth={max_width}"
-        if max_height > 0:
-            addon += f"&MaxHeight={max_height}"
-
-        encoded = quote(person_name)
-        logo_url = f"{self.server_root}/emby/Persons/{encoded}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
-
-        headers = Headers({
-            b"Accept": [b"image/*"]
-        })
-
-        for attempt in range(config.plugins.e2embyclient.conretries.value):
-            try:
-                d = self.agent.request(
-                    b"GET", logo_url.encode("utf-8"), headers, None)
-
-                # Manual timeout
-                # timeout_call = reactor.callLater(config.plugins.e2embyclient.con_timeout.value, d.cancel)
-
-                response = yield d
-                # timeout_call.cancel()
-
-                if response.code == 404:
-                    break
-
-                body = yield readBody(response)
-                if config.plugins.e2embyclient.thumbcache_loc.value == "off":
-                    im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{logo_tag}.{format}"
-                else:
-                    im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{logo_tag}.{format}"
-
-                if req_width > 0 and req_height > 0:
-                    crop_image_from_bytes(
-                        body, req_width, req_height, im_tmp_path)
-                else:
-                    with open(im_tmp_path, "wb") as f:
-                        f.write(body)
-
-                returnValue(im_tmp_path)
-
-            except Exception as e:
-                print(f"Attempt {attempt + 1} failed: {e}")
-                continue
-
-        returnValue(None)
 
     def sendWatched(self, item):
         item_id = item.get("Id")
@@ -831,8 +699,3 @@ class EmbyRestClient():
 
 EmbyApiClient = EmbyRestClient(BoxInfo.getItem(
     "displaymodel"), BoxInfo.getItem("model"))
-
-
-def set_agent():
-    EmbyApiClient.agent = Agent(
-        reactor, connectTimeout=config.plugins.e2embyclient.con_timeout.value)

@@ -3,14 +3,11 @@ from Plugins.Plugin import PluginDescriptor
 from os import makedirs, path
 from .EmbyHome import E2EmbyHome
 from . import _, PluginLanguageDomain
-from . import EmbyRestClient
 from .Variables import EMBY_THUMB_CACHE_DIR
 from Components.Harddisk import harddiskmanager
 from Components.config import config, ConfigSelection
 
 initConfig()
-
-EmbyRestClient.set_agent()
 
 
 class MountChoices:
