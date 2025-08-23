@@ -465,7 +465,7 @@ class EmbyRestClient():
                     if orig_image_type == "Chapter":
                         filename = f"{filename}_{image_index}"
                     # im_tmp_path = "%s%s/%s_%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, filename, orig_item_id, format)
-                    
+
                     if config.plugins.e2embyclient.thumbcache_loc.value == "/tmp":
                         im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{filename}_{orig_item_id}.{format}"
                     else:

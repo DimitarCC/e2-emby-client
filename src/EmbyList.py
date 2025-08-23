@@ -285,7 +285,7 @@ class EmbyList(GUIComponent):
             DIRECTORY_PARSER.addToSet(icon_pix)
             threads.deferToThread(self.redrawItem, item_index)
         return True
-    
+
     def redrawItem(self, index):
         sleep(0.1)
         self.instance.redrawItemByIndex(index)
