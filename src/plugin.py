@@ -1,13 +1,16 @@
-from .EmbySetup import initConfig, EmbySetup
+from .EmbySetup import initConfig
 from Plugins.Plugin import PluginDescriptor
 from os import makedirs, path
 from .EmbyHome import E2EmbyHome
-from . import _, PluginLanguageDomain
+from . import _
 from .Variables import EMBY_THUMB_CACHE_DIR
 from Components.Harddisk import harddiskmanager
 from Components.config import config, ConfigSelection
 
 initConfig()
+
+PROGRAM_NAME = _("E2Emby")
+PROGRAM_DESCRIPTION = _("A client for Emby server")
 
 
 class MountChoices:
@@ -44,15 +47,11 @@ class MountChoices:
 MountChoices()
 
 
-def setup(session, **kwargs):
-    session.open(EmbySetup)
-
-
 def main(session, **kwargs):
     session.open(E2EmbyHome)
 
 
-def startHome(menuid):
+def startFromMainMenu(menuid):
     if menuid != "mainmenu":
         return []
     return [(_("E2Emby"), main, "e2_emby_menu", 100)]
@@ -65,15 +64,13 @@ def sessionstart(reason, session, **kwargs):
 
 
 def Plugins(path, **kwargs):
-    try:
-        result = [
-            PluginDescriptor(where=PluginDescriptor.WHERE_SESSIONSTART,
-                             fnc=sessionstart, needsRestart=False),
-            PluginDescriptor(name=_("E2Emby"), description=_("A client for Emby server"),
-                             where=PluginDescriptor.WHERE_MENU, needsRestart=False, fnc=startHome),
-            PluginDescriptor(name=_("E2Emby Client Setup"), description=_(
-                "A client for Emby server setup"), where=PluginDescriptor.WHERE_PLUGINMENU, icon='plugin.png', fnc=setup)
-        ]
-        return result
-    except ImportError:
-        return PluginDescriptor()
+    plugin = [
+        PluginDescriptor(where=PluginDescriptor.WHERE_SESSIONSTART, fnc=sessionstart, needsRestart=False),
+        PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_PLUGINMENU, icon='plugin.png', fnc=main)
+    ]
+    if config.plugins.e2embyclient.add_to_mainmenu.value:
+        plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_EXTENSIONSMENU, fnc=main))
+    if config.plugins.e2embyclient.add_to_extensionmenu.value:
+        plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_MENU, fnc=startFromMainMenu))
+
+    return plugin
