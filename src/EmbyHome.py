@@ -14,7 +14,7 @@ from Screens.Screen import Screen, ScreenSummary
 from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
 from .EmbyInfoLine import EmbyInfoLine
-from .EmbySetup import getActiveConnection
+from .EmbySetup import getActiveConnection, EmbySetup
 from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .EmbyLibraryScreen import E2EmbyLibrary
 from .EmbyMovieItemView import EmbyMovieItemView
@@ -24,7 +24,7 @@ from .EmbySeriesItemView import EmbySeriesItemView
 from .EmbyItemViewBase import EXIT_RESULT_MOVIE, EXIT_RESULT_SERIES, EXIT_RESULT_EPISODE
 from .HelperFunctions import create_thumb_cache_dir, delete_thumb_cache_dir
 from .Variables import plugin_dir
-from . import _, PluginLanguageDomain
+from . import _
 
 current_thread = None
 
@@ -132,6 +132,7 @@ class E2EmbyHome(Screen):
             "cancel": self.close,  # KEY_RED / KEY_EXIT
             # "save": self.addProvider,  # KEY_GREEN
             "ok": self.processItem,
+            "menu": self.menu  # KEY_MENU
             # "yellow": self.keyYellow,
             # "blue": self.clearData,
         }, -1)
@@ -505,3 +506,6 @@ class E2EmbyHome(Screen):
                 i += 1
             widget.loadData(list)
         return len(list) > 0
+
+    def menu(self):
+        self.session.open(EmbySetup)
