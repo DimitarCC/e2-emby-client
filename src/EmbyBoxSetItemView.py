@@ -22,7 +22,7 @@ class EmbyBoxSetItemView(EmbyItemViewBase):
                     <widget name="boxset_items" position="40,600" size="e-80,426" iconWidth="232" iconHeight="330" font="Regular;20" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1"/>
                </screen>"""]  # noqa: E124
 
-    def __init__(self, session, item, backdrop=None):
+    def __init__(self, session, item, backdrop=None, logo=None):
         EmbyItemViewBase.__init__(self, session, item, backdrop)
 
         self.availableWidgets = ["f_buttons", "boxset_items"]

@@ -58,6 +58,7 @@ class E2EmbyLibrary(Screen):
         self.selected_widget = "list_watching"
         self.last_item_id = None
         self.backdrop_pix = None
+        self.logo_pix = None
         self.mode = MODE_RECOMMENDATIONS
         self.plot_posy_orig = 310
         self.plot_height_orig = 168
@@ -329,7 +330,7 @@ class E2EmbyLibrary(Screen):
             elif item_type == "Series":
                 embyScreenClass = EmbySeriesItemView
             self.session.openWithCallback(self.exitCallback, embyScreenClass,
-                                          selected_item, self.mode == MODE_RECOMMENDATIONS and self.backdrop_pix)
+                                          selected_item, self.mode == MODE_RECOMMENDATIONS and self.backdrop_pix, self.mode != MODE_LIST and self.logo_pix)
 
     def exitCallback(self, *result):
         if not len(result):
@@ -396,8 +397,9 @@ class E2EmbyLibrary(Screen):
             max_h = logo_widget_size.height()
             logo_pix = EmbyApiClient.getItemImage(
                 item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
+            self.logo_pix = logo_pix
             if logo_pix:
-                self["title_logo"].setPixmap(logo_pix)
+                self["title_logo"].setPixmap(self.logo_pix)
                 self["title"].text = ""
             else:
                 if itemType == "Episode":

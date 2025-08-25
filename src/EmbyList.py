@@ -25,6 +25,7 @@ class EmbyList(GUIComponent):
         self.onSelectionChanged = []
         self.data = []
         self.itemsForThumbs = []
+        self.itemsForRedraw = []
         self.thumbs = {}
         self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
         self.selectionEnabled = True
@@ -47,6 +48,8 @@ class EmbyList(GUIComponent):
         self.icon_type = "Primary"
         self.refreshing = False
         self.running = False
+        self.redrawing_thread_running = False
+        self.index_currently_redrawing = -1
         self.updatingIndexesInProgress = []
         self.interupt = False
         self.items_per_page = 0
@@ -220,6 +223,21 @@ class EmbyList(GUIComponent):
 
         self.running = False
 
+    def runRedrawingQueueProcess(self):
+        self.redrawing_thread_running = True
+        while len(self.itemsForRedraw) > 0:
+            if self.interupt:
+                self.interupt = False
+                break
+            while self.index_currently_redrawing > -1:
+                sleep(0.15)
+                continue
+            item_index = self.itemsForRedraw.pop(0)
+            print("[E2Emby][EmbyList] DELAYED REDRAW OF THUMB")
+            self.instance.redrawItemByIndex(item_index)
+
+        self.redrawing_thread_running = False
+
     def updateCastThumbnail(self, item_id, person_name, item_index, icon_img):
         icon_pix = None
 
@@ -287,12 +305,15 @@ class EmbyList(GUIComponent):
         return True
 
     def redrawItem(self, index):
-        sleep(0.1)
-        self.instance.redrawItemByIndex(index)
+        if self.index_currently_redrawing > -1:
+            self.itemsForRedraw.append(index)
+            if len(self.itemsForRedraw) == 1 and not self.redrawing_thread_running:
+                threads.deferToThread(self.runRedrawingQueueProcess)
+        else:
+            self.instance.redrawItemByIndex(index)
 
     def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
-        xPos = 0
-        yPos = 0
+        self.index_currently_redrawing = item_index
         res = [None]
         selected = self.selectedIndex == item_index
         item_id = item.get("Id")
@@ -394,5 +415,5 @@ class EmbyList(GUIComponent):
                 cornerRadius=6,
                 text=str(unplayed_items_count),
                 color=0xffffff, color_sel=0xffffff))
-
+        self.index_currently_redrawing = -1
         return res

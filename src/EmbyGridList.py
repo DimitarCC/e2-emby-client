@@ -212,10 +212,10 @@ class EmbyGridList(GUIComponent):
             if self.interupt:
                 self.interupt = False
                 break
-            item_index = self.itemsForRedraw.pop(0)
             while self.index_currently_redrawing > -1:
-                sleep(0.1)
+                sleep(0.15)
                 continue
+            item_index = self.itemsForRedraw.pop(0)
             print("[E2Emby][EmbyGridList] DELAYED REDRAW OF THUMB")
             self.instance.redrawItemByIndex(item_index)
 

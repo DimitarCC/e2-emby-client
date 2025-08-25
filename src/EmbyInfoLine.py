@@ -22,6 +22,11 @@ class EmbyInfoLine(GUIComponent):
         self.font = gFont("Regular", 18)
         self.fontAdditional = gFont("Regular", 18)
         self.foreColorAdditional = 0xffffff
+        self.l_t = LoadPixmap("%s/l_t.png" % plugin_dir)
+        self.l_b = LoadPixmap("%s/l_b.png" % plugin_dir)
+        self.r_t = LoadPixmap("%s/r_t.png" % plugin_dir)
+        self.r_b = LoadPixmap("%s/r_b.png" % plugin_dir)
+        self.b_back = LoadPixmap("%s/b_back.png" % plugin_dir)
         self.star24 = LoadPixmap(resolveFilename(
             SCOPE_GUISKIN, "icons/emby_star.png"))
         if not self.star24:
@@ -111,28 +116,65 @@ class EmbyInfoLine(GUIComponent):
         s = self.instance.size()
         return s.width(), s.height()
 
-    def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0xadacaa, backColor=0x02111111, textColor=0xffffff):
+    def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0x757472, backColor=0x02111111, textColor=0xffffff):
         if not spacing:
             spacing = self.spacing
 
         textWidth, textHeight = self._calcTextWidth(
             text, font=self.fontAdditional, size=eSize(self.getDesktopWith() // 3, 0))
-        rec_height = textHeight + 1
-        res.append(MultiContentEntryRectangle(
-            pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(textWidth + 20, rec_height),
-            cornerRadius=6,
-            backgroundColor=borderColor, backgroundColorSelected=borderColor))
-        res.append(MultiContentEntryRectangle(
-            pos=(xPos + 2, yPos - 1 + (height - rec_height) // 2 + 2), size=(textWidth + 16, rec_height - 4),
-            cornerRadius=4,
-            backgroundColor=backColor, backgroundColorSelected=backColor))
+        rec_height = textHeight + 10
+        res.append(MultiContentEntryPixmapAlphaBlend(
+                pos=(xPos + 1, yPos + (height - rec_height) // 2), size=(textWidth + 26, rec_height - 4),
+                png=self.b_back, flags=BT_SCALE, cornerRadius=8))
+        res.append(MultiContentEntryPixmapAlphaBlend(
+                pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(8, 8),
+                png=self.l_t))
+        res.append(MultiContentEntryPixmapAlphaBlend(
+                pos=(xPos + textWidth + 30 - 8, yPos - 1 + (height - rec_height) // 2), size=(8, 8),
+                png=self.r_t))
+        res.append(MultiContentEntryPixmapAlphaBlend(
+                pos=(xPos, yPos + (height - rec_height) // 2 + rec_height - 2 - 8), size=(8, 8),
+                png=self.l_b))
+        res.append(MultiContentEntryPixmapAlphaBlend(
+                pos=(xPos + textWidth + 30 - 8, yPos + (height - rec_height) // 2 + rec_height - 2 - 8), size=(8, 8),
+                png=self.r_b))
+        res.append(MultiContentEntryText(
+            pos=(xPos + 8, yPos + (height - rec_height) // 2), size=(textWidth + 30 - 16, 2),
+            font=0,
+            text="",
+            backcolor=borderColor))
+        res.append(MultiContentEntryText(
+            pos=(xPos + 8, yPos - 1 + (height - rec_height) // 2 + rec_height - 4), size=(textWidth + 30 - 16, 2),
+            font=0,
+            text="",
+            backcolor=borderColor))
+        res.append(MultiContentEntryText(
+            pos=(xPos + 1, yPos - 1 + (height - rec_height) // 2 + 8), size=(2, rec_height - 17),
+            font=0,
+            text="",
+            backcolor=borderColor))
+        res.append(MultiContentEntryText(
+            pos=(xPos + textWidth + 30 - 3, yPos - 1 + (height - rec_height) // 2 + 8), size=(2, rec_height - 17),
+            font=0,
+            text="",
+            backcolor=borderColor))
+
+        # res.append(MultiContentEntryRectangle(
+        #     pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(textWidth + 30, rec_height),
+        #     cornerRadius=6,
+        #     backgroundColor=borderColor, backgroundColorSelected=borderColor))
+        # res.append(MultiContentEntryRectangle(
+        #     pos=(xPos + 2, yPos - 1 + (height - rec_height) // 2 + 2), size=(textWidth + 26, rec_height - 4),
+        #     cornerRadius=4,
+        #     backgroundColor=backColor, backgroundColorSelected=backColor))
 
         res.append(MultiContentEntryText(
-            pos=(xPos + 2, yPos - 2 + (height - rec_height) // 2 + 2), size=(textWidth + 16, rec_height - 4),
+            pos=(xPos + 2, yPos + (height - rec_height) // 2 + 1), size=(textWidth + 26, rec_height - 4),
             font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
             text=text,
+            textBColor=0x333333, textBWidth=1,
             color=textColor, color_sel=textColor))
-        xPos += spacing + textWidth + 20
+        xPos += spacing + textWidth + 30
         return xPos
 
     def constructResolutionLabel(self, width, height):
@@ -148,6 +190,34 @@ class EmbyInfoLine(GUIComponent):
         if height == 720 and width == 1280:
             return "HD"
         return "SD"
+
+    def constructYears(self, item):
+        type = item.get("Type", None)
+
+        premiereDate_str = item.get("PremiereDate", None)
+        premiereDate = premiereDate_str and embyDateToString(premiereDate_str, type)
+
+        if type == "Series":
+            status = item.get("Status", "")
+            if status != "Continuing":
+                endDate_str = item.get("EndDate", None)
+                endDate = endDate_str and embyDateToString(endDate_str, type)
+            else:
+                endDate = "Present"
+            if premiereDate == endDate:
+                return premiereDate
+            return f"{premiereDate} - {endDate}"
+        return premiereDate
+
+    def constructSeasons(self, item):
+        type = item.get("Type", None)
+        if type == "Series":
+            seasonsCount = item.get("ChildCount", 0)
+            if seasonsCount == 1:
+                return f"1 {_('Season')}"
+            elif seasonsCount > 1:
+                return f"{seasonsCount} {_('Seasons')}"
+        return ""
 
     def constructAudioLabel(self, streams):
         dts_list = list(
@@ -175,11 +245,7 @@ class EmbyInfoLine(GUIComponent):
         height = self.instance.size().height()
         res = [None]
 
-        type = item.get("Type", None)
-
-        premiereDate_str = item.get("PremiereDate", None)
-        premiereDate = premiereDate_str and embyDateToString(
-            premiereDate_str, type)
+        dates = self.constructYears(item)
         user_rating = int(item.get("CommunityRating", "0"))
         critics_rating = int(item.get("CriticRating", "0"))
         mpaa = item.get("OfficialRating", None)
@@ -187,7 +253,9 @@ class EmbyInfoLine(GUIComponent):
         runtime = runtime_ticks and convert_ticks_to_time(runtime_ticks)
         position_ticks = int(item.get("UserData", {}).get(
             "PlaybackPositionTicks", "0"))
+        status = item.get("Status", "")
         ends_at = embyEndsAtToString(runtime_ticks, position_ticks)
+        seasons = self.constructSeasons(item)
         v_width = int(item.get("Width", "0"))
         v_height = int(item.get("Height", "0"))
         resString = self.constructResolutionLabel(v_width, v_height)
@@ -249,14 +317,25 @@ class EmbyInfoLine(GUIComponent):
                 color=0xffffff, color_sel=0xffffff))
             xPos += self.spacing + textWidth
 
-        if premiereDate:
+        if dates:
             textWidth = self._calcTextWidth(
-                premiereDate, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+                dates, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
             res.append(MultiContentEntryText(
                 pos=(xPos, yPos), size=(textWidth, height),
                 font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=premiereDate,
+                text=dates,
+                color=0xffffff, color_sel=0xffffff))
+            xPos += self.spacing + textWidth
+
+        if seasons:
+            textWidth = self._calcTextWidth(
+                seasons, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+
+            res.append(MultiContentEntryText(
+                pos=(xPos, yPos), size=(textWidth, height),
+                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+                text=seasons,
                 color=0xffffff, color_sel=0xffffff))
             xPos += self.spacing + textWidth
 
@@ -300,5 +379,8 @@ class EmbyInfoLine(GUIComponent):
                 text=ends_at,
                 color=0xffffff, color_sel=0xffffff))
             xPos += self.spacing + textWidth
+
+        if status:
+            xPos = self.constructLabelBox(res, status, height, xPos, yPos)
 
         return res

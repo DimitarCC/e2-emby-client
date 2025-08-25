@@ -22,12 +22,13 @@ EXIT_RESULT_SEASON = 5
 
 
 class EmbyItemViewBase(Screen):
-    def __init__(self, session, item, backdrop=None):
+    def __init__(self, session, item, backdrop=None, logo=None):
         Screen.__init__(self, session)
         self.setTitle(_("Emby") + item.get("Name"))
         self.exitResult = None
         self.init_loaded = False
         self.backdrop = backdrop
+        self.logo = logo
         self.item_id = item.get("Id")
         self.item = item
         self.onShown.append(self.__onShown)
@@ -83,6 +84,7 @@ class EmbyItemViewBase(Screen):
 
     def __onLayoutFinished(self):
         if not self.init_loaded:
+            self["title"].text = ""
             keys = list(self.lists.keys())
             top_widget = keys[0] if len(keys) > 1 else self.availableWidgets[0]
             if top_widget != "f_buttons":
@@ -186,6 +188,21 @@ class EmbyItemViewBase(Screen):
     def injectAfterLoad(self, item):
         pass
 
+    def loadLogo(self, logo_pix):
+        if logo_pix:
+            self.logo = logo_pix
+            self["title_logo"].setPixmap(self.logo)
+            self["title"].text = ""
+        else:
+            itemType = self.item.get("Type", None)
+            if itemType == "Episode":
+                self["title"].text = " ".join(
+                    self.item.get("SeriesName", "").splitlines())
+            else:
+                self["title"].text = " ".join(
+                    self.item.get("Name", "").splitlines())
+            self["title_logo"].setPixmap(None)
+
     def loadItemDetails(self, item, backdrop_pix):
         item_id = item.get("Id")
         parent_b_item_id = item.get("ParentLogoItemId")
@@ -200,22 +217,13 @@ class EmbyItemViewBase(Screen):
         itemType = item.get("Type", None)
 
         if logo_tag:
-            logo_widget_size = self["title_logo"].instance.size()
-            max_w = logo_widget_size.width()
-            max_h = logo_widget_size.height()
-            logo_pix = EmbyApiClient.getItemImage(
-                item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
-            if logo_pix:
-                self["title_logo"].setPixmap(logo_pix)
-                self["title"].text = ""
+            if self.logo:
+                self.loadLogo(self.logo)
             else:
-                if itemType == "Episode":
-                    self["title"].text = " ".join(
-                        item.get("SeriesName", "").splitlines())
-                else:
-                    self["title"].text = " ".join(
-                        item.get("Name", "").splitlines())
-                self["title_logo"].setPixmap(None)
+                logo_widget_size = self["title_logo"].instance.size()
+                max_w = logo_widget_size.width()
+                max_h = logo_widget_size.height()
+                threads.deferToThread(lambda: EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")).addCallback(self.loadLogo)
         else:
             if itemType == "Episode":
                 self["title"].text = " ".join(

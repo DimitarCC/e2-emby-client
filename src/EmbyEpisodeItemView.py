@@ -24,8 +24,8 @@ class EmbyEpisodeItemView(EmbyItemView):
                     <widget name="list_chapters" position="40,1230" size="e-80,426" iconWidth="395" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" orientation="orHorizontal" transparent="1"/>
                 </screen>"""]
 
-    def __init__(self, session, item, backdrop=None):
-        EmbyItemView.__init__(self, session, item, backdrop)
+    def __init__(self, session, item, backdrop=None, logo=None):
+        EmbyItemView.__init__(self, session, item, backdrop, logo)
         self.setTitle(_("Emby") + item.get("Name"))
 
         self["subtitle"] = Label()

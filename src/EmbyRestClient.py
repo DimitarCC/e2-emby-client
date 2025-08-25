@@ -112,7 +112,7 @@ class EmbyRestClient():
         includeItemsParam = "IncludeItemTypes="
         if type_part == "/Resume":
             includeItemsParam = "MediaTypes="
-        url = f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated{',Chapters,Taglines,People' if loadFullInfo else ''}&{includeItemsParam}{includeItems}{parent_part}"
+        url = f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,EndDate,DateCreated,Status,ChildCount{',Chapters,Taglines,People' if loadFullInfo else ''}&{includeItemsParam}{includeItems}{parent_part}"
         for attempt in range(config.plugins.e2embyclient.conretries.value):
             try:
                 response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,

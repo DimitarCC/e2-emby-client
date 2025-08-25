@@ -31,8 +31,8 @@ class EmbySeriesItemView(EmbyItemView):
                     <widget name="list_chapters" position="40,1800" size="e-80,426" iconWidth="407" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" orientation="orHorizontal" transparent="1"/>
                 </screen>"""]
 
-    def __init__(self, session, item, backdrop=None):
-        EmbyItemView.__init__(self, session, item, backdrop)
+    def __init__(self, session, item, backdrop=None, logo=None):
+        EmbyItemView.__init__(self, session, item, backdrop, logo)
         self.series_id = self.item_id
         self["subtitle"] = Label()
         self["seasons_list"] = EmbyList()
@@ -79,7 +79,7 @@ class EmbySeriesItemView(EmbyItemView):
         EmbyItemView.processItem(self)
         if self.selected_widget == "episodes_list":
             selected_item = self["episodes_list"].selectedItem
-            self.session.openWithCallback(self.exitCallback, EmbyEpisodeItemView, selected_item, self.backdrop)
+            self.session.openWithCallback(self.exitCallback, EmbyEpisodeItemView, selected_item, self.backdrop, self.logo)
 
     def exitCallback(self, *result):
         if not len(result):

@@ -10,8 +10,8 @@ from .EmbyItemFunctionButtons import playItem
 
 
 class EmbyItemView(EmbyItemViewBase):
-    def __init__(self, session, item, backdrop=None):
-        EmbyItemViewBase.__init__(self, session, item, backdrop)
+    def __init__(self, session, item, backdrop=None, logo=None):
+        EmbyItemViewBase.__init__(self, session, item, backdrop, logo)
         self["cast_header"] = Label(_("Cast and Crew"))
         self["list_cast"] = EmbyList(type="cast")
         self.cast_controller = EmbyListController(self["list_cast"], self["cast_header"])

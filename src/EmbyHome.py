@@ -64,6 +64,7 @@ class E2EmbyHome(Screen):
         self.deferred_image_tag = None
         self.last_cover = ""
         self.backdrop_pix = None
+        self.logo_pix = None
 
         self.plot_posy_orig = 310
         self.plot_height_orig = 168
@@ -257,7 +258,7 @@ class E2EmbyHome(Screen):
                 embyScreenClass = EmbyBoxSetItemView
             elif item_type == "Series":
                 embyScreenClass = EmbySeriesItemView
-            self.session.openWithCallback(self.exitCallback, embyScreenClass, selected_item, self.backdrop_pix)
+            self.session.openWithCallback(self.exitCallback, embyScreenClass, selected_item, self.backdrop_pix, self.logo_pix)
 
     def exitCallback(self, *result):
         if not len(result):
@@ -348,9 +349,9 @@ class E2EmbyHome(Screen):
             logo_widget_size = self["title_logo"].instance.size()
             max_w = logo_widget_size.width()
             max_h = logo_widget_size.height()
-            logo_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
-            if logo_pix:
-                self["title_logo"].setPixmap(logo_pix)
+            self.logo_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=logo_tag, max_width=max_w, max_height=max_h, image_type="Logo", format="png")
+            if self.logo_pix:
+                self["title_logo"].setPixmap(self.logo_pix)
                 self["title"].text = ""
             else:
                 if itemType == "Episode":
