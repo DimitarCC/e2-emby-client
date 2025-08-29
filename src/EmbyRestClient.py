@@ -437,13 +437,16 @@ class EmbyRestClient():
 
         addon = ""
         orig_image_type = image_type
+        file_addon = ""
 
         if width > 0:
             addon += f"&Width={width}"
             filename_suffix += f"_{width}"
+            file_addon += f"{width}"
         if height > 0:
             addon += f"&Height={height}"
             filename_suffix += f"_{height}"
+            file_addon += f"x{height}"
         if max_width > 0:
             addon += f"&MaxWidth={max_width}"
             filename_suffix += f"_{max_width}"
@@ -467,9 +470,9 @@ class EmbyRestClient():
                     # im_tmp_path = "%s%s/%s_%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, filename, orig_item_id, format)
 
                     if config.plugins.e2embyclient.thumbcache_loc.value == "/tmp":
-                        im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{filename}_{orig_item_id}.{format}"
+                        im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{orig_item_id or item_id}_{file_addon}_{filename}_{orig_item_id}.{format}"
                     else:
-                        im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{filename}_{filename_suffix}.{format}"
+                        im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{orig_item_id or item_id}_{file_addon}_{filename}_{filename_suffix}.{format}"
                     if req_width > 0 and req_height > 0:
                         resize_and_center_image(
                             response.content, (req_width, req_height), im_tmp_path)

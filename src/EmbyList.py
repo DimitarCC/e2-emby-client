@@ -2,7 +2,7 @@ from twisted.internet import threads
 from uuid import uuid4
 from time import sleep
 
-from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP
+from enigma import eTimer, eListbox, eListboxPythonMultiContent, eRect, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
@@ -15,6 +15,8 @@ from .HelperFunctions import embyDateToString, convert_ticks_to_time, find_index
 from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR
 from . import _, PluginLanguageDomain
 
+import os
+
 
 class EmbyList(GUIComponent):
     def __init__(self, type="item", isLibrary=False):
@@ -26,6 +28,7 @@ class EmbyList(GUIComponent):
         self.data = []
         self.itemsForThumbs = []
         self.itemsForRedraw = []
+        self.itemsForRedrawDelayed = []
         self.thumbs = {}
         self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
         self.selectionEnabled = True
@@ -54,6 +57,9 @@ class EmbyList(GUIComponent):
         self.interupt = False
         self.items_per_page = 0
         self.currentPage = 0
+        self.redraw_timer = eTimer()
+        self.redraw_timer.callback.append(self.redraw_delayed)
+        self.redraw_timer.start(1000)
 
     GUI_WIDGET = eListbox
 
@@ -132,6 +138,10 @@ class EmbyList(GUIComponent):
         self.selectionEnabled = enabled
         self.instance.setSelectionEnable(enabled)
 
+    def isIndexInCurrentPage(self, index):
+        item_page_index = index // self.items_per_page
+        return item_page_index == self.currentPage
+
     def loadData(self, items):
         new_index = -1
         if self.lastSelectedItemId:
@@ -148,14 +158,14 @@ class EmbyList(GUIComponent):
                     parent_icon_img = item.get("ParentThumbImageTag")
                     if parent_icon_img:
                         icon_img = parent_icon_img
-                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}x{self.iconHeight}_{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
                 elif self.type == "episodes":
                     icon_img = item.get("ImageTags").get("Primary")
-                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}x{self.iconHeight}_{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
                 elif self.type == "chapters":
                     icon_img = item.get("ImageTag")
                     image_index = item.get("ChapterIndex", -1)
-                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}_{image_index}__{self.iconWidth}_{self.iconHeight}.jpg"
+                    f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}x{self.iconHeight}_{icon_img}_{image_index}__{self.iconWidth}_{self.iconHeight}.jpg"
                 else:
                     icon_img = item.get("PrimaryImageTag")
                     f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}.jpg"
@@ -174,7 +184,7 @@ class EmbyList(GUIComponent):
 
                         icon_img = backdrop_image_tags[0]
 
-                        f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+                        f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}x{self.iconHeight}_{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
                         if f_name in DIRECTORY_PARSER.THUMBS:
                             self.thumbs[item_id] = f_name
 
@@ -229,14 +239,29 @@ class EmbyList(GUIComponent):
             if self.interupt:
                 self.interupt = False
                 break
-            while self.index_currently_redrawing > -1:
+            item_index = self.itemsForRedraw.pop(0)
+            while self.index_currently_redrawing > -1 or self.index_currently_redrawing == item_index:
                 sleep(0.15)
                 continue
-            item_index = self.itemsForRedraw.pop(0)
+
             print("[E2Emby][EmbyList] DELAYED REDRAW OF THUMB")
             self.instance.redrawItemByIndex(item_index)
 
         self.redrawing_thread_running = False
+
+    def redraw_delayed(self):
+        for index in list(self.itemsForRedrawDelayed):
+            if self.interupt:
+                break
+            if len(self.itemsForRedrawDelayed) == 0:
+                self.redraw_timer.stop()
+                break
+            if not self.isIndexInCurrentPage(index):
+                continue
+            if index not in self.itemsForRedrawDelayed:
+                continue
+
+            self.instance.redrawItemByIndex(index)
 
     def updateCastThumbnail(self, item_id, person_name, item_index, icon_img):
         icon_pix = None
@@ -250,6 +275,10 @@ class EmbyList(GUIComponent):
             return False
         if item_id not in self.thumbs:
             self.thumbs[item_id] = icon_pix or True
+            if item_index not in self.itemsForRedrawDelayed:
+                self.itemsForRedrawDelayed.append(item_index)
+                if not self.redraw_timer.isActive():
+                    self.redraw_timer.start(1000)
 
         if item_index in self.updatingIndexesInProgress:
             self.updatingIndexesInProgress.remove(item_index)
@@ -294,7 +323,14 @@ class EmbyList(GUIComponent):
                 icon_pix = EmbyApiClient.getItemImage(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight, image_type="Backdrop")
 
         if orig_item_id not in self.thumbs:
+            # for thumb in DIRECTORY_PARSER.THUMBS:
+            #     if f"{item_id}_{self.iconWidth}x{self.iconHeight}_" in thumb and os.path.exists(thumb):
+            #         os.remove(thumb)
             self.thumbs[orig_item_id] = icon_pix or True
+            if item_index not in self.itemsForRedrawDelayed:
+                self.itemsForRedrawDelayed.append(item_index)
+                if not self.redraw_timer.isActive():
+                    self.redraw_timer.start(1000)
 
         if item_index in self.updatingIndexesInProgress:
             self.updatingIndexesInProgress.remove(item_index)
@@ -319,6 +355,10 @@ class EmbyList(GUIComponent):
         item_id = item.get("Id")
         if item_id in self.thumbs:
             item_icon = self.thumbs[item_id]
+            if item_index in self.itemsForRedrawDelayed:
+                self.itemsForRedrawDelayed.remove(item_index)
+                if len(self.itemsForRedrawDelayed) > 0 and not self.redraw_timer.isActive():
+                    self.redraw_timer.start(1000)
         if selected and self.selectionEnabled:
             res.append(MultiContentEntryRectangle(
                 pos=(self.spacing_sides - 3, self.spacing_sides - 3), size=(self.iconWidth + 6, self.iconHeight + 6),

@@ -2,7 +2,7 @@ from twisted.internet import threads
 from uuid import uuid4
 from time import sleep
 
-from enigma import eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP, RT_ELLIPSIS
+from enigma import eTimer, eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP, RT_ELLIPSIS
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
@@ -25,6 +25,7 @@ class EmbyGridList(GUIComponent):
         self.data = []
         self.itemsForThumbs = []
         self.itemsForRedraw = []
+        self.itemsForRedrawDelayed = []
         self.thumbs = {}
         self.onSelectionChanged = []
         self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
@@ -51,6 +52,9 @@ class EmbyGridList(GUIComponent):
         self.interupt = False
         self.currentPage = 0
         self.items_per_page = 0
+        self.redraw_timer = eTimer()
+        self.redraw_timer.callback.append(self.redraw_delayed)
+        self.redraw_timer.start(1000)
 
     GUI_WIDGET = eListbox
 
@@ -71,6 +75,20 @@ class EmbyGridList(GUIComponent):
     def onShow(self):
         pass
 
+    def redraw_delayed(self):
+        for index in list(self.itemsForRedrawDelayed):
+            if self.interupt:
+                break
+            if len(self.itemsForRedrawDelayed) == 0:
+                self.redraw_timer.stop()
+                break
+            if not self.isIndexInCurrentPage(index):
+                continue
+            if index not in self.itemsForRedrawDelayed:
+                continue
+
+            self.instance.redrawItemByIndex(index)
+
     def postWidgetCreate(self, instance):
         create_thumb_cache_dir(self.widget_id)
         instance.setContent(self.l)
@@ -82,6 +100,8 @@ class EmbyGridList(GUIComponent):
 
     def preWidgetRemove(self, instance):
         instance.selectionChanged.get().remove(self.selectionChanged)
+        self.redraw_timer.stop()
+        self.redraw_timer.callback.remove(self.redraw_delayed)
         self.interupt = True
         delete_thumb_cache_dir(self.widget_id)
 
@@ -172,7 +192,7 @@ class EmbyGridList(GUIComponent):
                 parent_icon_img = itm.get("ParentThumbImageTag")
                 if parent_icon_img:
                     icon_img = parent_icon_img
-                f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+                f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}x{self.iconHeight}_{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
                 if f_name in DIRECTORY_PARSER.THUMBS:
                     self.thumbs[item_id] = f_name
         self.l.setList(items)
@@ -257,6 +277,10 @@ class EmbyGridList(GUIComponent):
             return
         if orig_id not in self.thumbs:
             self.thumbs[orig_id] = icon_pix or True
+            if item_index not in self.itemsForRedrawDelayed:
+                self.itemsForRedrawDelayed.append(item_index)
+                if not self.redraw_timer.isActive():
+                    self.redraw_timer.start(1000)
 
         if item_index in self.updatingIndexesInProgress:
             self.updatingIndexesInProgress.remove(item_index)
@@ -280,6 +304,10 @@ class EmbyGridList(GUIComponent):
         selected = self.currentSelectedIndex == item_index
         if orig_id in self.thumbs:
             item_icon = self.thumbs[orig_id]
+            if item_index in self.itemsForRedrawDelayed:
+                self.itemsForRedrawDelayed.remove(item_index)
+                if len(self.itemsForRedrawDelayed) > 0 and not self.redraw_timer.isActive():
+                    self.redraw_timer.start(1000)
         if selected and self.selectionEnabled:
             res.append(MultiContentEntryRectangle(
                 pos=(self.spacing - 3, self.spacing - 3), size=(self.iconWidth + 6, self.iconHeight + 6),

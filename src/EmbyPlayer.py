@@ -42,10 +42,10 @@ class EmbyPlayer(MoviePlayer):
         if self.onAudioSubTrackChanged not in AudioSelection.hooks:
             AudioSelection.hooks.append(self.onAudioSubTrackChanged)
         self.onPlayStateChanged.append(self.__playStateChanged)
+        self.init_seek_to = startPos
         self.curAudioIndex = -1
         self.curSubsIndex = -1
         self.firstSubIndex = -1
-        self.init_seek_to = startPos
         self.item = item or {}
         self.play_session_id = play_session_id
         self.skip_progress_update = False
@@ -78,7 +78,7 @@ class EmbyPlayer(MoviePlayer):
         self.emby_progress_timer = eTimer()
         self.emby_progress_timer.callback.append(self.updateEmbyProgress)
         self.init_seek_timer = eTimer()
-        self.init_seek_timer.callback.append(self.initiSeekProcess)
+        self.init_seek_timer.callback.append(self.initSeekOnTick)
         self.seek_timer = eTimer()
         self.seek_timer.callback.append(self.onSeekRequest)
         self.onProgressTimer()
@@ -120,7 +120,7 @@ class EmbyPlayer(MoviePlayer):
         p = self.getPosition()
         self.current_seek_step += {1: - config.seek.selfdefined_13.value, 3: config.seek.selfdefined_13.value, 4: - config.seek.selfdefined_46.value, 6: config.seek.selfdefined_46.value, 7: - config.seek.selfdefined_79.value, 9: config.seek.selfdefined_79.value}[key]
         self.progress_timer.stop()
-        self.seek_timer.start(1000, 1)
+        self.seek_timer.start(1000, True)
         p += self.current_seek_step
         self.skip_progress_update = True
         self.current_pos = p
@@ -130,11 +130,11 @@ class EmbyPlayer(MoviePlayer):
     def onSeekRequest(self):
         self.seek_timer.stop()
         self.doSeekRelative(self.current_seek_step * 90000)
+        self.updateEmbyProgress()
         self.current_seek_step = 0
         self.current_pos = -1
         self.skip_progress_update = False
         self.progress_timer.start(1000)
-        self.updateEmbyProgress()
 
     def setProgress(self, pos):
         if pos > 0:
@@ -183,7 +183,7 @@ class EmbyPlayer(MoviePlayer):
             self.setProgress(curr_pos if self.current_pos == -1 else self.current_pos)
 
     def updateEmbyProgress(self):
-        threads.deferToThread(self.updateEmbyProgressInternal, "TimeUpdate")
+        threads.deferToThread(self.updateEmbyProgressInternal, "TimeUpdate", self.current_pos)
 
     def updateEmbyProgressInternal(self, event, pos=-1):
         if pos == -1:
@@ -215,7 +215,7 @@ class EmbyPlayer(MoviePlayer):
         pos = seek.getPlayPosition()
         currentPTS = int(pos[1])
 
-        if self.currentSubEndPTS > -1 and currentPTS > self.currentSubEndPTS:
+        if self.currentSubEndPTS > -1 and currentPTS > self.currentSubEndPTS - (150 * 90):
             self.onhideSubs()
 
         currentLine = None
@@ -224,7 +224,6 @@ class EmbyPlayer(MoviePlayer):
             currentLine = window_matches[0][1]
 
         if currentLine and (self.currentSubPTS < 0 or self.currentSubPTS != currentLine["start"]):
-
             self.currentSubPTS = currentLine["start"]
             self.currentSubEndPTS = currentLine["end"]
             subtitleText = currentLine["text"]
@@ -292,14 +291,17 @@ class EmbyPlayer(MoviePlayer):
         media_streams = media_source.get("MediaStreams")
         defaultAudioIndex = media_source.get("DefaultAudioStreamIndex", -1)
         defaultSubtitlendex = media_source.get("DefaultSubtitleStreamIndex", -1)
+        aIndexSet = False
         aIndex = 0
         subtitle = None
         for stream in media_streams:
             type_stream = stream.get("Type")
             index = int(stream.get("Index"))
             if type_stream == "Audio":
-                if defaultAudioIndex != index:
+                if defaultAudioIndex != index and not aIndexSet:
                     aIndex += 1
+                else:
+                    aIndexSet = True
 
             isExternal = stream.get("IsExternal")
             if type_stream == "Subtitle" and self.firstSubIndex == -1:
@@ -335,7 +337,7 @@ class EmbyPlayer(MoviePlayer):
 
     def setAudioTrack(self, aIndex):
         track = aIndex
-        if isinstance(track, int):
+        if isinstance(track, int) and track > -1:
             service = self.session.nav.getCurrentService()
             audioTracks = service and service.audioTracks()
             ref = self.session.nav.getCurrentServiceReferenceOriginal()
@@ -352,15 +354,21 @@ class EmbyPlayer(MoviePlayer):
         media_source_id = media_source.get("Id")
         EmbyApiClient.setPlaySessionParameters(self.play_session_id, item_id, media_source_id, aIndex, sIndex, playPos, stopped)
 
+    def initSeekOnTick(self):
+        if self.getPosition() is not None:
+            self.initiSeekProcess()
+        else:
+            self.init_seek_timer.start(100, True)
+
     def initiSeekProcess(self):
         init_play_pos = -1
-        if self.init_seek_to:
-            self.doSeek(int(self.init_seek_to) * 90000)
-            init_play_pos = int(self.init_seek_to) * 10_000_000
         self.curAudioIndex, subtitle = self.getSelectedAudioSubStreamFromEmby()
         self.setAudioTrack(aIndex=self.curAudioIndex)
         self.runSubtitles(subtitle=subtitle)
         self.curSubsIndex = subtitle and subtitle[3] or -1
+        if self.init_seek_to and self.init_seek_to > -1:
+            self.doSeek(int(self.init_seek_to) * 90000)
+            init_play_pos = int(self.init_seek_to) * 10_000_000
         threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
 
     def __evServiceStart(self):

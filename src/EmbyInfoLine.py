@@ -9,6 +9,7 @@ from Tools.LoadPixmap import LoadPixmap
 
 from .HelperFunctions import convert_ticks_to_time, embyDateToString, embyEndsAtToString
 from .Variables import plugin_dir
+from .EmbyRestClient import EmbyApiClient
 from . import _, PluginLanguageDomain
 
 
@@ -172,7 +173,7 @@ class EmbyInfoLine(GUIComponent):
             pos=(xPos + 2, yPos + (height - rec_height) // 2 + 1), size=(textWidth + 26, rec_height - 4),
             font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
             text=text,
-            textBColor=0x333333, textBWidth=1,
+            textBColor=0x000000, textBWidth=1,
             color=textColor, color_sel=textColor))
         xPos += spacing + textWidth + 30
         return xPos
@@ -209,7 +210,7 @@ class EmbyInfoLine(GUIComponent):
             return f"{premiereDate} - {endDate}"
         return premiereDate
 
-    def constructSeasons(self, item):
+    def constructItems(self, item):
         type = item.get("Type", None)
         if type == "Series":
             seasonsCount = item.get("ChildCount", 0)
@@ -217,6 +218,21 @@ class EmbyInfoLine(GUIComponent):
                 return f"1 {_('Season')}"
             elif seasonsCount > 1:
                 return f"{seasonsCount} {_('Seasons')}"
+        elif type == "BoxSet":
+            itemsCount = item.get("ChildCount", 0)
+            if itemsCount == 1:
+                return f"1 {_('Movie')}"
+            elif itemsCount > 1:
+                return f"{itemsCount} {_('Movies')}"
+        return ""
+
+    def constructGenres(self, item):
+        type = item.get("Type", None)
+        if type == "BoxSet":
+            genres = item.get("Genres", [])
+            if len(genres) > 0:
+                genreLimitOnDetails = int(EmbyApiClient.userSettings.get("genreLimitOnDetails", "3"))
+                return ', '.join(genres[:genreLimitOnDetails])
         return ""
 
     def constructAudioLabel(self, streams):
@@ -255,7 +271,8 @@ class EmbyInfoLine(GUIComponent):
             "PlaybackPositionTicks", "0"))
         status = item.get("Status", "")
         ends_at = embyEndsAtToString(runtime_ticks, position_ticks)
-        seasons = self.constructSeasons(item)
+        items = self.constructItems(item)
+        genres = self.constructGenres(item)
         v_width = int(item.get("Width", "0"))
         v_height = int(item.get("Height", "0"))
         resString = self.constructResolutionLabel(v_width, v_height)
@@ -328,14 +345,14 @@ class EmbyInfoLine(GUIComponent):
                 color=0xffffff, color_sel=0xffffff))
             xPos += self.spacing + textWidth
 
-        if seasons:
+        if items:
             textWidth = self._calcTextWidth(
-                seasons, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+                items, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
             res.append(MultiContentEntryText(
                 pos=(xPos, yPos), size=(textWidth, height),
                 font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=seasons,
+                text=items,
                 color=0xffffff, color_sel=0xffffff))
             xPos += self.spacing + textWidth
 
@@ -347,6 +364,18 @@ class EmbyInfoLine(GUIComponent):
                 pos=(xPos, yPos), size=(textWidth, height),
                 font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
                 text=runtime,
+                color=0xffffff, color_sel=0xffffff))
+            xPos += self.spacing + textWidth
+
+        if genres:
+            textWidth = self._calcTextWidth(
+                genres, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+
+            res.append(MultiContentEntryText(
+                pos=(xPos, yPos), size=(textWidth, height),
+                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+                text=genres,
+                textBColor=0x000000, textBWidth=1,
                 color=0xffffff, color_sel=0xffffff))
             xPos += self.spacing + textWidth
 
@@ -377,6 +406,7 @@ class EmbyInfoLine(GUIComponent):
                 pos=(xPos, yPos), size=(textWidth, height),
                 font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
                 text=ends_at,
+                textBColor=0x000000, textBWidth=1,
                 color=0xffffff, color_sel=0xffffff))
             xPos += self.spacing + textWidth
 
