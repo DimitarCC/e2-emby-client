@@ -135,7 +135,7 @@ class EmbyPlayer(MoviePlayer):
         self.progress_timer.start(1000)
 
     def setProgress(self, pos):
-        if pos > 0:
+        if pos and pos > 0:
             self.lastPos = pos
         else:
             self.lastPos = self.init_seek_to
