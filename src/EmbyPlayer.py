@@ -77,8 +77,6 @@ class EmbyPlayer(MoviePlayer):
         self.hideSubs.callback.append(self.onhideSubs)
         self.emby_progress_timer = eTimer()
         self.emby_progress_timer.callback.append(self.updateEmbyProgress)
-        self.init_seek_timer = eTimer()
-        self.init_seek_timer.callback.append(self.initSeekOnTick)
         self.seek_timer = eTimer()
         self.seek_timer.callback.append(self.onSeekRequest)
         self.onProgressTimer()
@@ -354,13 +352,7 @@ class EmbyPlayer(MoviePlayer):
         media_source_id = media_source.get("Id")
         EmbyApiClient.setPlaySessionParameters(self.play_session_id, item_id, media_source_id, aIndex, sIndex, playPos, stopped)
 
-    def initSeekOnTick(self):
-        if self.getPosition() is not None:
-            self.initiSeekProcess()
-        else:
-            self.init_seek_timer.start(100, True)
-
-    def initiSeekProcess(self):
+    def initSeekProcess(self):
         init_play_pos = -1
         self.curAudioIndex, subtitle = self.getSelectedAudioSubStreamFromEmby()
         self.setAudioTrack(aIndex=self.curAudioIndex)
@@ -372,8 +364,7 @@ class EmbyPlayer(MoviePlayer):
         threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
 
     def __evServiceStart(self):
-        self.init_seek_timer.stop()
-        self.init_seek_timer.start(100, True)
+        self.initSeekProcess()
         if self.progress_timer:
             self.progress_timer.start(1000)
         self.emby_progress_timer.start(10000)
