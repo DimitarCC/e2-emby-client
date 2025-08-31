@@ -46,6 +46,8 @@ class E2EmbyLibrary(Screen):
 					<widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="list_watching_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 					<widget name="list_watching" position="40,620" size="e-80,268" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" orientation="orHorizontal" transparent="1" />
+                    <widget name="list_recent_added_header" position="55,928" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+					<widget name="list_recent_added" position="40,978" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" orientation="orHorizontal" transparent="1" />
 				</screen>"""]  # noqa: E124
 
     def __init__(self, session, library):
@@ -55,7 +57,7 @@ class E2EmbyLibrary(Screen):
         self.library_id = int(library.get("Id", "0"))
         self.type = library.get("CollectionType")
         self.is_init = False
-        self.selected_widget = "list_watching"
+        self.selected_widget = None
         self.last_item_id = None
         self.backdrop_pix = None
         self.logo_pix = None
@@ -63,6 +65,7 @@ class E2EmbyLibrary(Screen):
         self.plot_posy_orig = 310
         self.plot_height_orig = 168
         self.plot_width_orig = 924
+        self.top_pos = 570
         self.setTitle(_("Emby Library"))
         self.sel_timer = eTimer()
         self.sel_timer.callback.append(self.trigger_sel_changed_event)
@@ -71,6 +74,7 @@ class E2EmbyLibrary(Screen):
         if self.mask_alpha.mode != "L":
             self.mask_alpha = self.mask_alpha.convert("L")
         self.list_data = []
+        self.available_widgets = []
         self["header"] = EmbyLibraryHeaderButtons(self)
         self["charbar"] = EmbyLibraryCharacterBar()
         self["list"] = EmbyGridList()
@@ -83,11 +87,13 @@ class E2EmbyLibrary(Screen):
         self["backdrop_full"] = Pixmap()
         self["list_watching_header"] = Label(_("Continue watching"))
         self["list_watching"] = EmbyList()
+        self["list_recent_added_header"] = Label(_("Recently added"))
+        self["list_recent_added"] = EmbyList()
         self.lists = {}
-        self.lists["list_watching"] = EmbyListController(
-            self["list_watching"], self["list_watching_header"])
-        self["list_watching"].onSelectionChanged.append(
-            self.onSelectedIndexChanged)
+        self.lists["list_watching"] = EmbyListController(self["list_watching"], self["list_watching_header"])
+        self.lists["list_recent_added"] = EmbyListController(self["list_recent_added"], self["list_recent_added_header"])
+        self["list_watching"].onSelectionChanged.append(self.onSelectedIndexChanged)
+        self["list_recent_added"].onSelectionChanged.append(self.onSelectedIndexChanged)
         self.onShown.append(self.__onShown)
         self.onLayoutFinish.append(self.__onLayoutFinished)
 
@@ -121,7 +127,6 @@ class E2EmbyLibrary(Screen):
             self["charbar"].hide()
             self["charbar"].enableSelection(False)
             self["list"].toggleSelection(False)
-            self.lists["list_watching"].visible(True).enableSelection(True)
 
     def __onLayoutFinished(self):
         plot = self["plot"]
@@ -130,33 +135,35 @@ class E2EmbyLibrary(Screen):
         self.plot_posy_orig = plot_pos.y()
         self.plot_height_orig = plot_size.height()
         self.plot_width_orig = plot_size.width()
+        self.top_pos = self["list_watching_header"].instance.position().y()
+        for item in self.lists:
+            self.lists[item].visible(False)
 
     def onSelectedIndexChanged(self, widget=None, item_id=None):
-        if isinstance(self[self.selected_widget].selectedItem, tuple):
+        sel_widget = self.selected_widget if self.selected_widget != "header" else self.available_widgets[0]
+        if not sel_widget or isinstance(self[sel_widget].selectedItem, tuple):
             return
-        self.last_item_id = self[self.selected_widget].selectedItem.get("Id")
+        self.last_item_id = self[sel_widget].selectedItem.get("Id")
 
         if not item_id:
-            item_id = self[self.selected_widget].selectedItem.get("Id")
+            item_id = self[sel_widget].selectedItem.get("Id")
 
         self["backdrop"].setPixmap(None)
         self.backdrop_pix = None
 
         self.sel_timer.stop()
-        self.sel_timer.start(
-            config.plugins.e2embyclient.changedelay.value, True)
+        self.sel_timer.start(config.plugins.e2embyclient.changedelay.value, True)
 
     def trigger_sel_changed_event(self):
+        sel_widget = self.selected_widget if self.selected_widget != "header" else self.available_widgets[0]
         threads.deferToThread(self.loadSelectedItemDetails,
-                              self[self.selected_widget].selectedItem, self[self.selected_widget])
+                              self[sel_widget].selectedItem, self[sel_widget])
 
     def pageUp(self):
-        self[self.selected_widget].instance.moveSelection(
-            self[self.selected_widget].instance.prevPage)
+        self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevPage)
 
     def pageDown(self):
-        self[self.selected_widget].instance.moveSelection(
-            self[self.selected_widget].instance.nextPage)
+        self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextPage)
 
     def menu(self):
         if self.selected_widget == "charbar":
@@ -210,7 +217,8 @@ class E2EmbyLibrary(Screen):
         if self.selected_widget == "header":
             return
 
-        if (self.selected_widget == "list" and self["list"].getIsAtFirstRow()) or self.selected_widget == "list_watching":
+        current_widget_index = self.available_widgets.index(self.selected_widget) if self.selected_widget in self.available_widgets else -1
+        if (self.selected_widget == "list" and self["list"].getIsAtFirstRow()) or current_widget_index == 0:
             self[self.selected_widget].toggleSelection(False)
             self.selected_widget = "header"
             self[self.selected_widget].setFocused(True)
@@ -219,53 +227,50 @@ class E2EmbyLibrary(Screen):
                 self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveUp)
             elif self.selected_widget == "charbar":
                 self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
-        # current_widget_index = self.availableWidgets.index(self.selected_widget)
-        # if current_widget_index == 0:
-        # 	return
-        # y = self.top_slot_y
+            else:
+                current_widget_index = self.available_widgets.index(self.selected_widget)
+                y = self.top_pos
 
-        # prevWidgetName = self.availableWidgets[current_widget_index - 1]
-        # prevItem = self.lists[prevWidgetName]
-        # prevItem.move(40, y).visible(True).enableSelection(True)
-        # y += prevItem.getHeight() + 40
-        # self.selected_widget = prevWidgetName
+                prevWidgetName = self.available_widgets[current_widget_index - 1]
+                prevItem = self.lists[prevWidgetName]
+                prevItem.move(40, y).visible(True).enableSelection(True)
+                y += prevItem.getHeight() + 40
+                self.selected_widget = prevWidgetName
 
-        # for item in self.availableWidgets[current_widget_index:]:
-        # 	self.lists[item].move(40, y).enableSelection(False)
-        # 	y += self.lists[item].getHeight() + 40
+                for item in self.available_widgets[current_widget_index:]:
+                    self.lists[item].move(40, y).enableSelection(False)
+                    y += self.lists[item].getHeight() + 40
 
-        # if self[self.selected_widget].isLibrary:
-        # 	self.last_widget_info_load_success = None
-
-        # self.onSelectedIndexChanged()
+                self.onSelectedIndexChanged()
 
     def down(self):
+        current_widget_index = self.available_widgets.index(self.selected_widget) if self.selected_widget in self.available_widgets else -1
         if self.selected_widget == "header":
             self[self.selected_widget].setFocused(False)
             self[self.selected_widget].setSelectedIndex(self.mode)
-            self.selected_widget = "list_watching" if self.mode == MODE_RECOMMENDATIONS else "list"
+            self.selected_widget = self.available_widgets[0] if self.mode == MODE_RECOMMENDATIONS else "list"
             self[self.selected_widget].toggleSelection(True)
         else:
             if self.selected_widget == "list":
                 self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveDown)
             elif self.selected_widget == "charbar":
                 self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
-        # current_widget_index = self.availableWidgets.index(self.selected_widget)
-        # if current_widget_index == len(self.availableWidgets) - 1:
-        # 	return
-        # safe_index = min(current_widget_index + 1, len(self.availableWidgets))
-        # for item in self.availableWidgets[:safe_index]:
-        # 	self.lists[item].visible(False).enableSelection(False)
+            else:
+                if current_widget_index == len(self.available_widgets) - 1:
+                    return
+                safe_index = min(current_widget_index + 1, len(self.available_widgets))
+                for item in self.available_widgets[:safe_index]:
+                    self.lists[item].visible(False).enableSelection(False)
 
-        # y = self.top_slot_y
-        # selEnabled = True
-        # for item in self.availableWidgets[safe_index:]:
-        # 	self.lists[item].move(40, y).enableSelection(selEnabled)
-        # 	y += self.lists[item].getHeight() + 40
-        # 	if selEnabled:
-        # 		self.selected_widget = item
-        # 	selEnabled = False
-        # self.onSelectedIndexChanged()
+                y = self.top_pos
+                selEnabled = True
+                for item in self.available_widgets[safe_index:]:
+                    self.lists[item].move(40, y).enableSelection(selEnabled)
+                    y += self.lists[item].getHeight() + 40
+                    if selEnabled:
+                        self.selected_widget = item
+                    selEnabled = False
+                self.onSelectedIndexChanged()
 
     def toggleItemsSectionVisibility(self, visible):
         if visible:
@@ -283,7 +288,9 @@ class E2EmbyLibrary(Screen):
             self["infoline"].show()
             self["plot"].show()
             self["backdrop"].show()
-            self.lists["list_watching"].visible(True)
+            self.lists["list_watching"].visible("list_watching" in self.available_widgets)
+            self.lists["list_recent_added"].visible("list_recent_added" in self.available_widgets)
+            self.setWidgetsPosition(True)
         else:
             self["title_logo"].hide()
             self["title"].hide()
@@ -292,6 +299,7 @@ class E2EmbyLibrary(Screen):
             self["plot"].hide()
             self["backdrop"].hide()
             self.lists["list_watching"].visible(False)
+            self.lists["list_recent_added"].visible(False)
 
     def processItem(self):
         if self.selected_widget == "header":
@@ -356,22 +364,67 @@ class E2EmbyLibrary(Screen):
         self.list_data = list
         self["charbar"].setList(list)
 
-    def loadResumableItems(self):
-        items = EmbyApiClient.getResumableItemsForLibrary(
-            self.library_id, self.type)
+    def loadSuggestionTabbleItems(self):
+        self.available_widgets = []
+        items = EmbyApiClient.getResumableItemsForLibrary(self.library_id, self.type)
         list = []
         if items:
             i = 0
             for item in items:
-                played_perc = item.get("UserData", {}).get(
-                    "PlayedPercentage", "0")
-                list.append((i, item, item.get('Name'),
-                            None, played_perc, True))
+                played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+                list.append((i, item, item.get('Name'), None, played_perc, True))
                 i += 1
             self["list_watching"].loadData(list)
+            is_available = len(list) > 0
+            self.lists["list_watching"].visible(is_available and self.mode == MODE_RECOMMENDATIONS).enableSelection(False)
+            if is_available:
+                self.available_widgets.append("list_watching")
+            else:
+                self.available_widgets.remove("list_watching")            
+
+        items = EmbyApiClient.getRecentlyAddedItemsForLibrary(self.library_id)
+        list = []
+        if items:
+            i = 0
+            for item in items:
+                played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+                list.append((i, item, item.get('Name'), None, played_perc, True))
+                i += 1
+            self["list_recent_added"].loadData(list)
+            is_available = len(list) > 0
+            self.lists["list_recent_added"].visible(is_available and self.mode == MODE_RECOMMENDATIONS).enableSelection(False)
+            if is_available:
+                self.available_widgets.append("list_recent_added")
+            else:
+                self.available_widgets.remove("list_recent_added")
+
+    def setWidgetsPosition(self, result):
+        if not self.selected_widget:
+            self.selected_widget = self.available_widgets[0]
+
+        sel_widget = self.selected_widget
+
+        if result is None:
+            self.lists[sel_widget].enableSelection(True)
+        else:
+            sel_widget = self.available_widgets[0]
+
+        self.onSelectedIndexChanged()
+        current_widget_index = self.available_widgets.index(sel_widget) if sel_widget in self.available_widgets else -1
+        if current_widget_index == -1:
+            return
+
+        for item in self.available_widgets[:current_widget_index]:
+            self.lists[item].visible(False).enableSelection(False)
+        y = self.top_pos
+        for widget in self.available_widgets[current_widget_index:]:
+            h = self.lists[widget].getHeight()
+            x = 40
+            self.lists[widget].move(x, y).visible(self.mode == MODE_RECOMMENDATIONS)
+            y += h + 40
 
     def loadSuggestedTabItems(self):
-        threads.deferToThread(self.loadResumableItems)
+        threads.deferToThread(self.loadSuggestionTabbleItems).addCallback(self.setWidgetsPosition)
 
     def loadSelectedItemDetails(self, item, widget):
         if not self.is_init:

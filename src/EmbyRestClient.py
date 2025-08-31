@@ -156,23 +156,15 @@ class EmbyRestClient():
                 break
         return items
 
-    def getRecentlyAddedItemsForLibrary(self, library_id, library_type, limit=40):
+    def getRecentlyAddedItemsForLibrary(self, library_id, limit=40):
         items = {}
         headers = self.constructHeaders()
-        include_items = ""
-        if library_type == "movies":
-            include_items = "Movie"
-        elif library_type == "tvshow":
-            include_items = "Episode"
-        url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes={include_items}&ParentId={library_id}&SortBy=DateCreated&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
+        url = f"{self.server_root}/emby/Users/{self.user_id}/Items/Latest?ParentId={library_id}&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
         for attempt in range(config.plugins.e2embyclient.conretries.value):
             try:
-                response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-                               # set a timeout to prevent blocking
-                                                              config.plugins.e2embyclient.read_con_timeout.value))
+                response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
                 response_obj = response.content
-                res_json_obj = loads(response_obj)
-                items = res_json_obj.get('Items')
+                items = loads(response_obj)
                 break
             except TimeoutError:
                 pass
