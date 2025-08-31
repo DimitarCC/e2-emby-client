@@ -1,5 +1,5 @@
 from twisted.internet import threads
-from enigma import eListbox, eListboxPythonMultiContent, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, getDesktop, eSize, RT_BLEND
+from enigma import eLabel, eListbox, eListboxPythonMultiContent, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
@@ -20,7 +20,6 @@ class EmbyLibraryHeaderButtons(GUIComponent):
         self.isMoveLeftRight = False
         self.screen.onShow.append(self.onContainerShown)
         self.data = []
-        self.textRenderer = Label("")
         self.font = gFont("Regular", 22)
         self.fontAdditional = gFont("Regular", 22)
         self.foreColorAdditional = 0xffffff
@@ -44,7 +43,6 @@ class EmbyLibraryHeaderButtons(GUIComponent):
     def onContainerShown(self):
         self.l.setItemHeight(self.instance.size().height())
         self.l.setItemWidth(self.instance.size().width())
-        self.textRenderer.GUIcreate(self.screen.instance)
 
     def applySkin(self, desktop, parent):
         attribs = []
@@ -127,16 +125,9 @@ class EmbyLibraryHeaderButtons(GUIComponent):
         self.updateInfo()
 
     def _calcTextSize(self, text, font=None, size=None):
-        self.textRenderer.instance.setNoWrap(1)
-        if size:
-            self.textRenderer.instance.resize(size)
-        if font:
-            self.textRenderer.instance.setFont(font)
-        self.textRenderer.text = text
-        size = self.textRenderer.instance.calculateSize()
+        size = eLabel.calculateTextSize(font, text, size)
         res_width = size.width()
         res_height = size.height()
-        self.textRenderer.text = ""
         return res_width, res_height
 
     def getDesktopWith(self):
@@ -150,34 +141,35 @@ class EmbyLibraryHeaderButtons(GUIComponent):
         if not spacing:
             spacing = self.spacing
 
-        textWidth = self._calcTextSize(
-            text, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+        textWidth = self._calcTextSize(text, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
         rec_height = height
 
-        back_color = backColorSelected if selected else backColor
-        offset = 0
-        if selected:
-            if self.focused:
-                res.append(MultiContentEntryRectangle(
-                    pos=(xPos, yPos + 4), size=(textWidth + height, rec_height - 8),
-                    cornerRadius=(rec_height - 8) // 2,
-                    backgroundColor=0xffffff, backgroundColorSelected=0xffffff))
-                res.append(MultiContentEntryRectangle(
-                    pos=(xPos + 2, yPos + 6), size=(textWidth + height - 4, rec_height - 12),
-                    cornerRadius=(rec_height - 12) // 2,
-                    backgroundColor=back_color, backgroundColorSelected=back_color))
-            else:
-                res.append(MultiContentEntryRectangle(
-                    pos=(xPos, yPos + 4), size=(textWidth + height, rec_height - 8),
-                    cornerRadius=height // 2,
-                    backgroundColor=back_color, backgroundColorSelected=back_color))
+        back_color = backColorSelected if selected else None
         offset = xPos + textWidth + height
+        # if selected:
+        #     if self.focused:
+        #         res.append(MultiContentEntryRectangle(
+        #             pos=(xPos, yPos + 4), size=(textWidth + height, rec_height - 8),
+        #             cornerRadius=(rec_height - 8) // 2,
+        #             backgroundColor=0xffffff, backgroundColorSelected=0xffffff))
+        #         res.append(MultiContentEntryRectangle(
+        #             pos=(xPos + 2, yPos + 6), size=(textWidth + height - 4, rec_height - 12),
+        #             cornerRadius=(rec_height - 12) // 2,
+        #             backgroundColor=back_color, backgroundColorSelected=back_color))
+        #     else:
+        #         res.append(MultiContentEntryRectangle(
+        #             pos=(xPos, yPos + 4), size=(textWidth + height, rec_height - 8),
+        #             cornerRadius=height // 2,
+        #             backgroundColor=back_color, backgroundColorSelected=back_color))
 
         res.append(MultiContentEntryText(
-            pos=(xPos + height // 2, yPos + (height - rec_height) // 2), size=(textWidth + 16, rec_height),
-            font=0, flags=RT_HALIGN_LEFT | RT_BLEND | RT_VALIGN_CENTER,
+            pos=(xPos - (2 if self.focused else 0), yPos + (1 if self.focused else 4)), size=(textWidth + height + (4 if self.focused else 0), rec_height - (2 if self.focused else 8)),
+            font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
             text=text,
+            cornerRadius=(rec_height - (4 if self.focused else 8)) // 2,
+            border_width=2 if selected and self.focused else 0, border_color=0xffffff,
+            backcolor=back_color, backcolor_sel=back_color,
             color=textColor, color_sel=textColor))
         offset += spacing
         return offset
@@ -194,8 +186,9 @@ class EmbyLibraryHeaderButtons(GUIComponent):
         if self.drawing_start_x > -1:
             res.append(MultiContentEntryRectangle(
                 pos=(self.drawing_start_x - 4, 0), size=(self.container_rect_width, height),
-                cornerRadius=height // 2,
-                backgroundColor=0x333333, backgroundColorSelected=0x333333))
+                cornerRadius=(height // 2) - 2,
+                borderWidth=1, borderColor=0x22333333, borderColorSelected=0x22333333,
+                backgroundColor=0x22333333, backgroundColorSelected=0x22333333))
 
         for button in buttons:
             selected = button[0] == self.selectedIndex

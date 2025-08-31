@@ -367,8 +367,8 @@ class EmbyList(GUIComponent):
         res.append(MultiContentEntryRectangle(
             pos=(self.spacing_sides, self.spacing_sides),
             size=(self.iconWidth, self.iconHeight),
-            cornerRadius=6,
-            backgroundColor=0x00222222))
+            cornerRadius=8,
+            backgroundColor=0x00222222, backgroundColorSelected=0x00222222))
         is_icon = not isinstance(item_icon, bool)
         if item_icon and is_icon:
             flags = 0
@@ -379,7 +379,7 @@ class EmbyList(GUIComponent):
                 size=(self.iconWidth, self.iconHeight),
                 png=LoadPixmap(item_icon),
                 backcolor=None, backcolor_sel=None,
-                cornerRadius=6,
+                cornerRadius=8,
                 flags=flags))
         else:
             found = any(item_index in tup for tup in self.itemsForThumbs)
@@ -434,7 +434,7 @@ class EmbyList(GUIComponent):
                 size=(45, 45),
                 cornerRadius=6,
                 cornerEdges=2 | 4,
-                backgroundColor=0x32772b))
+                backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
             res.append(MultiContentEntryPixmapAlphaBlend(
                 pos=(self.spacing_sides + self.iconWidth - 45, self.spacing_sides),
                 size=(45, 45),
@@ -443,17 +443,14 @@ class EmbyList(GUIComponent):
                 cornerRadius=6,
                 flags=BT_HALIGN_CENTER | BT_VALIGN_CENTER))
         elif unplayed_items_count > 0:
-            res.append(MultiContentEntryRectangle(
+            res.append(MultiContentEntryText(
                 pos=(self.spacing_sides + self.iconWidth - 45, self.spacing_sides),
                 size=(45, 45),
-                cornerRadius=6,
-                cornerEdges=2 | 4,
-                backgroundColor=0x32772b))
-            res.append(MultiContentEntryText(
-                pos=(self.spacing_sides + self.iconWidth - 45, self.spacing_sides), size=(45, 45),
                 font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
                 cornerRadius=6,
+                cornerEdges=2 | 4,
                 text=str(unplayed_items_count),
+                backcolor=0x32772b, backcolor_sel=0x32772b,
                 color=0xffffff, color_sel=0xffffff))
         self.index_currently_redrawing = -1
         return res

@@ -138,7 +138,7 @@ class EmbyRestClient():
             include_items = "Movie"
         elif library_type == "tvshow":
             include_items = "Episode"
-        url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes={include_items}&Filters=IsResumable&ParentId={library_id}&SortBy=DatePlayed&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
+        url = f"{self.server_root}/emby/Users/{self.user_id}/Items/Resume?IncludeItemTypes={include_items}&MediaTypes=Video&ParentId={library_id}&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
         for attempt in range(config.plugins.e2embyclient.conretries.value):
             try:
                 response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,

@@ -325,7 +325,7 @@ class EmbyGridList(GUIComponent):
                 size=(self.iconWidth, self.iconHeight),
                 png=LoadPixmap(item_icon),
                 backcolor=None, backcolor_sel=None,
-                cornerRadius=6,
+                cornerRadius=8,
                 flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
         else:
             found = any(item_index in tup for tup in self.itemsForThumbs)
@@ -356,14 +356,14 @@ class EmbyGridList(GUIComponent):
         res.append(MultiContentEntryText(
             pos=(self.spacing, self.iconHeight + 32), size=(self.iconWidth, 25),
             font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
-            cornerRadius=6,
+            cornerRadius=8,
             text=text,
             color=0xffffff, color_sel=0xffffff))
         if text1:
             res.append(MultiContentEntryText(
                 pos=(self.spacing, self.iconHeight + 62), size=(self.iconWidth, 25),
                 font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
-                cornerRadius=6,
+                cornerRadius=8,
                 text=text1,
                 color=0xc2c2c2, color_sel=0xc2c2c2))
 
@@ -375,7 +375,7 @@ class EmbyGridList(GUIComponent):
                 size=(45, 45),
                 cornerRadius=6,
                 cornerEdges=2 | 4,
-                backgroundColor=0x32772b))
+                backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
             res.append(MultiContentEntryPixmapAlphaBlend(
                 pos=(self.spacing + self.iconWidth - 45, self.spacing),
                 size=(45, 45),
@@ -384,17 +384,14 @@ class EmbyGridList(GUIComponent):
                 cornerRadius=6,
                 flags=BT_HALIGN_CENTER | BT_VALIGN_CENTER))
         elif unplayed_items_count > 0:
-            res.append(MultiContentEntryRectangle(
+            res.append(MultiContentEntryText(
                 pos=(self.spacing + self.iconWidth - 45, self.spacing),
                 size=(45, 45),
-                cornerRadius=6,
-                cornerEdges=2 | 4,
-                backgroundColor=0x32772b))
-            res.append(MultiContentEntryText(
-                pos=(self.spacing + self.iconWidth - 45, self.spacing), size=(45, 45),
                 font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
                 cornerRadius=6,
+                cornerEdges=2 | 4,
                 text=str(unplayed_items_count),
+                backcolor=0x32772b, backcolor_sel=0x32772b,
                 color=0xffffff, color_sel=0xffffff))
         self.index_currently_redrawing = -1
         return res

@@ -1,5 +1,5 @@
 from twisted.internet import threads
-from enigma import eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, getDesktop, eSize, RT_BLEND
+from enigma import eLabel, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
@@ -43,7 +43,6 @@ class EmbyItemFunctionButtons(GUIComponent):
         self.favoriteIcon = LoadPixmap("%s/favorite.png" % plugin_dir)
         self.notFavoriteIcon = LoadPixmap("%s/notfavorite.png" % plugin_dir)
         self.tvIcon = LoadPixmap("%s/tv.png" % plugin_dir)
-        self.textRenderer = Label("")
         self.font = gFont("Regular", 22)
         self.fontAdditional = gFont("Regular", 22)
         self.foreColorAdditional = 0xffffff
@@ -64,7 +63,6 @@ class EmbyItemFunctionButtons(GUIComponent):
     def onContainerShown(self):
         self.l.setItemHeight(self.instance.size().height())
         self.l.setItemWidth(self.instance.size().width())
-        self.textRenderer.GUIcreate(self.screen.instance)
 
     def applySkin(self, desktop, parent):
         attribs = []
@@ -212,16 +210,9 @@ class EmbyItemFunctionButtons(GUIComponent):
         self.updateInfo()
 
     def _calcTextSize(self, text, font=None, size=None):
-        self.textRenderer.instance.setNoWrap(1)
-        if size:
-            self.textRenderer.instance.resize(size)
-        if font:
-            self.textRenderer.instance.setFont(font)
-        self.textRenderer.text = text
-        size = self.textRenderer.instance.calculateSize()
+        size = eLabel.calculateTextSize(font, text, size)
         res_width = size.width()
         res_height = size.height()
-        self.textRenderer.text = ""
         return res_width, res_height
 
     def getDesktopWith(self):

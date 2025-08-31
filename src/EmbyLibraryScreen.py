@@ -30,7 +30,7 @@ MODE_LIST = 1
 
 class E2EmbyLibrary(Screen):
     skin = ["""<screen name="E2EmbyLibrary" position="fill">
-					<widget name="header" position="center,30" size="700,50" font="Bold;32" transparent="1"/>
+					<widget name="header" position="center,30" size="700,50" font="Bold;32" transparent="1" alphaBlend="1"/>
 					<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
 					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
 						<convert type="ClockToText">Default</convert>
@@ -38,7 +38,7 @@ class E2EmbyLibrary(Screen):
 					<widget name="charbar" position="40,130" size="40,e-130-70" scrollbarMode="showNever" iconHeight="40" font="Regular;20" transparent="1" />
 					<widget name="list" position="90,130" size="e-20-90,e-130-70" scrollbarMode="showOnDemand" iconWidth="225" iconHeight="315" orientation="orGrid" font="Regular;22" transparent="1" />
 					<widget addon="Pager" connection="list" position="90,145+e-220+10" size="e-20-90,25" transparent="1" backgroundColor="background" zPosition="40" />
-					<widget name="backdrop" position="e-1280,0" size="1280,720" alphatest="blend" zPosition="-3"/>
+					<widget name="backdrop" position="0,0" size="1920,720" alphatest="blend" zPosition="-10" alphaBlend="1" scaleFlags="moveRightCenter"/>
 					<widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
 					<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
 					<widget name="subtitle" position="60,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>

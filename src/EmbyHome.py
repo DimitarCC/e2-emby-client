@@ -35,7 +35,7 @@ class E2EmbyHome(Screen):
                 <widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
                     <convert type="ClockToText">Default</convert>
                 </widget>
-                <widget name="backdrop" position="e-1280,0" size="1280,720" alphatest="blend" zPosition="-3"/>
+                <widget name="backdrop" position="0,0" size="1920,720" alphatest="blend" zPosition="-10" alphaBlend="1" scaleFlags="moveRightCenter"/>
                 <widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
                 <widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
                 <widget name="subtitle" position="60,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
@@ -479,7 +479,7 @@ class E2EmbyHome(Screen):
         if type == "Resume":
             type_part = "/Resume"
             sortBy = "DatePlayed"
-            includeItems = "Video&IncludeNextUp=false"
+            includeItems = "Movie,Episode&MediaTypes=Video"
         elif type == "LastMovies":
             sortBy = "DateCreated"
             includeItems = "Movie&IsMovie=true&Recursive=true&Filters=IsNotFolder"

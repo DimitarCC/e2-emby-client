@@ -1,4 +1,4 @@
-from enigma import eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
+from enigma import eLabel, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
@@ -19,7 +19,6 @@ class EmbyInfoLine(GUIComponent):
         self.screen = screen
         self.screen.onShow.append(self.onContainerShown)
         self.data = []
-        self.textRenderer = Label("")
         self.font = gFont("Regular", 18)
         self.fontAdditional = gFont("Regular", 18)
         self.foreColorAdditional = 0xffffff
@@ -59,7 +58,6 @@ class EmbyInfoLine(GUIComponent):
     def onContainerShown(self):
         self.l.setItemHeight(self.instance.size().height())
         self.l.setItemWidth(self.instance.size().width())
-        self.textRenderer.GUIcreate(self.screen.instance)
 
     def applySkin(self, desktop, parent):
         attribs = []
@@ -98,16 +96,9 @@ class EmbyInfoLine(GUIComponent):
         self.l.setList(l_list)
 
     def _calcTextWidth(self, text, font=None, size=None):
-        self.textRenderer.instance.setNoWrap(1)
-        if size:
-            self.textRenderer.instance.resize(size)
-        if font:
-            self.textRenderer.instance.setFont(font)
-        self.textRenderer.text = text
-        size = self.textRenderer.instance.calculateSize()
+        size = eLabel.calculateTextSize(font, text, size)
         res_width = size.width()
         res_height = size.height()
-        self.textRenderer.text = ""
         return res_width, res_height
 
     def getDesktopWith(self):
@@ -117,53 +108,54 @@ class EmbyInfoLine(GUIComponent):
         s = self.instance.size()
         return s.width(), s.height()
 
-    def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0x757472, backColor=0x02111111, textColor=0xffffff):
+    def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0x757472, backColor=0x55111111, textColor=0xffffff):
         if not spacing:
             spacing = self.spacing
 
         textWidth, textHeight = self._calcTextWidth(
             text, font=self.fontAdditional, size=eSize(self.getDesktopWith() // 3, 0))
         rec_height = textHeight + 10
-        res.append(MultiContentEntryPixmapAlphaBlend(
-                pos=(xPos + 1, yPos + (height - rec_height) // 2), size=(textWidth + 26, rec_height - 4),
-                png=self.b_back, flags=BT_SCALE, cornerRadius=8))
-        res.append(MultiContentEntryPixmapAlphaBlend(
-                pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(8, 8),
-                png=self.l_t))
-        res.append(MultiContentEntryPixmapAlphaBlend(
-                pos=(xPos + textWidth + 30 - 8, yPos - 1 + (height - rec_height) // 2), size=(8, 8),
-                png=self.r_t))
-        res.append(MultiContentEntryPixmapAlphaBlend(
-                pos=(xPos, yPos + (height - rec_height) // 2 + rec_height - 2 - 8), size=(8, 8),
-                png=self.l_b))
-        res.append(MultiContentEntryPixmapAlphaBlend(
-                pos=(xPos + textWidth + 30 - 8, yPos + (height - rec_height) // 2 + rec_height - 2 - 8), size=(8, 8),
-                png=self.r_b))
-        res.append(MultiContentEntryText(
-            pos=(xPos + 8, yPos + (height - rec_height) // 2), size=(textWidth + 30 - 16, 2),
-            font=0,
-            text="",
-            backcolor=borderColor))
-        res.append(MultiContentEntryText(
-            pos=(xPos + 8, yPos - 1 + (height - rec_height) // 2 + rec_height - 4), size=(textWidth + 30 - 16, 2),
-            font=0,
-            text="",
-            backcolor=borderColor))
-        res.append(MultiContentEntryText(
-            pos=(xPos + 1, yPos - 1 + (height - rec_height) // 2 + 8), size=(2, rec_height - 17),
-            font=0,
-            text="",
-            backcolor=borderColor))
-        res.append(MultiContentEntryText(
-            pos=(xPos + textWidth + 30 - 3, yPos - 1 + (height - rec_height) // 2 + 8), size=(2, rec_height - 17),
-            font=0,
-            text="",
-            backcolor=borderColor))
+        # res.append(MultiContentEntryPixmapAlphaBlend(
+        #         pos=(xPos + 1, yPos + (height - rec_height) // 2), size=(textWidth + 26, rec_height - 4),
+        #         png=self.b_back, flags=BT_SCALE, cornerRadius=8))
+        # res.append(MultiContentEntryPixmapAlphaBlend(
+        #         pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(8, 8),
+        #         png=self.l_t))
+        # res.append(MultiContentEntryPixmapAlphaBlend(
+        #         pos=(xPos + textWidth + 30 - 8, yPos - 1 + (height - rec_height) // 2), size=(8, 8),
+        #         png=self.r_t))
+        # res.append(MultiContentEntryPixmapAlphaBlend(
+        #         pos=(xPos, yPos + (height - rec_height) // 2 + rec_height - 2 - 8), size=(8, 8),
+        #         png=self.l_b))
+        # res.append(MultiContentEntryPixmapAlphaBlend(
+        #         pos=(xPos + textWidth + 30 - 8, yPos + (height - rec_height) // 2 + rec_height - 2 - 8), size=(8, 8),
+        #         png=self.r_b))
+        # res.append(MultiContentEntryText(
+        #     pos=(xPos + 8, yPos + (height - rec_height) // 2), size=(textWidth + 30 - 16, 2),
+        #     font=0,
+        #     text="",
+        #     backcolor=borderColor))
+        # res.append(MultiContentEntryText(
+        #     pos=(xPos + 8, yPos - 1 + (height - rec_height) // 2 + rec_height - 4), size=(textWidth + 30 - 16, 2),
+        #     font=0,
+        #     text="",
+        #     backcolor=borderColor))
+        # res.append(MultiContentEntryText(
+        #     pos=(xPos + 1, yPos - 1 + (height - rec_height) // 2 + 8), size=(2, rec_height - 17),
+        #     font=0,
+        #     text="",
+        #     backcolor=borderColor))
+        # res.append(MultiContentEntryText(
+        #     pos=(xPos + textWidth + 30 - 3, yPos - 1 + (height - rec_height) // 2 + 8), size=(2, rec_height - 17),
+        #     font=0,
+        #     text="",
+        #     backcolor=borderColor))
 
         # res.append(MultiContentEntryRectangle(
         #     pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(textWidth + 30, rec_height),
         #     cornerRadius=6,
-        #     backgroundColor=borderColor, backgroundColorSelected=borderColor))
+        #     borderColor=borderColor, borderWidth=2,
+        #     backgroundColor=backColor, backgroundColorSelected=backColor))
         # res.append(MultiContentEntryRectangle(
         #     pos=(xPos + 2, yPos - 1 + (height - rec_height) // 2 + 2), size=(textWidth + 26, rec_height - 4),
         #     cornerRadius=4,
@@ -171,9 +163,13 @@ class EmbyInfoLine(GUIComponent):
 
         res.append(MultiContentEntryText(
             pos=(xPos + 2, yPos + (height - rec_height) // 2 + 1), size=(textWidth + 26, rec_height - 4),
-            font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+            font=1, flags=RT_HALIGN_CENTER | RT_VALIGN_CENTER,
             text=text,
-            textBColor=0x000000, textBWidth=1,
+            cornerRadius=6,
+            # textBColor=0x000000, textBWidth=1,
+            border_color=borderColor, border_width=2,
+            backcolor=backColor, backcolor_sel=backColor,
+            # backcolor=0xfe000000,
             color=textColor, color_sel=textColor))
         xPos += spacing + textWidth + 30
         return xPos
@@ -403,7 +399,7 @@ class EmbyInfoLine(GUIComponent):
                 ends_at, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
             res.append(MultiContentEntryText(
-                pos=(xPos, yPos), size=(textWidth, height),
+                pos=(xPos, yPos), size=(textWidth + 5, height),
                 font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
                 text=ends_at,
                 textBColor=0x000000, textBWidth=1,
