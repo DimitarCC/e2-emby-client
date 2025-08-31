@@ -380,7 +380,7 @@ class E2EmbyLibrary(Screen):
             if is_available:
                 self.available_widgets.append("list_watching")
             else:
-                self.available_widgets.remove("list_watching")            
+                self.available_widgets.remove("list_watching")
 
         items = EmbyApiClient.getRecentlyAddedItemsForLibrary(self.library_id)
         list = []
