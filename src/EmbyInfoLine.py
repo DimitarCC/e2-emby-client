@@ -41,7 +41,7 @@ class EmbyInfoLine(GUIComponent):
             self.rt_lt_60 = LoadPixmap("%s/rt59.png" % plugin_dir)
         self.l = eListboxPythonMultiContent()  # noqa: E741
         self.l.setBuildFunc(self.buildEntry)
-        self.spacing = 30
+        self.spacing = 28
         self.orientations = {
             "orHorizontal": eListbox.orHorizontal, "orVertical": eListbox.orVertical}
         self.orientation = eListbox.orHorizontal
@@ -115,61 +115,14 @@ class EmbyInfoLine(GUIComponent):
         textWidth, textHeight = self._calcTextWidth(
             text, font=self.fontAdditional, size=eSize(self.getDesktopWith() // 3, 0))
         rec_height = textHeight + 10
-        # res.append(MultiContentEntryPixmapAlphaBlend(
-        #         pos=(xPos + 1, yPos + (height - rec_height) // 2), size=(textWidth + 26, rec_height - 4),
-        #         png=self.b_back, flags=BT_SCALE, cornerRadius=8))
-        # res.append(MultiContentEntryPixmapAlphaBlend(
-        #         pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(8, 8),
-        #         png=self.l_t))
-        # res.append(MultiContentEntryPixmapAlphaBlend(
-        #         pos=(xPos + textWidth + 30 - 8, yPos - 1 + (height - rec_height) // 2), size=(8, 8),
-        #         png=self.r_t))
-        # res.append(MultiContentEntryPixmapAlphaBlend(
-        #         pos=(xPos, yPos + (height - rec_height) // 2 + rec_height - 2 - 8), size=(8, 8),
-        #         png=self.l_b))
-        # res.append(MultiContentEntryPixmapAlphaBlend(
-        #         pos=(xPos + textWidth + 30 - 8, yPos + (height - rec_height) // 2 + rec_height - 2 - 8), size=(8, 8),
-        #         png=self.r_b))
-        # res.append(MultiContentEntryText(
-        #     pos=(xPos + 8, yPos + (height - rec_height) // 2), size=(textWidth + 30 - 16, 2),
-        #     font=0,
-        #     text="",
-        #     backcolor=borderColor))
-        # res.append(MultiContentEntryText(
-        #     pos=(xPos + 8, yPos - 1 + (height - rec_height) // 2 + rec_height - 4), size=(textWidth + 30 - 16, 2),
-        #     font=0,
-        #     text="",
-        #     backcolor=borderColor))
-        # res.append(MultiContentEntryText(
-        #     pos=(xPos + 1, yPos - 1 + (height - rec_height) // 2 + 8), size=(2, rec_height - 17),
-        #     font=0,
-        #     text="",
-        #     backcolor=borderColor))
-        # res.append(MultiContentEntryText(
-        #     pos=(xPos + textWidth + 30 - 3, yPos - 1 + (height - rec_height) // 2 + 8), size=(2, rec_height - 17),
-        #     font=0,
-        #     text="",
-        #     backcolor=borderColor))
-
-        # res.append(MultiContentEntryRectangle(
-        #     pos=(xPos, yPos - 1 + (height - rec_height) // 2), size=(textWidth + 30, rec_height),
-        #     cornerRadius=6,
-        #     borderColor=borderColor, borderWidth=2,
-        #     backgroundColor=backColor, backgroundColorSelected=backColor))
-        # res.append(MultiContentEntryRectangle(
-        #     pos=(xPos + 2, yPos - 1 + (height - rec_height) // 2 + 2), size=(textWidth + 26, rec_height - 4),
-        #     cornerRadius=4,
-        #     backgroundColor=backColor, backgroundColorSelected=backColor))
 
         res.append(MultiContentEntryText(
             pos=(xPos + 2, yPos + (height - rec_height) // 2 + 1), size=(textWidth + 26, rec_height - 4),
             font=1, flags=RT_HALIGN_CENTER | RT_VALIGN_CENTER,
             text=text,
             cornerRadius=6,
-            # textBColor=0x000000, textBWidth=1,
             border_color=borderColor, border_width=2,
             backcolor=backColor, backcolor_sel=backColor,
-            # backcolor=0xfe000000,
             color=textColor, color_sel=textColor))
         xPos += spacing + textWidth + 30
         return xPos

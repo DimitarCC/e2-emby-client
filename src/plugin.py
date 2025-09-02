@@ -68,9 +68,9 @@ def Plugins(path, **kwargs):
         PluginDescriptor(where=PluginDescriptor.WHERE_SESSIONSTART, fnc=sessionstart, needsRestart=False),
         PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_PLUGINMENU, icon='plugin.png', fnc=main)
     ]
-    if config.plugins.e2embyclient.add_to_mainmenu.value:
-        plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_EXTENSIONSMENU, fnc=main))
     if config.plugins.e2embyclient.add_to_extensionmenu.value:
+        plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_EXTENSIONSMENU, fnc=main))
+    if config.plugins.e2embyclient.add_to_mainmenu.value:
         plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_MENU, fnc=startFromMainMenu))
 
     return plugin

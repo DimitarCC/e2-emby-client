@@ -38,7 +38,7 @@ class E2EmbyLibrary(Screen):
 					<widget name="charbar" position="40,130" size="40,e-130-70" scrollbarMode="showNever" iconHeight="40" font="Regular;20" transparent="1" />
 					<widget name="list" position="90,130" size="e-20-90,e-130-70" scrollbarMode="showOnDemand" iconWidth="225" iconHeight="315" orientation="orGrid" font="Regular;22" transparent="1" />
 					<widget addon="Pager" connection="list" position="90,145+e-220+10" size="e-20-90,25" transparent="1" backgroundColor="background" zPosition="40" />
-					<widget name="backdrop" position="0,0" size="1920,720" alphatest="blend" zPosition="-10" alphaBlend="1" scaleFlags="moveRightCenter"/>
+					<widget name="backdrop" position="0,0" size="e,e" alphatest="blend" zPosition="-10" scaleFlags="moveRightTop"/>
 					<widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
 					<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
 					<widget name="subtitle" position="60,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
