@@ -308,24 +308,20 @@ class EmbyGridList(GUIComponent):
                 self.itemsForRedrawDelayed.remove(item_index)
                 if len(self.itemsForRedrawDelayed) > 0 and not self.redraw_timer.isActive():
                     self.redraw_timer.start(1000)
-        if selected and self.selectionEnabled:
-            res.append(MultiContentEntryRectangle(
-                pos=(self.spacing - 3, self.spacing - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
-                cornerRadius=8,
-                backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
+        sel = selected and self.selectionEnabled
         res.append(MultiContentEntryRectangle(
-            pos=(self.spacing, self.spacing),
-            size=(self.iconWidth, self.iconHeight),
-            cornerRadius=6,
-            backgroundColor=0x22222222))
+            pos=(self.spacing - 3, self.spacing - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
+            cornerRadius=8,
+            borderWidth=3, borderColor=0x32772b if sel else 0xfe555555, borderColorSelected=0x32772b if sel else 0xfe555555,
+            backgroundColor=0x02222222, backgroundColorSelected=0x02222222))
+
         is_icon = not isinstance(item_icon, bool)
         if item_icon and is_icon:
             res.append(MultiContentEntryPixmapAlphaBlend(
                 pos=(self.spacing, self.spacing),
                 size=(self.iconWidth, self.iconHeight),
                 png=LoadPixmap(item_icon),
-                backcolor=None, backcolor_sel=None,
-                cornerRadius=8,
+                cornerRadius=6,
                 flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
         else:
             found = any(item_index in tup for tup in self.itemsForThumbs)
@@ -356,14 +352,12 @@ class EmbyGridList(GUIComponent):
         res.append(MultiContentEntryText(
             pos=(self.spacing, self.iconHeight + 32), size=(self.iconWidth, 25),
             font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
-            cornerRadius=8,
             text=text,
             color=0xffffff, color_sel=0xffffff))
         if text1:
             res.append(MultiContentEntryText(
                 pos=(self.spacing, self.iconHeight + 62), size=(self.iconWidth, 25),
                 font=0, flags=RT_HALIGN_CENTER | RT_BLEND,
-                cornerRadius=8,
                 text=text1,
                 color=0xc2c2c2, color_sel=0xc2c2c2))
 
@@ -380,7 +374,6 @@ class EmbyGridList(GUIComponent):
                 pos=(self.spacing + self.iconWidth - 45, self.spacing),
                 size=(45, 45),
                 png=self.check24,
-                backcolor=None, backcolor_sel=None,
                 cornerRadius=6,
                 flags=BT_HALIGN_CENTER | BT_VALIGN_CENTER))
         elif unplayed_items_count > 0:
@@ -388,9 +381,9 @@ class EmbyGridList(GUIComponent):
                 pos=(self.spacing + self.iconWidth - 45, self.spacing),
                 size=(45, 45),
                 font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+                text=str(unplayed_items_count),
                 cornerRadius=6,
                 cornerEdges=2 | 4,
-                text=str(unplayed_items_count),
                 backcolor=0x32772b, backcolor_sel=0x32772b,
                 color=0xffffff, color_sel=0xffffff))
         self.index_currently_redrawing = -1

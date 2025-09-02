@@ -124,14 +124,13 @@ class EmbyList(GUIComponent):
         self.l.setFont(0, self.font)
         self.l.setFont(1, self.badgeFont)
         self.itemWidth = self.iconWidth + self.spacing_sides * 2
-
-        self.l.setItemHeight(self.itemHeight)
-        self.l.setItemWidth(self.itemWidth)
-        self.instance.setOrientation(self.orientation)
+        # self.instance.setOrientation(self.orientation)
         self.l.setOrientation(self.orientation)
         res = GUIComponent.applySkin(self, desktop, parent)
         self.itemHeight = self.instance.size().height()
         self.items_per_page = self.instance.size().width() // self.itemWidth
+        self.l.setItemHeight(self.itemHeight)
+        self.l.setItemWidth(self.itemWidth)
         return res
 
     def toggleSelection(self, enabled):
@@ -359,18 +358,23 @@ class EmbyList(GUIComponent):
                 self.itemsForRedrawDelayed.remove(item_index)
                 if len(self.itemsForRedrawDelayed) > 0 and not self.redraw_timer.isActive():
                     self.redraw_timer.start(1000)
-        if selected and self.selectionEnabled:
+
+        is_icon = not isinstance(item_icon, bool)
+        icon_available = item_icon and is_icon
+        sel = selected and self.selectionEnabled
+        if sel:
             res.append(MultiContentEntryRectangle(
                 pos=(self.spacing_sides - 3, self.spacing_sides - 3), size=(self.iconWidth + 6, self.iconHeight + 6),
                 cornerRadius=8,
+                # borderWidth=3, borderColor=0x37772b,
                 backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
+
         res.append(MultiContentEntryRectangle(
-            pos=(self.spacing_sides, self.spacing_sides),
-            size=(self.iconWidth, self.iconHeight),
-            cornerRadius=8,
-            backgroundColor=0x00222222, backgroundColorSelected=0x00222222))
-        is_icon = not isinstance(item_icon, bool)
-        if item_icon and is_icon:
+                pos=(self.spacing_sides, self.spacing_sides), size=(self.iconWidth, self.iconHeight),
+                cornerRadius=8,
+                backgroundColor=0x00222222, backgroundColorSelected=0x00222222))
+
+        if icon_available:
             flags = 0
             if self.type == "cast":
                 flags = BT_HALIGN_CENTER | BT_VALIGN_CENTER
@@ -379,7 +383,7 @@ class EmbyList(GUIComponent):
                 size=(self.iconWidth, self.iconHeight),
                 png=LoadPixmap(item_icon),
                 backcolor=None, backcolor_sel=None,
-                cornerRadius=8,
+                cornerRadius=6,
                 flags=flags))
         else:
             found = any(item_index in tup for tup in self.itemsForThumbs)
@@ -402,7 +406,6 @@ class EmbyList(GUIComponent):
             res.append(MultiContentEntryText(
                 pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 25),
                 font=0, flags=RT_HALIGN_LEFT | RT_BLEND,
-                cornerRadius=6,
                 text=item_name,
                 color=0xffffff, color_sel=0xffffff))
             date_str = item.get("PremiereDate")
@@ -414,14 +417,12 @@ class EmbyList(GUIComponent):
                 pos=(self.spacing_sides, y), size=(
                     self.iconWidth, self.itemHeight - y),
                 font=0, flags=RT_HALIGN_LEFT | RT_BLEND | RT_WRAP,
-                cornerRadius=6,
                 text=desc,
                 color=0x666666, color_sel=0x666666))
         else:
             res.append(MultiContentEntryText(
                 pos=(self.spacing_sides, self.iconHeight + 32), size=(self.iconWidth, 70),
                 font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_WRAP,
-                cornerRadius=6,
                 text=item_name,
                 color=0xffffff, color_sel=0xffffff))
 
@@ -432,7 +433,7 @@ class EmbyList(GUIComponent):
             res.append(MultiContentEntryRectangle(
                 pos=(self.spacing_sides + self.iconWidth - 45, self.spacing_sides),
                 size=(45, 45),
-                cornerRadius=6,
+                cornerRadius=8,
                 cornerEdges=2 | 4,
                 backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
             res.append(MultiContentEntryPixmapAlphaBlend(
@@ -447,7 +448,7 @@ class EmbyList(GUIComponent):
                 pos=(self.spacing_sides + self.iconWidth - 45, self.spacing_sides),
                 size=(45, 45),
                 font=1, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                cornerRadius=6,
+                cornerRadius=8,
                 cornerEdges=2 | 4,
                 text=str(unplayed_items_count),
                 backcolor=0x32772b, backcolor_sel=0x32772b,

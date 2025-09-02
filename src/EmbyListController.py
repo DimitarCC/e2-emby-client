@@ -4,6 +4,10 @@ class EmbyListController():
         self.list = list
         self.header = header
 
+    def setHeaderText(self, text):
+        self.header.text = text
+        return self
+
     def move(self, x, y):
         header_h = self.header.instance.size().height() + 10 if self.header else 0
         if self.header:

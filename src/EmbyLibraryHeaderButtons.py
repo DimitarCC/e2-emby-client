@@ -147,27 +147,11 @@ class EmbyLibraryHeaderButtons(GUIComponent):
 
         back_color = backColorSelected if selected else None
         offset = xPos + textWidth + height
-        # if selected:
-        #     if self.focused:
-        #         res.append(MultiContentEntryRectangle(
-        #             pos=(xPos, yPos + 4), size=(textWidth + height, rec_height - 8),
-        #             cornerRadius=(rec_height - 8) // 2,
-        #             backgroundColor=0xffffff, backgroundColorSelected=0xffffff))
-        #         res.append(MultiContentEntryRectangle(
-        #             pos=(xPos + 2, yPos + 6), size=(textWidth + height - 4, rec_height - 12),
-        #             cornerRadius=(rec_height - 12) // 2,
-        #             backgroundColor=back_color, backgroundColorSelected=back_color))
-        #     else:
-        #         res.append(MultiContentEntryRectangle(
-        #             pos=(xPos, yPos + 4), size=(textWidth + height, rec_height - 8),
-        #             cornerRadius=height // 2,
-        #             backgroundColor=back_color, backgroundColorSelected=back_color))
-
         res.append(MultiContentEntryText(
-            pos=(xPos - (2 if self.focused else 0), yPos + (1 if self.focused else 4)), size=(textWidth + height + (4 if self.focused else 0), rec_height - (2 if self.focused else 8)),
+            pos=(xPos - 1 - (2 if self.focused else 0), yPos + (1 if self.focused else 4)), size=(textWidth + height + (4 if self.focused else 0), rec_height - (2 if self.focused else 8)),
             font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
             text=text,
-            cornerRadius=(rec_height - (4 if self.focused else 8)) // 2,
+            cornerRadius=((rec_height - (4 if self.focused else 8)) // 2) if (selected and self.focused) or selected else 0,
             border_width=2 if selected and self.focused else 0, border_color=0xffffff,
             backcolor=back_color, backcolor_sel=back_color,
             color=textColor, color_sel=textColor))
@@ -187,17 +171,15 @@ class EmbyLibraryHeaderButtons(GUIComponent):
             res.append(MultiContentEntryRectangle(
                 pos=(self.drawing_start_x - 4, 0), size=(self.container_rect_width, height),
                 cornerRadius=(height // 2) - 2,
-                borderWidth=1, borderColor=0x22333333, borderColorSelected=0x22333333,
                 backgroundColor=0x22333333, backgroundColorSelected=0x22333333))
 
         for button in buttons:
             selected = button[0] == self.selectedIndex
-            xPos = self.constructButton(
-                res, button[1], height, xPos, yPos, selected)
+            xPos = self.constructButton(res, button[1], height, xPos, yPos, selected)
 
         if self.drawing_start_x == -1:
             self.drawing_start_x = (width - xPos) // 2
-            self.container_rect_width = xPos
+            self.container_rect_width = xPos - 3
             return self.buildEntry(buttons)
 
         # self.move((1920 - xPos) // 2, self.instance.position().y())

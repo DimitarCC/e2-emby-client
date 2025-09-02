@@ -414,7 +414,7 @@ class EmbyRestClient():
         # sorted_items = sorted(items, key=lambda x: x.get("SortName"))
         return items  # sorted_items
 
-    def getRandomItemFromLibrary(self, parent_id, type, limit=200):
+    def getRandomItemFromLibrary(self, parent_id, type, limit=2000):
         includeItems = "Movie"
         if type == "movies":
             includeItems = "Movie&IsMovie=true&Recursive=true&Filters=IsNotFolder"
@@ -423,6 +423,24 @@ class EmbyRestClient():
         items = self.getItems("", "DateCreated", includeItems,
                               f"&ParentId={parent_id}", limit)
         return items and choice(items) or {}
+
+    def getRecommendedMoviesForLibrary(self, library_id, limit=40):
+        items = []
+        headers = self.constructHeaders()
+        url = f"{self.server_root}/emby/Movies/Recommendations?UserId={self.user_id}&categoryLimit=6&GroupProgramsBySeries=true&ParentId={library_id}&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&ItemLimit={limit}"
+        for attempt in range(config.plugins.e2embyclient.conretries.value):
+            try:
+                response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+                response_obj = response.content
+                items.extend(loads(response_obj))
+                break
+            except TimeoutError:
+                pass
+            except ReadTimeout:
+                pass
+            except:
+                break
+        return items
 
     def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id="", widget_id=""):
         filename_suffix = ""
@@ -692,5 +710,4 @@ class EmbyRestClient():
         return ""
 
 
-EmbyApiClient = EmbyRestClient(BoxInfo.getItem(
-    "displaymodel"), BoxInfo.getItem("model"))
+EmbyApiClient = EmbyRestClient(BoxInfo.getItem("displaymodel"), BoxInfo.getItem("model"))
