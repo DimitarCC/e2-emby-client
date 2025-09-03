@@ -8,6 +8,7 @@ from shutil import rmtree
 from Components.config import config
 
 from .Variables import EMBY_THUMB_CACHE_DIR
+from . import _
 
 
 def convert_ticks_to_time(ticks, is_chapters=False):

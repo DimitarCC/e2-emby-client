@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-24 11:48+0200\n"
+"POT-Creation-Date: 2025-09-03 11:21+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: jbleyel\n"
 "Language-Team: \n"
-"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
 "X-Generator: Poedit 3.6\n"
 
 #: ../src/setup.xml
@@ -36,10 +36,6 @@ msgstr ""
 msgid "Add E2EmbyClient to the Main Menu list of options."
 msgstr ""
 
-#: ../src/EmbyHome.py:107
-msgid "Add provider"
-msgstr "Anbieter hinzufügen"
-
 #: ../src/setup.xml
 msgid "Add to Extensions Menu"
 msgstr "Zeige in Erweiterungen"
@@ -56,11 +52,7 @@ msgstr "Besetzung/Team"
 msgid "Chapters"
 msgstr "Kapitel"
 
-#: ../src/EmbyHome.py:109
-msgid "Clear all data"
-msgstr "Alle Daten löschen"
-
-#: ../src/EmbyHome.py:106
+#: ../src/EmbyHome.py:107
 msgid "Close"
 msgstr "Schließen"
 
@@ -80,7 +72,7 @@ msgstr "Verbindungszeitüberschreitung"
 msgid "Connections"
 msgstr "Verbindungen"
 
-#: ../src/EmbyHome.py:100 ../src/EmbyLibraryScreen.py:83
+#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:101
 msgid "Continue watching"
 msgstr "Weitersehen"
 
@@ -105,11 +97,11 @@ msgstr "Bearbeiten"
 msgid "Emby"
 msgstr "Emby"
 
-#: ../src/EmbyLibraryScreen.py:65
+#: ../src/EmbyLibraryScreen.py:82
 msgid "Emby Library"
 msgstr "Emby-Bibliothek"
 
-#: ../src/HelperFunctions.py:42
+#: ../src/HelperFunctions.py:43
 msgid "Ends at"
 msgstr "Endet um"
 
@@ -117,15 +109,11 @@ msgstr "Endet um"
 msgid "Extras"
 msgstr "Extras"
 
-#: ../src/EmbyItemFunctionButtons.py:196
+#: ../src/EmbyItemFunctionButtons.py:192
 msgid "Favorite"
 msgstr "Favorit"
 
-#: ../src/EmbyHome.py:108
-msgid "Generate bouquets"
-msgstr "Bouquets erstellen"
-
-#: ../src/EmbyItemFunctionButtons.py:199
+#: ../src/EmbyItemFunctionButtons.py:195
 msgid "Go to series"
 msgstr "Gehe zu Serien"
 
@@ -133,11 +121,16 @@ msgstr "Gehe zu Serien"
 msgid "Included in"
 msgstr "Inclusive"
 
-#: ../src/EmbyLibraryHeaderButtons.py:109
+#: ../src/EmbyInfoLine.py:173
+#, fuzzy
+msgid "Movie"
+msgstr "Filme"
+
+#: ../src/EmbyInfoLine.py:175 ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
 msgstr "Filme"
 
-#: ../src/EmbyHome.py:98
+#: ../src/EmbyHome.py:99
 msgid "My Media"
 msgstr "Meine Medien"
 
@@ -157,19 +150,15 @@ msgstr "Passwort"
 msgid "Password for the Connection."
 msgstr "Passwort für die Verbindung."
 
-#: ../src/plugin.py:29
-msgid "Persistent thumbnail cache in"
-msgstr "Permanenter Vorschaubilder Cache"
-
-#: ../src/EmbyItemFunctionButtons.py:186
+#: ../src/EmbyItemFunctionButtons.py:182
 msgid "Play"
 msgstr "Abspielen"
 
-#: ../src/EmbyItemFunctionButtons.py:183
+#: ../src/EmbyItemFunctionButtons.py:179
 msgid "Play from start"
 msgstr "Von Anfang an abspielen"
 
-#: ../src/EmbyItemFunctionButtons.py:190
+#: ../src/EmbyItemFunctionButtons.py:186
 msgid "Play trailer"
 msgstr "Trailer abspielen"
 
@@ -181,20 +170,21 @@ msgstr "Port"
 msgid "Port of the Connection."
 msgstr "Port der Verbindung."
 
-#: ../src/EmbyHome.py:112
-msgid "Press OK to edit the currently selected provider"
-msgstr "OK drücken, um den aktuell ausgewählten Anbieter zu bearbeiten"
+#: ../src/EmbyLibraryScreen.py:103
+#, fuzzy
+msgid "Recently added"
+msgstr "Kürzlich hinzugefügte Filme"
 
-#: ../src/EmbyHome.py:102
+#: ../src/EmbyHome.py:103
 msgid "Recently added movies"
 msgstr "Kürzlich hinzugefügte Filme"
 
-#: ../src/EmbyHome.py:104
+#: ../src/EmbyHome.py:105
 msgid "Recently added tvshows"
 msgstr "Kürzlich hinzugefügte Serien"
 
-#: ../src/EmbyLibraryHeaderButtons.py:108
-#: ../src/EmbyLibraryHeaderButtons.py:112
+#: ../src/EmbyLibraryHeaderButtons.py:106
+#: ../src/EmbyLibraryHeaderButtons.py:110
 msgid "Recommendations"
 msgstr "Empfehlungen"
 
@@ -206,15 +196,24 @@ msgstr "Entfernen"
 msgid "Remove Connection"
 msgstr "Verbindung entfernen"
 
-#: ../src/EmbyItemFunctionButtons.py:181
-msgid "Resume ("
+#: ../src/EmbyItemFunctionButtons.py:178
+#, fuzzy
+msgid "Resume"
 msgstr "Fortsetzen ("
 
 #: ../src/setup.xml
 msgid "Root URL address of the Connection."
 msgstr "Basis-URL-Adresse der Verbindung."
 
-#: ../src/EmbyLibraryHeaderButtons.py:113
+#: ../src/EmbyInfoLine.py:167
+msgid "Season"
+msgstr ""
+
+#: ../src/EmbyInfoLine.py:169
+msgid "Seasons"
+msgstr ""
+
+#: ../src/EmbyLibraryHeaderButtons.py:111
 msgid "Series"
 msgstr "Serien"
 
@@ -274,7 +273,7 @@ msgstr "Benutzer"
 msgid "User for the Connection."
 msgstr "Benutzer für die Verbindung."
 
-#: ../src/EmbyItemFunctionButtons.py:193
+#: ../src/EmbyItemFunctionButtons.py:189
 msgid "Watched"
 msgstr "Gesehen"
 

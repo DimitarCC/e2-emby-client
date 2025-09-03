@@ -8,11 +8,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-24 11:48+0200\n"
+"POT-Creation-Date: 2025-09-03 11:25+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -41,10 +40,6 @@ msgstr ""
 msgid "Add E2EmbyClient to the Main Menu list of options."
 msgstr ""
 
-#: ../src/EmbyHome.py:107
-msgid "Add provider"
-msgstr ""
-
 #: ../src/setup.xml
 msgid "Add to Extensions Menu"
 msgstr ""
@@ -61,11 +56,7 @@ msgstr ""
 msgid "Chapters"
 msgstr ""
 
-#: ../src/EmbyHome.py:109
-msgid "Clear all data"
-msgstr ""
-
-#: ../src/EmbyHome.py:106
+#: ../src/EmbyHome.py:107
 msgid "Close"
 msgstr ""
 
@@ -85,7 +76,7 @@ msgstr ""
 msgid "Connections"
 msgstr ""
 
-#: ../src/EmbyHome.py:100 ../src/EmbyLibraryScreen.py:83
+#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:101
 msgid "Continue watching"
 msgstr ""
 
@@ -110,11 +101,11 @@ msgstr ""
 msgid "Emby"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:65
+#: ../src/EmbyLibraryScreen.py:82
 msgid "Emby Library"
 msgstr ""
 
-#: ../src/HelperFunctions.py:42
+#: ../src/HelperFunctions.py:43
 msgid "Ends at"
 msgstr ""
 
@@ -122,15 +113,11 @@ msgstr ""
 msgid "Extras"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:196
+#: ../src/EmbyItemFunctionButtons.py:192
 msgid "Favorite"
 msgstr ""
 
-#: ../src/EmbyHome.py:108
-msgid "Generate bouquets"
-msgstr ""
-
-#: ../src/EmbyItemFunctionButtons.py:199
+#: ../src/EmbyItemFunctionButtons.py:195
 msgid "Go to series"
 msgstr ""
 
@@ -138,11 +125,15 @@ msgstr ""
 msgid "Included in"
 msgstr ""
 
-#: ../src/EmbyLibraryHeaderButtons.py:109
+#: ../src/EmbyInfoLine.py:173
+msgid "Movie"
+msgstr ""
+
+#: ../src/EmbyInfoLine.py:175 ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
 msgstr ""
 
-#: ../src/EmbyHome.py:98
+#: ../src/EmbyHome.py:99
 msgid "My Media"
 msgstr ""
 
@@ -162,19 +153,15 @@ msgstr ""
 msgid "Password for the Connection."
 msgstr ""
 
-#: ../src/plugin.py:29
-msgid "Persistent thumbnail cache in"
-msgstr ""
-
-#: ../src/EmbyItemFunctionButtons.py:186
+#: ../src/EmbyItemFunctionButtons.py:182
 msgid "Play"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:183
+#: ../src/EmbyItemFunctionButtons.py:179
 msgid "Play from start"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:190
+#: ../src/EmbyItemFunctionButtons.py:186
 msgid "Play trailer"
 msgstr ""
 
@@ -186,20 +173,20 @@ msgstr ""
 msgid "Port of the Connection."
 msgstr ""
 
-#: ../src/EmbyHome.py:112
-msgid "Press OK to edit the currently selected provider"
+#: ../src/EmbyLibraryScreen.py:103
+msgid "Recently added"
 msgstr ""
 
-#: ../src/EmbyHome.py:102
+#: ../src/EmbyHome.py:103
 msgid "Recently added movies"
 msgstr ""
 
-#: ../src/EmbyHome.py:104
+#: ../src/EmbyHome.py:105
 msgid "Recently added tvshows"
 msgstr ""
 
-#: ../src/EmbyLibraryHeaderButtons.py:108
-#: ../src/EmbyLibraryHeaderButtons.py:112
+#: ../src/EmbyLibraryHeaderButtons.py:106
+#: ../src/EmbyLibraryHeaderButtons.py:110
 msgid "Recommendations"
 msgstr ""
 
@@ -211,15 +198,23 @@ msgstr ""
 msgid "Remove Connection"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:181
-msgid "Resume ("
+#: ../src/EmbyItemFunctionButtons.py:178
+msgid "Resume"
 msgstr ""
 
 #: ../src/setup.xml
 msgid "Root URL address of the Connection."
 msgstr ""
 
-#: ../src/EmbyLibraryHeaderButtons.py:113
+#: ../src/EmbyInfoLine.py:167
+msgid "Season"
+msgstr ""
+
+#: ../src/EmbyInfoLine.py:169
+msgid "Seasons"
+msgstr ""
+
+#: ../src/EmbyLibraryHeaderButtons.py:111
 msgid "Series"
 msgstr ""
 
@@ -279,7 +274,7 @@ msgstr ""
 msgid "User for the Connection."
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:193
+#: ../src/EmbyItemFunctionButtons.py:189
 msgid "Watched"
 msgstr ""
 

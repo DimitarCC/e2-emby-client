@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-08-24 11:48+0200\n"
+"POT-Creation-Date: 2025-09-03 11:25+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
-"Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: bg\n"
 "X-Generator: Poedit 3.6\n"
 
 #: ../src/setup.xml
@@ -18,266 +18,262 @@ msgstr "---"
 
 #: ../src/plugin.py:13
 msgid "A client for Emby server"
-msgstr ""
+msgstr "Клиент за Emby сървер"
 
 #: ../src/EmbySetup.py:54 ../src/EmbySetup.py:69
 msgid "Add"
-msgstr ""
+msgstr "Добавяне"
 
 #: ../src/EmbySetup.py:58
 msgid "Add Connection"
-msgstr ""
+msgstr "Добавяне на сървер/потребител"
 
 #: ../src/setup.xml
 msgid "Add E2EmbyClient to the Extensions Menu list of options."
-msgstr ""
+msgstr "Добавяне на E2EmbyClient в меню разширения."
 
 #: ../src/setup.xml
 msgid "Add E2EmbyClient to the Main Menu list of options."
-msgstr ""
-
-#: ../src/EmbyHome.py:107
-msgid "Add provider"
-msgstr ""
+msgstr "Добавяне на E2EmbyClient в главно меню."
 
 #: ../src/setup.xml
 msgid "Add to Extensions Menu"
-msgstr ""
+msgstr "Добавяне в меню разширения"
 
 #: ../src/setup.xml
 msgid "Add to Main Menu"
-msgstr ""
+msgstr "Добавяне в главно меню"
 
 #: ../src/EmbyItemView.py:15
 msgid "Cast and Crew"
-msgstr ""
+msgstr "Актьори и Екип"
 
 #: ../src/EmbyItemView.py:19
 msgid "Chapters"
-msgstr ""
+msgstr "Глави"
 
-#: ../src/EmbyHome.py:109
-msgid "Clear all data"
-msgstr ""
-
-#: ../src/EmbyHome.py:106
+#: ../src/EmbyHome.py:107
 msgid "Close"
-msgstr ""
+msgstr "Затваряне"
 
 #: ../src/setup.xml
 msgid "Connection read timeout"
-msgstr ""
+msgstr "Таймаут при четене"
 
 #: ../src/setup.xml
 msgid "Connection reties count"
-msgstr ""
+msgstr "Повторения на опити за връзка"
 
 #: ../src/setup.xml
 msgid "Connection timeout"
-msgstr ""
+msgstr "Таймаут на връзката"
 
 #: ../src/setup.xml
 msgid "Connections"
-msgstr ""
+msgstr "Връзки"
 
-#: ../src/EmbyHome.py:100 ../src/EmbyLibraryScreen.py:83
+#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:101
 msgid "Continue watching"
-msgstr ""
+msgstr "Продължаване на гледането"
 
 #: ../src/plugin.py:12 ../src/plugin.py:57
 msgid "E2Emby"
-msgstr ""
+msgstr "E2Emby"
 
 #: ../src/setup.xml
 msgid "E2EmbyClient Connection"
-msgstr ""
+msgstr "E2EmbyClient връзка"
 
 #: ../src/setup.xml
 msgid "E2EmbyClient Setup"
-msgstr ""
+msgstr "E2EmbyClient настройки"
 
 #: ../src/EmbySetup.py:66
 msgid "Edit"
-msgstr ""
+msgstr "Редакция"
 
 #: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:56
 #: ../src/EmbyItemViewBase.py:27 ../src/EmbyMovieItemView.py:31
 msgid "Emby"
-msgstr ""
+msgstr "Emby"
 
-#: ../src/EmbyLibraryScreen.py:65
+#: ../src/EmbyLibraryScreen.py:82
 msgid "Emby Library"
-msgstr ""
+msgstr "Emby библиотека"
 
-#: ../src/HelperFunctions.py:42
+#: ../src/HelperFunctions.py:43
 msgid "Ends at"
-msgstr ""
+msgstr "Край в"
 
 #: ../src/EmbyItemView.py:23
 msgid "Extras"
-msgstr ""
+msgstr "Екстри"
 
-#: ../src/EmbyItemFunctionButtons.py:196
+#: ../src/EmbyItemFunctionButtons.py:192
 msgid "Favorite"
-msgstr ""
+msgstr "Любими"
 
-#: ../src/EmbyHome.py:108
-msgid "Generate bouquets"
-msgstr ""
-
-#: ../src/EmbyItemFunctionButtons.py:199
+#: ../src/EmbyItemFunctionButtons.py:195
 msgid "Go to series"
-msgstr ""
+msgstr "Отиди на сериал"
 
 #: ../src/EmbyMovieItemView.py:34
 msgid "Included in"
-msgstr ""
+msgstr "Включен в"
 
-#: ../src/EmbyLibraryHeaderButtons.py:109
+#: ../src/EmbyInfoLine.py:173
+msgid "Movie"
+msgstr "Филм"
+
+#: ../src/EmbyInfoLine.py:175 ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
-msgstr ""
+msgstr "Филми"
 
-#: ../src/EmbyHome.py:98
+#: ../src/EmbyHome.py:99
 msgid "My Media"
-msgstr ""
+msgstr "Моята медия"
 
 #: ../src/setup.xml
 msgid "Name"
-msgstr ""
+msgstr "Име"
 
 #: ../src/setup.xml
 msgid "Name of the Remote Box (freely selectable)."
-msgstr ""
+msgstr "Име на устройството (свободно избираемо)."
 
 #: ../src/setup.xml
 msgid "Password"
-msgstr ""
+msgstr "Парола"
 
 #: ../src/setup.xml
 msgid "Password for the Connection."
-msgstr ""
+msgstr "Парола за връзката."
 
-#: ../src/plugin.py:29
-msgid "Persistent thumbnail cache in"
-msgstr ""
+#: ../src/EmbyItemFunctionButtons.py:182
+msgid "Play"
+msgstr "Възпроизвеждане"
+
+#: ../src/EmbyItemFunctionButtons.py:179
+msgid "Play from start"
+msgstr "Пусни от началото"
 
 #: ../src/EmbyItemFunctionButtons.py:186
-msgid "Play"
-msgstr ""
-
-#: ../src/EmbyItemFunctionButtons.py:183
-msgid "Play from start"
-msgstr ""
-
-#: ../src/EmbyItemFunctionButtons.py:190
 msgid "Play trailer"
-msgstr ""
+msgstr "Трейлър възпр."
 
 #: ../src/setup.xml
 msgid "Port"
-msgstr ""
+msgstr "Порт"
 
 #: ../src/setup.xml
 msgid "Port of the Connection."
-msgstr ""
+msgstr "Порт за връзката."
 
-#: ../src/EmbyHome.py:112
-msgid "Press OK to edit the currently selected provider"
-msgstr ""
+#: ../src/EmbyLibraryScreen.py:103
+msgid "Recently added"
+msgstr "Последно добавени филми"
 
-#: ../src/EmbyHome.py:102
+#: ../src/EmbyHome.py:103
 msgid "Recently added movies"
-msgstr ""
+msgstr "Последно добавени филми"
 
-#: ../src/EmbyHome.py:104
+#: ../src/EmbyHome.py:105
 msgid "Recently added tvshows"
-msgstr ""
+msgstr "Последно добавени сериали"
 
-#: ../src/EmbyLibraryHeaderButtons.py:108
-#: ../src/EmbyLibraryHeaderButtons.py:112
+#: ../src/EmbyLibraryHeaderButtons.py:106
+#: ../src/EmbyLibraryHeaderButtons.py:110
 msgid "Recommendations"
-msgstr ""
+msgstr "Препоръчани"
 
 #: ../src/EmbySetup.py:55 ../src/EmbySetup.py:67
 msgid "Remove"
-msgstr ""
+msgstr "Изтриване"
 
 #: ../src/EmbySetup.py:59
 msgid "Remove Connection"
-msgstr ""
+msgstr "Изтриване на връзка"
 
-#: ../src/EmbyItemFunctionButtons.py:181
-msgid "Resume ("
-msgstr ""
+#: ../src/EmbyItemFunctionButtons.py:178
+msgid "Resume"
+msgstr "Продължаване"
 
 #: ../src/setup.xml
 msgid "Root URL address of the Connection."
-msgstr ""
+msgstr "Главен адрес за връзката."
 
-#: ../src/EmbyLibraryHeaderButtons.py:113
+#: ../src/EmbyInfoLine.py:167
+msgid "Season"
+msgstr "Сезон"
+
+#: ../src/EmbyInfoLine.py:169
+msgid "Seasons"
+msgstr "Сезони"
+
+#: ../src/EmbyLibraryHeaderButtons.py:111
 msgid "Series"
-msgstr ""
+msgstr "Сериали"
 
 #: ../src/EmbySetup.py:60
 msgid "Setup Actions"
-msgstr ""
+msgstr "Setup Actions"
 
 #: ../src/setup.xml
 msgid "Specify the connection retries count."
-msgstr ""
+msgstr "Задаване на максималния брой опити за връзка."
 
 #: ../src/setup.xml
 msgid "Specify the delay between selection changed events."
-msgstr ""
+msgstr "Задаване на закъснението при скролиране."
 
 #: ../src/setup.xml
 msgid "Specify the timeout for connect."
-msgstr ""
+msgstr "Задава се времето за отказ при невъзможност да се свърже със сървера."
 
 #: ../src/setup.xml
 msgid "Specify the timeout for connections read operations."
-msgstr ""
+msgstr "Задава се времето за отказ при четене от сървера."
 
 #: ../src/setup.xml
 msgid "Specify where thumbnail cache will be storred."
-msgstr ""
+msgstr "Задава местоположението на кеша на постерите."
 
 #: ../src/plugin.py:31
 msgid "Temporary thumbnail cache"
-msgstr ""
+msgstr "Временен кеш за постерите"
 
 #: ../src/setup.xml
 msgid "Thumb cache location"
-msgstr ""
+msgstr "Местоположение на кеша на постери"
 
 #: ../src/setup.xml
 msgid "Timeouts"
-msgstr ""
+msgstr "Закъснения"
 
 #: ../src/setup.xml
 msgid "UI Settings"
-msgstr ""
+msgstr "UI настройки"
 
 #: ../src/setup.xml
 msgid "UI scroll delay"
-msgstr ""
+msgstr "UI закъснение при скролиране"
 
 #: ../src/setup.xml
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #: ../src/setup.xml
 msgid "User"
-msgstr ""
+msgstr "Потребител"
 
 #: ../src/setup.xml
 msgid "User for the Connection."
-msgstr ""
+msgstr "Потребител за логване в сървера."
 
-#: ../src/EmbyItemFunctionButtons.py:193
+#: ../src/EmbyItemFunctionButtons.py:189
 msgid "Watched"
-msgstr ""
+msgstr "Гледан"
 
 #: ../src/plugin.py:32
 msgid "off"
-msgstr ""
+msgstr "Изкл."

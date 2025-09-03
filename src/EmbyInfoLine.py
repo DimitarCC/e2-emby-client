@@ -10,7 +10,7 @@ from Tools.LoadPixmap import LoadPixmap
 from .HelperFunctions import convert_ticks_to_time, embyDateToString, embyEndsAtToString
 from .Variables import plugin_dir
 from .EmbyRestClient import EmbyApiClient
-from . import _, PluginLanguageDomain
+from . import _
 
 
 class EmbyInfoLine(GUIComponent):
@@ -164,15 +164,15 @@ class EmbyInfoLine(GUIComponent):
         if type == "Series":
             seasonsCount = item.get("ChildCount", 0)
             if seasonsCount == 1:
-                return f"1 {_('Season')}"
+                return "1 %s" % _('Season')
             elif seasonsCount > 1:
-                return f"{seasonsCount} {_('Seasons')}"
+                return "%d %s" % (seasonsCount, _('Seasons'))
         elif type == "BoxSet":
             itemsCount = item.get("ChildCount", 0)
             if itemsCount == 1:
-                return f"1 {_('Movie')}"
+                return "1 %s" % _('Movie')
             elif itemsCount > 1:
-                return f"{itemsCount} {_('Movies')}"
+                return "%d %s" % (itemsCount, _('Movies'))
         return ""
 
     def constructGenres(self, item):

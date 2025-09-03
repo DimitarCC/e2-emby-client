@@ -13,7 +13,7 @@ from Tools.LoadPixmap import LoadPixmap
 from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .HelperFunctions import embyDateToString, create_thumb_cache_dir, delete_thumb_cache_dir
 from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR
-from . import _, PluginLanguageDomain
+from . import _
 
 
 class EmbyGridList(GUIComponent):

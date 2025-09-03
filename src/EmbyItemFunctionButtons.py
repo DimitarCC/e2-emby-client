@@ -12,7 +12,7 @@ from .EmbyPlayer import EmbyPlayer
 from .EmbyRestClient import EmbyApiClient
 from .HelperFunctions import convert_ticks_to_time
 from .Variables import plugin_dir
-from . import _, PluginLanguageDomain
+from . import _
 
 
 def playItem(selected_item, session, callback, startPos=0):
@@ -175,10 +175,8 @@ class EmbyItemFunctionButtons(GUIComponent):
         played = item.get("UserData", {}).get("Played", False)
         isFavorite = item.get("UserData", {}).get("IsFavorite", False)
         if position_ticks:
-            self.buttons.append((len(self.buttons), self.resumeIcon, _(
-                "Resume (") + convert_ticks_to_time(position_ticks, is_chapters=True) + ")", self.resumePlay))
-            self.buttons.append((len(self.buttons), self.playStartIcon, _(
-                "Play from start"), self.playFromBeguinning))
+            self.buttons.append((len(self.buttons), self.resumeIcon, _("Resume") + " (" + convert_ticks_to_time(position_ticks, is_chapters=True) + ")", self.resumePlay))
+            self.buttons.append((len(self.buttons), self.playStartIcon, _("Play from start"), self.playFromBeguinning))
         else:
             self.buttons.append(
                 (len(self.buttons), self.playIcon, _("Play"), self.playFromBeguinning))

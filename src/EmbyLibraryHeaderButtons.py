@@ -6,7 +6,7 @@ from Components.GUIComponent import GUIComponent
 from Components.Label import Label
 from Components.MultiContent import MultiContentEntryText, MultiContentEntryRectangle
 
-from . import _, PluginLanguageDomain
+from . import _
 
 
 class EmbyLibraryHeaderButtons(GUIComponent):

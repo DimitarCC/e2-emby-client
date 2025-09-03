@@ -105,12 +105,12 @@ class E2EmbyHome(Screen):
 		self["list_recent_tvshows_header"] = Label(_("Recently added tvshows"))
 		self["list_recent_tvshows"] = EmbyList()
 		self["key_red"] = StaticText(_("Close"))
-		self["key_green"] = StaticText(_("Add provider"))
-		self["key_yellow"] = StaticText(_("Generate bouquets"))
-		self["key_blue"] = StaticText(_("Clear all data"))
-		self["key_info"] = StaticText()
-		self["description"] = StaticText(
-			_("Press OK to edit the currently selected provider"))
+		# self["key_green"] = StaticText(_("Add provider"))
+		# self["key_yellow"] = StaticText(_("Generate bouquets"))
+		# self["key_blue"] = StaticText(_("Clear all data"))
+		# self["key_info"] = StaticText()
+		# self["description"] = StaticText(
+		# 	_("Press OK to edit the currently selected provider"))
 
 		self.lists = {}
 		self.lists["list"] = EmbyListController(

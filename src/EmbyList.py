@@ -13,7 +13,7 @@ from Tools.LoadPixmap import LoadPixmap
 from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .HelperFunctions import embyDateToString, convert_ticks_to_time, find_index, create_thumb_cache_dir, delete_thumb_cache_dir
 from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR
-from . import _, PluginLanguageDomain
+from . import _
 
 import os
 
