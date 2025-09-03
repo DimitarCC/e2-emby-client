@@ -385,6 +385,7 @@ class EmbyGridList(GUIComponent):
 				cornerRadius=6,
 				cornerEdges=2 | 4,
 				backcolor=0x32772b, backcolor_sel=0x32772b,
+				textBColor=0x000000, textBWidth=2,
 				color=0xffffff, color_sel=0xffffff))
 		self.index_currently_redrawing = -1
 		return res

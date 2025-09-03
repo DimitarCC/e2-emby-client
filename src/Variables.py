@@ -1,5 +1,6 @@
 from sys import modules
 from os import path
+from Components.SystemInfo import BoxInfo
 
 # User Agents
 USER_AGENTS = {"android": "Mozilla/5.0 (Linux; Android 15) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.6834.79 Mobile Safari/537.36",
@@ -13,3 +14,5 @@ plugin_dir = path.dirname(modules[__name__].__file__)
 
 EMBY_DATA_DIR = "/emby"
 EMBY_THUMB_CACHE_DIR = EMBY_DATA_DIR + "/thumbCache"
+
+DISTRO = BoxInfo.getItem("distro")

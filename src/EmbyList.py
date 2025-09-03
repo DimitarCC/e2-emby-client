@@ -103,7 +103,7 @@ class EmbyList(GUIComponent):
 	def applySkin(self, desktop, parent):
 		attribs = []
 		for (attrib, value) in self.skinAttributes[:]:
-			if attrib == "orientation":
+			if attrib == "listOrientation":
 				self.orientation = self.orientations.get(
 					value, self.orientations["orHorizontal"])
 			elif attrib == "font":
@@ -451,6 +451,7 @@ class EmbyList(GUIComponent):
 				cornerRadius=6,
 				cornerEdges=2 | 4,
 				text=str(unplayed_items_count),
+				textBColor=0x000000, textBWidth=2,
 				backcolor=0x32772b, backcolor_sel=0x32772b,
 				color=0xffffff, color_sel=0xffffff))
 		self.index_currently_redrawing = -1
