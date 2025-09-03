@@ -39,8 +39,8 @@ class EmbyList(GUIComponent):
 		self.l = eListboxPythonMultiContent()  # noqa: E741
 		self.l.setBuildFunc(self.buildEntry)
 		self.spacing_sides = 15
-		self.orientations = {"orHorizontal": eListbox.orHorizontal,
-							 "orVertical": eListbox.orVertical}
+		self.orientations = {"horizontal": eListbox.orHorizontal,
+							 "vertical": eListbox.orVertical}
 		self.orientation = eListbox.orHorizontal
 		self.iconWidth = 270
 		self.iconHeight = 152
@@ -105,7 +105,7 @@ class EmbyList(GUIComponent):
 		for (attrib, value) in self.skinAttributes[:]:
 			if attrib == "listOrientation":
 				self.orientation = self.orientations.get(
-					value, self.orientations["orHorizontal"])
+					value, self.orientations["horizontal"])
 			elif attrib == "font":
 				self.font = parseFont(value, parent.scale)
 			elif attrib == "badgeFont":
