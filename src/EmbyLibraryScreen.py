@@ -37,7 +37,7 @@ class E2EmbyLibrary(Screen):
 						<convert type="ClockToText">Default</convert>
 					</widget>
 					<widget name="charbar" position="40,130" size="40,e-130-70" scrollbarMode="showNever" itemHeight="40" font="Regular;20" transparent="1" />
-					<widget name="list" position="90,130" size="e-20-90,e-130-70" scrollbarMode="showOnDemand" iconWidth="225" iconHeight="315" listOrientation="orGrid" font="Regular;22" transparent="1" />
+					<widget name="list" position="90,130" size="e-20-90,e-130-70" scrollbarMode="showOnDemand" iconWidth="225" iconHeight="315" font="Regular;22" transparent="1" />
 					{("" if DISTRO == "openatv" else pager)}
 					<widget name="backdrop" position="0,0" size="e,e" alphatest="blend" zPosition="-10" scaleFlags="moveRightTop"/>
 					<widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
@@ -46,21 +46,21 @@ class E2EmbyLibrary(Screen):
 					<widget name="infoline" position="60,240" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 					<widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="list_watching_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_watching" position="40,620" size="e-80,268" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" listOrientation="orHorizontal" transparent="1" />
+					<widget name="list_watching" position="40,620" size="e-80,268" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" transparent="1" />
 					<widget name="list_recent_added_header" position="55,918" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_recent_added" position="40,968" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" listOrientation="orHorizontal" transparent="1" />
+					<widget name="list_recent_added" position="40,968" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 					<widget name="list_recommend_header_0" position="55,1286" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_recommend_0" position="40,1336" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" listOrientation="orHorizontal" transparent="1" />
+					<widget name="list_recommend_0" position="40,1336" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 		 			<widget name="list_recommend_header_1" position="55,1644" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_recommend_1" position="40,1694" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" listOrientation="orHorizontal" transparent="1" />
+					<widget name="list_recommend_1" position="40,1694" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 		 			<widget name="list_recommend_header_2" position="55,2002" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_recommend_2" position="40,2052" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" listOrientation="orHorizontal" transparent="1" />
+					<widget name="list_recommend_2" position="40,2052" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 		 			<widget name="list_recommend_header_3" position="55,2360" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_recommend_3" position="40,2410" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" listOrientation="orHorizontal" transparent="1" />
+					<widget name="list_recommend_3" position="40,2410" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 		 			<widget name="list_recommend_header_4" position="55,2718" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_recommend_4" position="40,2768" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" listOrientation="orHorizontal" transparent="1" />
+					<widget name="list_recommend_4" position="40,2768" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 		 			<widget name="list_recommend_header_5" position="55,3076" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_recommend_5" position="40,3126" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" listOrientation="orHorizontal" transparent="1" />
+					<widget name="list_recommend_5" position="40,3126" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 				</screen>"""]  # noqa: E124
 
 	def __init__(self, session, library):

@@ -19,9 +19,9 @@ class EmbyEpisodeItemView(EmbyItemView):
 					<widget name="plot" position="60,310" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="f_buttons" position="60,520" size="924,70" font="Regular;32" transparent="1"/>
 					<widget name="cast_header" position="40,630" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-					<widget name="list_cast" position="40,700" size="e-80,426" iconWidth="180" iconHeight="270" font="Regular;20" scrollbarMode="showNever" iconType="Primary" listOrientation="orHorizontal" transparent="1"/>
+					<widget name="list_cast" position="40,700" size="e-80,426" iconWidth="180" iconHeight="270" font="Regular;20" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 					<widget name="chapters_header" position="40,1166" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-					<widget name="list_chapters" position="40,1230" size="e-80,426" iconWidth="395" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" listOrientation="orHorizontal" transparent="1"/>
+					<widget name="list_chapters" position="40,1230" size="e-80,426" iconWidth="395" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
 				</screen>"""]
 
 	def __init__(self, session, item, backdrop=None, logo=None):
