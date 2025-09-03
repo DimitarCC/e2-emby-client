@@ -14,352 +14,352 @@ from . import _
 
 
 class EmbyInfoLine(GUIComponent):
-    def __init__(self, screen):
-        GUIComponent.__init__(self)
-        self.screen = screen
-        self.screen.onShow.append(self.onContainerShown)
-        self.data = []
-        self.font = gFont("Regular", 18)
-        self.fontAdditional = gFont("Regular", 18)
-        self.foreColorAdditional = 0xffffff
-        self.l_t = LoadPixmap("%s/l_t.png" % plugin_dir)
-        self.l_b = LoadPixmap("%s/l_b.png" % plugin_dir)
-        self.r_t = LoadPixmap("%s/r_t.png" % plugin_dir)
-        self.r_b = LoadPixmap("%s/r_b.png" % plugin_dir)
-        self.b_back = LoadPixmap("%s/b_back.png" % plugin_dir)
-        self.star24 = LoadPixmap(resolveFilename(
-            SCOPE_GUISKIN, "icons/emby_star.png"))
-        if not self.star24:
-            self.star24 = LoadPixmap("%s/star.png" % plugin_dir)
-        self.rt_gt_60 = LoadPixmap(resolveFilename(
-            SCOPE_GUISKIN, "icons/emby_rtgt60.png"))
-        if not self.rt_gt_60:
-            self.rt_gt_60 = LoadPixmap("%s/rt60.png" % plugin_dir)
-        self.rt_lt_60 = LoadPixmap(resolveFilename(
-            SCOPE_GUISKIN, "icons/emby_rtlt60.png"))
-        if not self.rt_lt_60:
-            self.rt_lt_60 = LoadPixmap("%s/rt59.png" % plugin_dir)
-        self.l = eListboxPythonMultiContent()  # noqa: E741
-        self.l.setBuildFunc(self.buildEntry)
-        self.spacing = 28
-        self.orientations = {
-            "orHorizontal": eListbox.orHorizontal, "orVertical": eListbox.orVertical}
-        self.orientation = eListbox.orHorizontal
-        self.l.setItemHeight(35)
-        self.l.setItemWidth(35)
+	def __init__(self, screen):
+		GUIComponent.__init__(self)
+		self.screen = screen
+		self.screen.onShow.append(self.onContainerShown)
+		self.data = []
+		self.font = gFont("Regular", 18)
+		self.fontAdditional = gFont("Regular", 18)
+		self.foreColorAdditional = 0xffffff
+		self.l_t = LoadPixmap("%s/l_t.png" % plugin_dir)
+		self.l_b = LoadPixmap("%s/l_b.png" % plugin_dir)
+		self.r_t = LoadPixmap("%s/r_t.png" % plugin_dir)
+		self.r_b = LoadPixmap("%s/r_b.png" % plugin_dir)
+		self.b_back = LoadPixmap("%s/b_back.png" % plugin_dir)
+		self.star24 = LoadPixmap(resolveFilename(
+			SCOPE_GUISKIN, "icons/emby_star.png"))
+		if not self.star24:
+			self.star24 = LoadPixmap("%s/star.png" % plugin_dir)
+		self.rt_gt_60 = LoadPixmap(resolveFilename(
+			SCOPE_GUISKIN, "icons/emby_rtgt60.png"))
+		if not self.rt_gt_60:
+			self.rt_gt_60 = LoadPixmap("%s/rt60.png" % plugin_dir)
+		self.rt_lt_60 = LoadPixmap(resolveFilename(
+			SCOPE_GUISKIN, "icons/emby_rtlt60.png"))
+		if not self.rt_lt_60:
+			self.rt_lt_60 = LoadPixmap("%s/rt59.png" % plugin_dir)
+		self.l = eListboxPythonMultiContent()  # noqa: E741
+		self.l.setBuildFunc(self.buildEntry)
+		self.spacing = 28
+		self.orientations = {
+			"orHorizontal": eListbox.orHorizontal, "orVertical": eListbox.orVertical}
+		self.orientation = eListbox.orHorizontal
+		self.l.setItemHeight(35)
+		self.l.setItemWidth(35)
 
-    GUI_WIDGET = eListbox
+	GUI_WIDGET = eListbox
 
-    def postWidgetCreate(self, instance):
-        instance.setSelectionEnable(False)
-        instance.setContent(self.l)
-        instance.allowNativeKeys(False)
+	def postWidgetCreate(self, instance):
+		instance.setSelectionEnable(False)
+		instance.setContent(self.l)
+		instance.allowNativeKeys(False)
 
-    def onContainerShown(self):
-        self.l.setItemHeight(self.instance.size().height())
-        self.l.setItemWidth(self.instance.size().width())
+	def onContainerShown(self):
+		self.l.setItemHeight(self.instance.size().height())
+		self.l.setItemWidth(self.instance.size().width())
 
-    def applySkin(self, desktop, parent):
-        attribs = []
-        for (attrib, value) in self.skinAttributes[:]:
-            if attrib == "font":
-                self.font = parseFont(value, parent.scale)
-            elif attrib == "fontAdditional":
-                self.fontAdditional = parseFont(value, parent.scale)
-            elif attrib == "foregroundColor":
-                self.foreColor = parseColor(value).argb()
-            elif attrib == "foregroundColorAdditional":
-                self.foreColorAdditional = parseColor(value).argb()
-            elif attrib == "spacing":
-                self.spacing = int(value)
-            elif attrib == "orientation":
-                self.orientation = self.orientations.get(
-                    value, self.orientations["orHorizontal"])
-                if self.orientation == eListbox.orHorizontal:
-                    self.instance.setOrientation(eListbox.orVertical)
-                    self.l.setOrientation(eListbox.orVertical)
-                else:
-                    self.instance.setOrientation(eListbox.orHorizontal)
-                    self.l.setOrientation(eListbox.orHorizontal)
-            else:
-                attribs.append((attrib, value))
-        self.skinAttributes = attribs
-        self.l.setFont(0, self.font)
-        self.l.setFont(1, self.fontAdditional)
-        self.instance.setOrientation(self.orientation)
-        self.l.setOrientation(self.orientation)
-        return GUIComponent.applySkin(self, desktop, parent)
+	def applySkin(self, desktop, parent):
+		attribs = []
+		for (attrib, value) in self.skinAttributes[:]:
+			if attrib == "font":
+				self.font = parseFont(value, parent.scale)
+			elif attrib == "fontAdditional":
+				self.fontAdditional = parseFont(value, parent.scale)
+			elif attrib == "foregroundColor":
+				self.foreColor = parseColor(value).argb()
+			elif attrib == "foregroundColorAdditional":
+				self.foreColorAdditional = parseColor(value).argb()
+			elif attrib == "spacing":
+				self.spacing = int(value)
+			elif attrib == "orientation":
+				self.orientation = self.orientations.get(
+					value, self.orientations["orHorizontal"])
+				if self.orientation == eListbox.orHorizontal:
+					self.instance.setOrientation(eListbox.orVertical)
+					self.l.setOrientation(eListbox.orVertical)
+				else:
+					self.instance.setOrientation(eListbox.orHorizontal)
+					self.l.setOrientation(eListbox.orHorizontal)
+			else:
+				attribs.append((attrib, value))
+		self.skinAttributes = attribs
+		self.l.setFont(0, self.font)
+		self.l.setFont(1, self.fontAdditional)
+		self.instance.setOrientation(self.orientation)
+		self.l.setOrientation(self.orientation)
+		return GUIComponent.applySkin(self, desktop, parent)
 
-    def updateInfo(self, item):
-        l_list = []
-        l_list.append((item,))
-        self.l.setList(l_list)
+	def updateInfo(self, item):
+		l_list = []
+		l_list.append((item,))
+		self.l.setList(l_list)
 
-    def _calcTextWidth(self, text, font=None, size=None):
-        size = eLabel.calculateTextSize(font, text, size)
-        res_width = size.width()
-        res_height = size.height()
-        return res_width, res_height
+	def _calcTextWidth(self, text, font=None, size=None):
+		size = eLabel.calculateTextSize(font, text, size)
+		res_width = size.width()
+		res_height = size.height()
+		return res_width, res_height
 
-    def getDesktopWith(self):
-        return getDesktop(0).size().width()
+	def getDesktopWith(self):
+		return getDesktop(0).size().width()
 
-    def getSize(self):
-        s = self.instance.size()
-        return s.width(), s.height()
+	def getSize(self):
+		s = self.instance.size()
+		return s.width(), s.height()
 
-    def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0x757472, backColor=0x55111111, textColor=0xffffff):
-        if not spacing:
-            spacing = self.spacing
+	def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0x757472, backColor=0x55111111, textColor=0xffffff):
+		if not spacing:
+			spacing = self.spacing
 
-        textWidth, textHeight = self._calcTextWidth(
-            text, font=self.fontAdditional, size=eSize(self.getDesktopWith() // 3, 0))
-        rec_height = textHeight + 10
+		textWidth, textHeight = self._calcTextWidth(
+			text, font=self.fontAdditional, size=eSize(self.getDesktopWith() // 3, 0))
+		rec_height = textHeight + 10
 
-        res.append(MultiContentEntryText(
-            pos=(xPos + 2, yPos + (height - rec_height) // 2 + 1), size=(textWidth + 26, rec_height - 4),
-            font=1, flags=RT_HALIGN_CENTER | RT_VALIGN_CENTER,
-            text=text,
-            cornerRadius=6,
-            border_color=borderColor, border_width=2,
-            backcolor=backColor, backcolor_sel=backColor,
-            color=textColor, color_sel=textColor))
-        xPos += spacing + textWidth + 30
-        return xPos
+		res.append(MultiContentEntryText(
+			pos=(xPos + 2, yPos + (height - rec_height) // 2 + 1), size=(textWidth + 26, rec_height - 4),
+			font=1, flags=RT_HALIGN_CENTER | RT_VALIGN_CENTER,
+			text=text,
+			cornerRadius=6,
+			border_color=borderColor, border_width=2,
+			backcolor=backColor, backcolor_sel=backColor,
+			color=textColor, color_sel=textColor))
+		xPos += spacing + textWidth + 30
+		return xPos
 
-    def constructResolutionLabel(self, width, height):
-        if width == 0 or height == 0:
-            return ""
+	def constructResolutionLabel(self, width, height):
+		if width == 0 or height == 0:
+			return ""
 
-        if height > 1080 and width > 1920:
-            return "UHD"
+		if height > 1080 and width > 1920:
+			return "UHD"
 
-        if height > 720 and width > 1280:
-            return "FHD"
+		if height > 720 and width > 1280:
+			return "FHD"
 
-        if height == 720 and width == 1280:
-            return "HD"
-        return "SD"
+		if height == 720 and width == 1280:
+			return "HD"
+		return "SD"
 
-    def constructYears(self, item):
-        type = item.get("Type", None)
+	def constructYears(self, item):
+		type = item.get("Type", None)
 
-        premiereDate_str = item.get("PremiereDate", None)
-        premiereDate = premiereDate_str and embyDateToString(premiereDate_str, type)
+		premiereDate_str = item.get("PremiereDate", None)
+		premiereDate = premiereDate_str and embyDateToString(premiereDate_str, type)
 
-        if type == "Series":
-            status = item.get("Status", "")
-            if status != "Continuing":
-                endDate_str = item.get("EndDate", None)
-                endDate = endDate_str and embyDateToString(endDate_str, type)
-            else:
-                endDate = "Present"
-            if premiereDate == endDate:
-                return premiereDate
-            return f"{premiereDate} - {endDate}"
-        return premiereDate
+		if type == "Series":
+			status = item.get("Status", "")
+			if status != "Continuing":
+				endDate_str = item.get("EndDate", None)
+				endDate = endDate_str and embyDateToString(endDate_str, type)
+			else:
+				endDate = "Present"
+			if premiereDate == endDate:
+				return premiereDate
+			return f"{premiereDate} - {endDate}"
+		return premiereDate
 
-    def constructItems(self, item):
-        type = item.get("Type", None)
-        if type == "Series":
-            seasonsCount = item.get("ChildCount", 0)
-            if seasonsCount == 1:
-                return "1 %s" % _('Season')
-            elif seasonsCount > 1:
-                return "%d %s" % (seasonsCount, _('Seasons'))
-        elif type == "BoxSet":
-            itemsCount = item.get("ChildCount", 0)
-            if itemsCount == 1:
-                return "1 %s" % _('Movie')
-            elif itemsCount > 1:
-                return "%d %s" % (itemsCount, _('Movies'))
-        return ""
+	def constructItems(self, item):
+		type = item.get("Type", None)
+		if type == "Series":
+			seasonsCount = item.get("ChildCount", 0)
+			if seasonsCount == 1:
+				return "1 %s" % _('Season')
+			elif seasonsCount > 1:
+				return "%d %s" % (seasonsCount, _('Seasons'))
+		elif type == "BoxSet":
+			itemsCount = item.get("ChildCount", 0)
+			if itemsCount == 1:
+				return "1 %s" % _('Movie')
+			elif itemsCount > 1:
+				return "%d %s" % (itemsCount, _('Movies'))
+		return ""
 
-    def constructGenres(self, item):
-        type = item.get("Type", None)
-        if type == "BoxSet":
-            genres = item.get("Genres", [])
-            if len(genres) > 0:
-                genreLimitOnDetails = int(EmbyApiClient.userSettings.get("genreLimitOnDetails", "3"))
-                return ', '.join(genres[:genreLimitOnDetails])
-        return ""
+	def constructGenres(self, item):
+		type = item.get("Type", None)
+		if type == "BoxSet":
+			genres = item.get("Genres", [])
+			if len(genres) > 0:
+				genreLimitOnDetails = int(EmbyApiClient.userSettings.get("genreLimitOnDetails", "3"))
+				return ', '.join(genres[:genreLimitOnDetails])
+		return ""
 
-    def constructAudioLabel(self, streams):
-        dts_list = list(
-            filter(lambda track: track.get("Codec") == "dts", streams))
+	def constructAudioLabel(self, streams):
+		dts_list = list(
+			filter(lambda track: track.get("Codec") == "dts", streams))
 
-        if dts_list:
-            sorted_dts_list = sorted(
-                dts_list, key=lambda track: track.get("ChannelLayout"))
-            dts_track = sorted_dts_list[-1]
-            return dts_track.get("Profile"), dts_track.get("ChannelLayout")
+		if dts_list:
+			sorted_dts_list = sorted(
+				dts_list, key=lambda track: track.get("ChannelLayout"))
+			dts_track = sorted_dts_list[-1]
+			return dts_track.get("Profile"), dts_track.get("ChannelLayout")
 
-        dolby_list = list(filter(lambda track: track.get(
-            "Codec") in ["eac3", "ac3"], streams))
+		dolby_list = list(filter(lambda track: track.get(
+			"Codec") in ["eac3", "ac3"], streams))
 
-        if dolby_list:
-            sorted_dolby_list = sorted(
-                dolby_list, key=lambda track: track.get("ChannelLayout"))
-            dolby_track = sorted_dolby_list[-1]
-            return "DOLBY", dolby_track.get("ChannelLayout", "").replace("stereo", "2.0")
-        return None, None
+		if dolby_list:
+			sorted_dolby_list = sorted(
+				dolby_list, key=lambda track: track.get("ChannelLayout"))
+			dolby_track = sorted_dolby_list[-1]
+			return "DOLBY", dolby_track.get("ChannelLayout", "").replace("stereo", "2.0")
+		return None, None
 
-    def buildEntry(self, item):
-        xPos = 0
-        yPos = 0
-        height = self.instance.size().height()
-        res = [None]
+	def buildEntry(self, item):
+		xPos = 0
+		yPos = 0
+		height = self.instance.size().height()
+		res = [None]
 
-        dates = self.constructYears(item)
-        user_rating = int(item.get("CommunityRating", "0"))
-        critics_rating = int(item.get("CriticRating", "0"))
-        mpaa = item.get("OfficialRating", None)
-        runtime_ticks = int(item.get("RunTimeTicks", "0"))
-        runtime = runtime_ticks and convert_ticks_to_time(runtime_ticks)
-        position_ticks = int(item.get("UserData", {}).get(
-            "PlaybackPositionTicks", "0"))
-        status = item.get("Status", "")
-        ends_at = embyEndsAtToString(runtime_ticks, position_ticks)
-        items = self.constructItems(item)
-        genres = self.constructGenres(item)
-        v_width = int(item.get("Width", "0"))
-        v_height = int(item.get("Height", "0"))
-        resString = self.constructResolutionLabel(v_width, v_height)
-        streams = item.get("MediaSources", [{}])[0].get("MediaStreams", [])
+		dates = self.constructYears(item)
+		user_rating = int(item.get("CommunityRating", "0"))
+		critics_rating = int(item.get("CriticRating", "0"))
+		mpaa = item.get("OfficialRating", None)
+		runtime_ticks = int(item.get("RunTimeTicks", "0"))
+		runtime = runtime_ticks and convert_ticks_to_time(runtime_ticks)
+		position_ticks = int(item.get("UserData", {}).get(
+			"PlaybackPositionTicks", "0"))
+		status = item.get("Status", "")
+		ends_at = embyEndsAtToString(runtime_ticks, position_ticks)
+		items = self.constructItems(item)
+		genres = self.constructGenres(item)
+		v_width = int(item.get("Width", "0"))
+		v_height = int(item.get("Height", "0"))
+		resString = self.constructResolutionLabel(v_width, v_height)
+		streams = item.get("MediaSources", [{}])[0].get("MediaStreams", [])
 
-        audioCodec, audioCh = self.constructAudioLabel(streams)
+		audioCodec, audioCh = self.constructAudioLabel(streams)
 
-        has_subtitles = any(stream.get("Type") ==
-                            "Subtitle" for stream in streams)
+		has_subtitles = any(stream.get("Type") ==
+							"Subtitle" for stream in streams)
 
-        if user_rating:
-            pixd_size = self.star24.size()
-            pixd_width = pixd_size.width()
-            pixd_height = pixd_size.height()
-            res.append(MultiContentEntryPixmapAlphaBlend(
-                pos=(xPos, yPos - 2 + (height - pixd_height) // 2),
-                size=(pixd_width, height),
-                png=self.star24,
-                backcolor=None, backcolor_sel=None,
-                flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
-            xPos += 7 + pixd_width
+		if user_rating:
+			pixd_size = self.star24.size()
+			pixd_width = pixd_size.width()
+			pixd_height = pixd_size.height()
+			res.append(MultiContentEntryPixmapAlphaBlend(
+				pos=(xPos, yPos - 2 + (height - pixd_height) // 2),
+				size=(pixd_width, height),
+				png=self.star24,
+				backcolor=None, backcolor_sel=None,
+				flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
+			xPos += 7 + pixd_width
 
-            user_rating_str = f" {user_rating:.1f}"
+			user_rating_str = f" {user_rating:.1f}"
 
-            textWidth = self._calcTextWidth(
-                user_rating_str, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+			textWidth = self._calcTextWidth(
+				user_rating_str, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
-            res.append(MultiContentEntryText(
-                pos=(xPos, yPos), size=(textWidth, height),
-                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=user_rating_str,
-                color=0xffffff, color_sel=0xffffff))
-            xPos += self.spacing + textWidth
+			res.append(MultiContentEntryText(
+				pos=(xPos, yPos), size=(textWidth, height),
+				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+				text=user_rating_str,
+				color=0xffffff, color_sel=0xffffff))
+			xPos += self.spacing + textWidth
 
-        if critics_rating:
-            rt_icon = self.rt_gt_60
-            if critics_rating < 60:
-                rt_icon = self.rt_lt_60
-            pixd_size = rt_icon.size()
-            pixd_width = pixd_size.width()
-            pixd_height = pixd_size.height()
-            res.append(MultiContentEntryPixmapAlphaBlend(
-                pos=(xPos, yPos - 2 + (height - pixd_height) // 2),
-                size=(pixd_width, height),
-                png=rt_icon,
-                backcolor=None, backcolor_sel=None,
-                flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
-            xPos += 7 + pixd_width
+		if critics_rating:
+			rt_icon = self.rt_gt_60
+			if critics_rating < 60:
+				rt_icon = self.rt_lt_60
+			pixd_size = rt_icon.size()
+			pixd_width = pixd_size.width()
+			pixd_height = pixd_size.height()
+			res.append(MultiContentEntryPixmapAlphaBlend(
+				pos=(xPos, yPos - 2 + (height - pixd_height) // 2),
+				size=(pixd_width, height),
+				png=rt_icon,
+				backcolor=None, backcolor_sel=None,
+				flags=BT_SCALE | BT_KEEP_ASPECT_RATIO))
+			xPos += 7 + pixd_width
 
-            critics_rating_str = f" {critics_rating}%"
+			critics_rating_str = f" {critics_rating}%"
 
-            textWidth = self._calcTextWidth(
-                critics_rating_str, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+			textWidth = self._calcTextWidth(
+				critics_rating_str, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
-            res.append(MultiContentEntryText(
-                pos=(xPos, yPos), size=(textWidth, height),
-                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=critics_rating_str,
-                color=0xffffff, color_sel=0xffffff))
-            xPos += self.spacing + textWidth
+			res.append(MultiContentEntryText(
+				pos=(xPos, yPos), size=(textWidth, height),
+				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+				text=critics_rating_str,
+				color=0xffffff, color_sel=0xffffff))
+			xPos += self.spacing + textWidth
 
-        if dates:
-            textWidth = self._calcTextWidth(
-                dates, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+		if dates:
+			textWidth = self._calcTextWidth(
+				dates, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
-            res.append(MultiContentEntryText(
-                pos=(xPos, yPos), size=(textWidth, height),
-                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=dates,
-                color=0xffffff, color_sel=0xffffff))
-            xPos += self.spacing + textWidth
+			res.append(MultiContentEntryText(
+				pos=(xPos, yPos), size=(textWidth, height),
+				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+				text=dates,
+				color=0xffffff, color_sel=0xffffff))
+			xPos += self.spacing + textWidth
 
-        if items:
-            textWidth = self._calcTextWidth(
-                items, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+		if items:
+			textWidth = self._calcTextWidth(
+				items, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
-            res.append(MultiContentEntryText(
-                pos=(xPos, yPos), size=(textWidth, height),
-                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=items,
-                color=0xffffff, color_sel=0xffffff))
-            xPos += self.spacing + textWidth
+			res.append(MultiContentEntryText(
+				pos=(xPos, yPos), size=(textWidth, height),
+				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+				text=items,
+				color=0xffffff, color_sel=0xffffff))
+			xPos += self.spacing + textWidth
 
-        if runtime:
-            textWidth = self._calcTextWidth(
-                runtime, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+		if runtime:
+			textWidth = self._calcTextWidth(
+				runtime, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
-            res.append(MultiContentEntryText(
-                pos=(xPos, yPos), size=(textWidth, height),
-                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=runtime,
-                color=0xffffff, color_sel=0xffffff))
-            xPos += self.spacing + textWidth
+			res.append(MultiContentEntryText(
+				pos=(xPos, yPos), size=(textWidth, height),
+				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+				text=runtime,
+				color=0xffffff, color_sel=0xffffff))
+			xPos += self.spacing + textWidth
 
-        if genres:
-            textWidth = self._calcTextWidth(
-                genres, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+		if genres:
+			textWidth = self._calcTextWidth(
+				genres, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
-            res.append(MultiContentEntryText(
-                pos=(xPos, yPos), size=(textWidth, height),
-                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=genres,
-                textBColor=0x000000, textBWidth=1,
-                color=0xffffff, color_sel=0xffffff))
-            xPos += self.spacing + textWidth
+			res.append(MultiContentEntryText(
+				pos=(xPos, yPos), size=(textWidth, height),
+				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+				text=genres,
+				textBColor=0x000000, textBWidth=1,
+				color=0xffffff, color_sel=0xffffff))
+			xPos += self.spacing + textWidth
 
-        if mpaa:
-            xPos = self.constructLabelBox(
-                res, mpaa, height, xPos, yPos, 10 if resString or audioCodec or audioCh or has_subtitles else None)
+		if mpaa:
+			xPos = self.constructLabelBox(
+				res, mpaa, height, xPos, yPos, 10 if resString or audioCodec or audioCh or has_subtitles else None)
 
-        if resString:
-            xPos = self.constructLabelBox(
-                res, resString, height, xPos, yPos, 10 if audioCodec or audioCh or has_subtitles else None)
+		if resString:
+			xPos = self.constructLabelBox(
+				res, resString, height, xPos, yPos, 10 if audioCodec or audioCh or has_subtitles else None)
 
-        if audioCodec:
-            xPos = self.constructLabelBox(
-                res, audioCodec, height, xPos, yPos, 10 if audioCh or has_subtitles else None)
+		if audioCodec:
+			xPos = self.constructLabelBox(
+				res, audioCodec, height, xPos, yPos, 10 if audioCh or has_subtitles else None)
 
-        if audioCh:
-            xPos = self.constructLabelBox(
-                res, audioCh, height, xPos, yPos, 10 if has_subtitles else None)
+		if audioCh:
+			xPos = self.constructLabelBox(
+				res, audioCh, height, xPos, yPos, 10 if has_subtitles else None)
 
-        if has_subtitles:
-            xPos = self.constructLabelBox(res, "CC", height, xPos, yPos)
+		if has_subtitles:
+			xPos = self.constructLabelBox(res, "CC", height, xPos, yPos)
 
-        if ends_at:
-            textWidth = self._calcTextWidth(
-                ends_at, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
+		if ends_at:
+			textWidth = self._calcTextWidth(
+				ends_at, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
 
-            res.append(MultiContentEntryText(
-                pos=(xPos, yPos), size=(textWidth + 5, height),
-                font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
-                text=ends_at,
-                textBColor=0x000000, textBWidth=1,
-                color=0xffffff, color_sel=0xffffff))
-            xPos += self.spacing + textWidth
+			res.append(MultiContentEntryText(
+				pos=(xPos, yPos), size=(textWidth + 5, height),
+				font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
+				text=ends_at,
+				textBColor=0x000000, textBWidth=1,
+				color=0xffffff, color_sel=0xffffff))
+			xPos += self.spacing + textWidth
 
-        if status:
-            xPos = self.constructLabelBox(res, status, height, xPos, yPos)
+		if status:
+			xPos = self.constructLabelBox(res, status, height, xPos, yPos)
 
-        return res
+		return res

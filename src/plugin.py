@@ -14,63 +14,63 @@ PROGRAM_DESCRIPTION = _("A client for Emby server")
 
 
 class MountChoices:
-    def __init__(self):
-        choices = self.getMountChoices()
-        config.plugins.e2embyclient.thumbcache_loc = ConfigSelection(choices=choices, default=self.getMountDefault(choices))
-        harddiskmanager.on_partition_list_change.append(MountChoices.__onPartitionChange)  # to update data location choices on mountpoint change
+	def __init__(self):
+		choices = self.getMountChoices()
+		config.plugins.e2embyclient.thumbcache_loc = ConfigSelection(choices=choices, default=self.getMountDefault(choices))
+		harddiskmanager.on_partition_list_change.append(MountChoices.__onPartitionChange)  # to update data location choices on mountpoint change
 
-    @staticmethod
-    def getMountChoices():
-        choices = []
-        for p in harddiskmanager.getMountedPartitions():
-            if path.exists(p.mountpoint):
-                d = path.normpath(p.mountpoint)
-                if p.mountpoint != "/":
-                    choices.append((d, f"{_('Persistent thumbnail cache in')} {p.mountpoint}"))
-        choices.sort()
-        choices.insert(0, ("/tmp", _("Temporary thumbnail cache")))
-        choices.insert(0, ("off", _("off")))
-        return choices
+	@staticmethod
+	def getMountChoices():
+		choices = []
+		for p in harddiskmanager.getMountedPartitions():
+			if path.exists(p.mountpoint):
+				d = path.normpath(p.mountpoint)
+				if p.mountpoint != "/":
+					choices.append((d, f"{_('Persistent thumbnail cache in')} {p.mountpoint}"))
+		choices.sort()
+		choices.insert(0, ("/tmp", _("Temporary thumbnail cache")))
+		choices.insert(0, ("off", _("off")))
+		return choices
 
-    @staticmethod
-    def getMountDefault(choices):
-        choices = {x[1]: x[0] for x in choices}
-        default = "/tmp"  # choices.get("/media/hdd") or choices.get("/media/usb") or ""
-        return default
+	@staticmethod
+	def getMountDefault(choices):
+		choices = {x[1]: x[0] for x in choices}
+		default = "/tmp"  # choices.get("/media/hdd") or choices.get("/media/usb") or ""
+		return default
 
-    @staticmethod
-    def __onPartitionChange(*args, **kwargs):
-        choices = MountChoices.getMountChoices()
-        config.plugins.e2embyclient.thumbcache_loc.setChoices(choices=choices, default=MountChoices.getMountDefault(choices))
+	@staticmethod
+	def __onPartitionChange(*args, **kwargs):
+		choices = MountChoices.getMountChoices()
+		config.plugins.e2embyclient.thumbcache_loc.setChoices(choices=choices, default=MountChoices.getMountDefault(choices))
 
 
 MountChoices()
 
 
 def main(session, **kwargs):
-    session.open(E2EmbyHome)
+	session.open(E2EmbyHome)
 
 
 def startFromMainMenu(menuid):
-    if menuid != "mainmenu":
-        return []
-    return [(_("E2Emby"), main, "e2_emby_menu", 100)]
+	if menuid != "mainmenu":
+		return []
+	return [(_("E2Emby"), main, "e2_emby_menu", 100)]
 
 
 def sessionstart(reason, session, **kwargs):
-    makedirs(f"/tmp{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
-    if config.plugins.e2embyclient.thumbcache_loc.value != "off":
-        makedirs(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
+	makedirs(f"/tmp{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
+	if config.plugins.e2embyclient.thumbcache_loc.value != "off":
+		makedirs(f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
 
 
 def Plugins(path, **kwargs):
-    plugin = [
-        PluginDescriptor(where=PluginDescriptor.WHERE_SESSIONSTART, fnc=sessionstart, needsRestart=False),
-        PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_PLUGINMENU, icon='plugin.png', fnc=main)
-    ]
-    if config.plugins.e2embyclient.add_to_extensionmenu.value:
-        plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_EXTENSIONSMENU, fnc=main))
-    if config.plugins.e2embyclient.add_to_mainmenu.value:
-        plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_MENU, fnc=startFromMainMenu))
+	plugin = [
+		PluginDescriptor(where=PluginDescriptor.WHERE_SESSIONSTART, fnc=sessionstart, needsRestart=False),
+		PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_PLUGINMENU, icon='plugin.png', fnc=main)
+	]
+	if config.plugins.e2embyclient.add_to_extensionmenu.value:
+		plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_EXTENSIONSMENU, fnc=main))
+	if config.plugins.e2embyclient.add_to_mainmenu.value:
+		plugin.append(PluginDescriptor(name=PROGRAM_NAME, description=PROGRAM_DESCRIPTION, where=PluginDescriptor.WHERE_MENU, fnc=startFromMainMenu))
 
-    return plugin
+	return plugin
