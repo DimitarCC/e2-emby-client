@@ -390,8 +390,7 @@ class EmbyRestClient():
 			includeItems = "Movie&IsMovie=true&Recursive=true&Filters=IsNotFolder"
 		elif type == "tvshows":
 			includeItems = "Series&IsFolder=true&Recursive=true"
-		items = self.getItems("", "DateCreated", includeItems,
-							  f"&ParentId={parent_id}", limit)
+		items = self.getItems("", "DateCreated", includeItems, f"&ParentId={parent_id}", limit)
 		return items and choice(items) or {}
 
 	def getRecommendedMoviesForLibrary(self, library_id, limit=40):
