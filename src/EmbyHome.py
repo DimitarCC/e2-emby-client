@@ -1,14 +1,14 @@
-import os
+from os.path import join
 from twisted.internet import threads
 from PIL import Image
 
 from enigma import eTimer
 
 from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
+from Components.config import config
 from Components.Label import Label
 from Components.Pixmap import Pixmap
 from Components.Sources.StaticText import StaticText
-from Components.config import config
 from Screens.Screen import Screen, ScreenSummary
 
 from .EmbyList import EmbyList
@@ -70,7 +70,7 @@ class E2EmbyHome(Screen):
 		self.plot_height_orig = 168
 		self.plot_width_orig = 924
 
-		self.mask_alpha = Image.open(os.path.join(
+		self.mask_alpha = Image.open(join(
 			plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
 		if self.mask_alpha.mode != "L":
 			self.mask_alpha = self.mask_alpha.convert("L")

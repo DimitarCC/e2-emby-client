@@ -29,8 +29,8 @@ class EmbySeriesItemView(EmbyItemView):
 					<widget name="list_cast" position="40,1118" size="e-80,426" iconWidth="205" iconHeight="310" font="Regular;19" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 					<widget name="chapters_header" position="40,1584" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 					<widget name="list_chapters" position="40,1644" size="e-80,310" iconWidth="395" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
-		 			<widget name="header_similar" position="40,1994" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-		 			<widget name="list_similar" position="40,2054" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
+					<widget name="header_similar" position="40,1994" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+					<widget name="list_similar" position="40,2054" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 				</screen>"""]
 
 	def __init__(self, session, item, backdrop=None, logo=None):

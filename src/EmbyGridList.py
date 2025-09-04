@@ -1,6 +1,7 @@
-from twisted.internet import threads
-from uuid import uuid4
 from time import sleep
+from uuid import uuid4
+
+from twisted.internet import threads
 
 from enigma import eTimer, eListbox, eListboxPythonMultiContent, eRect, BT_SCALE, BT_KEEP_ASPECT_RATIO, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP, RT_ELLIPSIS
 from skin import parseColor, parseFont

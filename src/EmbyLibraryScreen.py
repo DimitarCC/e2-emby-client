@@ -1,12 +1,14 @@
-from os import path
+from os.path import join
 from twisted.internet import threads
+from PIL import Image
+
 from enigma import eServiceReference, eTimer
-from Screens.Screen import Screen
-from Screens.InfoBar import InfoBar
 from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
+from Components.config import config
 from Components.Label import Label
 from Components.Pixmap import Pixmap
-from Components.config import config
+from Screens.InfoBar import InfoBar
+from Screens.Screen import Screen
 
 from .EmbyGridList import EmbyGridList
 from .EmbyList import EmbyList
@@ -19,10 +21,9 @@ from .EmbyBoxSetItemView import EmbyBoxSetItemView
 from .EmbySeriesItemView import EmbySeriesItemView
 from .EmbyLibraryHeaderButtons import EmbyLibraryHeaderButtons
 from .EmbyLibraryCharacterBar import EmbyLibraryCharacterBar
-from .Variables import plugin_dir, DISTRO
+from .Variables import plugin_dir, PAGERSUPPORT
 from . import _
 
-from PIL import Image
 
 MODE_RECOMMENDATIONS = 0
 MODE_LIST = 1
@@ -38,7 +39,7 @@ class E2EmbyLibrary(Screen):
 					</widget>
 					<widget name="charbar" position="40,130" size="40,e-130-70" scrollbarMode="showNever" itemHeight="40" font="Regular;20" transparent="1" />
 					<widget name="list" position="90,130" size="e-20-90,e-130-70" scrollbarMode="showOnDemand" iconWidth="225" iconHeight="315" font="Regular;22" transparent="1" />
-					{("" if DISTRO == "openatv" else pager)}
+					{(pager if PAGERSUPPORT else "")}
 					<widget name="backdrop" position="0,0" size="e,e" alphatest="blend" zPosition="-10" scaleFlags="moveRightTop"/>
 					<widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
 					<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
@@ -84,7 +85,7 @@ class E2EmbyLibrary(Screen):
 		self.sel_timer = eTimer()
 		self.sel_timer.callback.append(self.trigger_sel_changed_event)
 		self.mask_alpha = Image.open(
-			path.join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
+			join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
 		if self.mask_alpha.mode != "L":
 			self.mask_alpha = self.mask_alpha.convert("L")
 		self.list_data = []

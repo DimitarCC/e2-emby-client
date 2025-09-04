@@ -1,9 +1,9 @@
-from typing import Iterable, Callable, TypeVar
 from datetime import datetime, timedelta
-from PIL import Image
 from io import BytesIO
 from os import makedirs
 from shutil import rmtree
+from typing import Iterable, Callable, TypeVar
+from PIL import Image
 
 from Components.config import config
 

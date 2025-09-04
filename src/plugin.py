@@ -1,11 +1,13 @@
-from .EmbySetup import initConfig
-from Plugins.Plugin import PluginDescriptor
-from os import makedirs, path
-from .EmbyHome import E2EmbyHome
-from . import _
-from .Variables import EMBY_THUMB_CACHE_DIR
-from Components.Harddisk import harddiskmanager
+from os import makedirs
+from os.path import exists, normpath
 from Components.config import config, ConfigSelection
+from Components.Harddisk import harddiskmanager
+from Plugins.Plugin import PluginDescriptor
+
+from .EmbySetup import initConfig
+from .EmbyHome import E2EmbyHome
+from .Variables import EMBY_THUMB_CACHE_DIR
+from . import _
 
 initConfig()
 
@@ -23,8 +25,8 @@ class MountChoices:
 	def getMountChoices():
 		choices = []
 		for p in harddiskmanager.getMountedPartitions():
-			if path.exists(p.mountpoint):
-				d = path.normpath(p.mountpoint)
+			if exists(p.mountpoint):
+				d = normpath(p.mountpoint)
 				if p.mountpoint != "/":
 					choices.append((d, f"{_('Persistent thumbnail cache in')} {p.mountpoint}"))
 		choices.sort()

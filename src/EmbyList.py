@@ -1,21 +1,22 @@
-from twisted.internet import threads
+#import os
+
 from uuid import uuid4
 from time import sleep
+
+from twisted.internet import threads
 
 from enigma import eTimer, eListbox, eListboxPythonMultiContent, eRect, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP
 from skin import parseColor, parseFont
 
+from Components.config import config
 from Components.GUIComponent import GUIComponent
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryProgress, MultiContentEntryRectangle
-from Components.config import config
 from Tools.LoadPixmap import LoadPixmap
 
 from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .HelperFunctions import embyDateToString, convert_ticks_to_time, find_index, create_thumb_cache_dir, delete_thumb_cache_dir
 from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR
 from . import _
-
-import os
 
 
 class EmbyList(GUIComponent):

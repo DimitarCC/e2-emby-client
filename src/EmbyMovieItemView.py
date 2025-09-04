@@ -27,12 +27,12 @@ class EmbyMovieItemView(EmbyItemView):
 					<widget name="list_cast" position="40,660" size="e-80,426" iconWidth="205" iconHeight="310" font="Regular;19" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 					<widget name="chapters_header" position="40,1126" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 					<widget name="list_chapters" position="40,1190" size="e-80,310" iconWidth="395" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
-		 			<widget name="header_extras" position="40,1520" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-		 			<widget name="list_extras" position="40,1580" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
-		 			<widget name="header_parent_boxsets" position="40,2046" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-		 			<widget name="list_parent_boxsets" position="40,2106" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
-		 			<widget name="header_similar" position="40,2572" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-		 			<widget name="list_similar" position="40,2632" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
+					<widget name="header_extras" position="40,1520" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+					<widget name="list_extras" position="40,1580" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
+					<widget name="header_parent_boxsets" position="40,2046" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+					<widget name="list_parent_boxsets" position="40,2106" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
+					<widget name="header_similar" position="40,2572" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+					<widget name="list_similar" position="40,2632" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 			</screen>"""]
 
 	def __init__(self, session, item, backdrop=None, logo=None):

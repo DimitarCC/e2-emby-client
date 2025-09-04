@@ -5,14 +5,14 @@ from requests.exceptions import ReadTimeout
 from secrets import choice
 from urllib.parse import quote
 
+from PIL import Image
+
 from Components.config import config
 from Components.SystemInfo import BoxInfo
 from Tools.LoadPixmap import LoadPixmap
 
 from .Variables import REQUEST_USER_AGENT, EMBY_THUMB_CACHE_DIR
 from .HelperFunctions import crop_image_from_bytes, resize_and_center_image
-
-from PIL import Image
 
 
 class DirectoryParser:
