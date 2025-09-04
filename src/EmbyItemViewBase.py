@@ -159,12 +159,7 @@ class EmbyItemViewBase(Screen):
 		if self.selected_widget == "f_buttons":
 			self["f_buttons"].movePrevious()
 		else:
-			if hasattr(self[self.selected_widget].instance, "prevItem"):
-				self[self.selected_widget].instance.moveSelection(
-					self[self.selected_widget].instance.prevItem)
-			else:
-				self[self.selected_widget].instance.moveSelection(
-					self[self.selected_widget].instance.moveLeft)
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
 		if self.selected_widget == "f_buttons":

@@ -198,17 +198,11 @@ class E2EmbyHome(Screen):
 
 	def left(self):
 		self.last_widget_info_load_success = None
-		if hasattr(self[self.selected_widget].instance, "prevItem"):
-			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
-		else:
-			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
+		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
 		self.last_widget_info_load_success = None
-		if hasattr(self[self.selected_widget].instance, "nextItem"):
-			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
-		else:
-			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
+		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
 		current_widget_index = self.availableWidgets.index(

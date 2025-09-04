@@ -2,21 +2,21 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 11:25+0300\n"
+"POT-Creation-Date: 2025-09-04 19:01+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
+"Language: bg\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: bg\n"
-"X-Generator: Poedit 3.6\n"
+"X-Generator: Poedit 3.7\n"
 
 #: ../src/setup.xml
 msgid "---"
 msgstr "---"
 
-#: ../src/plugin.py:13
+#: ../src/plugin.py:15
 msgid "A client for Emby server"
 msgstr "Клиент за Emby сървер"
 
@@ -43,6 +43,14 @@ msgstr "Добавяне в меню разширения"
 #: ../src/setup.xml
 msgid "Add to Main Menu"
 msgstr "Добавяне в главно меню"
+
+#: ../src/EmbyLibraryScreen.py:468
+msgid "Because you liked"
+msgstr "Защото харесахте"
+
+#: ../src/EmbyLibraryScreen.py:466
+msgid "Because you recently watched"
+msgstr "Защото гледахте наскоро"
 
 #: ../src/EmbyItemView.py:15
 msgid "Cast and Crew"
@@ -72,11 +80,11 @@ msgstr "Таймаут на връзката"
 msgid "Connections"
 msgstr "Връзки"
 
-#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:101
+#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:103
 msgid "Continue watching"
 msgstr "Продължаване на гледането"
 
-#: ../src/plugin.py:12 ../src/plugin.py:57
+#: ../src/plugin.py:14 ../src/plugin.py:59
 msgid "E2Emby"
 msgstr "E2Emby"
 
@@ -93,11 +101,11 @@ msgid "Edit"
 msgstr "Редакция"
 
 #: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:56
-#: ../src/EmbyItemViewBase.py:27 ../src/EmbyMovieItemView.py:31
+#: ../src/EmbyItemViewBase.py:26 ../src/EmbyMovieItemView.py:40
 msgid "Emby"
 msgstr "Emby"
 
-#: ../src/EmbyLibraryScreen.py:82
+#: ../src/EmbyLibraryScreen.py:84
 msgid "Emby Library"
 msgstr "Emby библиотека"
 
@@ -109,17 +117,21 @@ msgstr "Край в"
 msgid "Extras"
 msgstr "Екстри"
 
-#: ../src/EmbyItemFunctionButtons.py:192
+#: ../src/EmbyItemFunctionButtons.py:183
 msgid "Favorite"
 msgstr "Любими"
 
-#: ../src/EmbyItemFunctionButtons.py:195
+#: ../src/EmbyLibraryScreen.py:470
+msgid "From director"
+msgstr "От режисьор"
+
+#: ../src/EmbyItemFunctionButtons.py:185
 msgid "Go to series"
 msgstr "Отиди на сериал"
 
-#: ../src/EmbyMovieItemView.py:34
-msgid "Included in"
-msgstr "Включен в"
+#: ../src/EmbyMovieItemView.py:43
+msgid "Included in Collections"
+msgstr "Включен в поредици"
 
 #: ../src/EmbyInfoLine.py:173
 msgid "Movie"
@@ -149,15 +161,15 @@ msgstr "Парола"
 msgid "Password for the Connection."
 msgstr "Парола за връзката."
 
-#: ../src/EmbyItemFunctionButtons.py:182
+#: ../src/EmbyItemFunctionButtons.py:175
 msgid "Play"
 msgstr "Възпроизвеждане"
 
-#: ../src/EmbyItemFunctionButtons.py:179
+#: ../src/EmbyItemFunctionButtons.py:172
 msgid "Play from start"
 msgstr "Пусни от началото"
 
-#: ../src/EmbyItemFunctionButtons.py:186
+#: ../src/EmbyItemFunctionButtons.py:179
 msgid "Play trailer"
 msgstr "Трейлър възпр."
 
@@ -169,7 +181,7 @@ msgstr "Порт"
 msgid "Port of the Connection."
 msgstr "Порт за връзката."
 
-#: ../src/EmbyLibraryScreen.py:103
+#: ../src/EmbyLibraryScreen.py:105
 msgid "Recently added"
 msgstr "Последно добавени филми"
 
@@ -194,7 +206,7 @@ msgstr "Изтриване"
 msgid "Remove Connection"
 msgstr "Изтриване на връзка"
 
-#: ../src/EmbyItemFunctionButtons.py:178
+#: ../src/EmbyItemFunctionButtons.py:171
 msgid "Resume"
 msgstr "Продължаване"
 
@@ -218,6 +230,10 @@ msgstr "Сериали"
 msgid "Setup Actions"
 msgstr "Setup Actions"
 
+#: ../src/EmbyMovieItemView.py:46 ../src/EmbySeriesItemView.py:44
+msgid "Similar"
+msgstr "Подобни"
+
 #: ../src/setup.xml
 msgid "Specify the connection retries count."
 msgstr "Задаване на максималния брой опити за връзка."
@@ -238,7 +254,7 @@ msgstr "Задава се времето за отказ при четене о�
 msgid "Specify where thumbnail cache will be storred."
 msgstr "Задава местоположението на кеша на постерите."
 
-#: ../src/plugin.py:31
+#: ../src/plugin.py:33
 msgid "Temporary thumbnail cache"
 msgstr "Временен кеш за постерите"
 
@@ -270,10 +286,14 @@ msgstr "Потребител"
 msgid "User for the Connection."
 msgstr "Потребител за логване в сървера."
 
-#: ../src/EmbyItemFunctionButtons.py:189
+#: ../src/EmbyItemFunctionButtons.py:181
 msgid "Watched"
 msgstr "Гледан"
 
-#: ../src/plugin.py:32
+#: ../src/EmbyLibraryScreen.py:472
+msgid "With actor"
+msgstr "С участието на"
+
+#: ../src/plugin.py:34
 msgid "off"
 msgstr "Изкл."

@@ -70,19 +70,13 @@ class EmbyBoxSetItemView(EmbyItemViewBase):
 		if self.selected_widget == "f_buttons":
 			self["f_buttons"].movePrevious()
 		else:
-			if hasattr(self[self.selected_widget].instance, "prevItem"):
-				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
-			else:
-				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveLeft)
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
 		if self.selected_widget == "f_buttons":
 			self["f_buttons"].moveNext()
 		else:
-			if hasattr(self[self.selected_widget].instance, "nextItem"):
-				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
-			else:
-				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveRight)
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def loadBoxSetDetails(self):
 		items = EmbyApiClient.getBoxsetsChildren(self.item_id)

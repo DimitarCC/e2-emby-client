@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-03 11:21+0300\n"
+"POT-Creation-Date: 2025-09-04 19:01+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: jbleyel\n"
 "Language-Team: \n"
@@ -16,7 +16,7 @@ msgstr ""
 msgid "---"
 msgstr "---"
 
-#: ../src/plugin.py:13
+#: ../src/plugin.py:15
 msgid "A client for Emby server"
 msgstr "Ein Client für den Emby-Server"
 
@@ -43,6 +43,14 @@ msgstr "Zeige in Erweiterungen"
 #: ../src/setup.xml
 msgid "Add to Main Menu"
 msgstr "Zeige im Hauptmenü"
+
+#: ../src/EmbyLibraryScreen.py:468
+msgid "Because you liked"
+msgstr ""
+
+#: ../src/EmbyLibraryScreen.py:466
+msgid "Because you recently watched"
+msgstr ""
 
 #: ../src/EmbyItemView.py:15
 msgid "Cast and Crew"
@@ -72,11 +80,11 @@ msgstr "Verbindungszeitüberschreitung"
 msgid "Connections"
 msgstr "Verbindungen"
 
-#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:101
+#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:103
 msgid "Continue watching"
 msgstr "Weitersehen"
 
-#: ../src/plugin.py:12 ../src/plugin.py:57
+#: ../src/plugin.py:14 ../src/plugin.py:59
 msgid "E2Emby"
 msgstr "E2Emby"
 
@@ -93,11 +101,11 @@ msgid "Edit"
 msgstr "Bearbeiten"
 
 #: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:56
-#: ../src/EmbyItemViewBase.py:27 ../src/EmbyMovieItemView.py:31
+#: ../src/EmbyItemViewBase.py:26 ../src/EmbyMovieItemView.py:40
 msgid "Emby"
 msgstr "Emby"
 
-#: ../src/EmbyLibraryScreen.py:82
+#: ../src/EmbyLibraryScreen.py:84
 msgid "Emby Library"
 msgstr "Emby-Bibliothek"
 
@@ -109,16 +117,21 @@ msgstr "Endet um"
 msgid "Extras"
 msgstr "Extras"
 
-#: ../src/EmbyItemFunctionButtons.py:192
+#: ../src/EmbyItemFunctionButtons.py:183
 msgid "Favorite"
 msgstr "Favorit"
 
-#: ../src/EmbyItemFunctionButtons.py:195
+#: ../src/EmbyLibraryScreen.py:470
+msgid "From director"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:185
 msgid "Go to series"
 msgstr "Gehe zu Serien"
 
-#: ../src/EmbyMovieItemView.py:34
-msgid "Included in"
+#: ../src/EmbyMovieItemView.py:43
+#, fuzzy
+msgid "Included in Collections"
 msgstr "Inclusive"
 
 #: ../src/EmbyInfoLine.py:173
@@ -150,15 +163,15 @@ msgstr "Passwort"
 msgid "Password for the Connection."
 msgstr "Passwort für die Verbindung."
 
-#: ../src/EmbyItemFunctionButtons.py:182
+#: ../src/EmbyItemFunctionButtons.py:175
 msgid "Play"
 msgstr "Abspielen"
 
-#: ../src/EmbyItemFunctionButtons.py:179
+#: ../src/EmbyItemFunctionButtons.py:172
 msgid "Play from start"
 msgstr "Von Anfang an abspielen"
 
-#: ../src/EmbyItemFunctionButtons.py:186
+#: ../src/EmbyItemFunctionButtons.py:179
 msgid "Play trailer"
 msgstr "Trailer abspielen"
 
@@ -170,7 +183,7 @@ msgstr "Port"
 msgid "Port of the Connection."
 msgstr "Port der Verbindung."
 
-#: ../src/EmbyLibraryScreen.py:103
+#: ../src/EmbyLibraryScreen.py:105
 #, fuzzy
 msgid "Recently added"
 msgstr "Kürzlich hinzugefügte Filme"
@@ -196,7 +209,7 @@ msgstr "Entfernen"
 msgid "Remove Connection"
 msgstr "Verbindung entfernen"
 
-#: ../src/EmbyItemFunctionButtons.py:178
+#: ../src/EmbyItemFunctionButtons.py:171
 #, fuzzy
 msgid "Resume"
 msgstr "Fortsetzen ("
@@ -221,6 +234,10 @@ msgstr "Serien"
 msgid "Setup Actions"
 msgstr "Einrichtungsaktionen"
 
+#: ../src/EmbyMovieItemView.py:46 ../src/EmbySeriesItemView.py:44
+msgid "Similar"
+msgstr ""
+
 #: ../src/setup.xml
 msgid "Specify the connection retries count."
 msgstr "Anzahl der Verbindungswiederholungen festlegen."
@@ -241,7 +258,7 @@ msgstr "Zeitlimit für Verbindungen zum Abrufen festlegen."
 msgid "Specify where thumbnail cache will be storred."
 msgstr "Definiere Ziel für Vorschaubilder Cache"
 
-#: ../src/plugin.py:31
+#: ../src/plugin.py:33
 msgid "Temporary thumbnail cache"
 msgstr "Temporärer Vorschaubilder Cache"
 
@@ -273,10 +290,14 @@ msgstr "Benutzer"
 msgid "User for the Connection."
 msgstr "Benutzer für die Verbindung."
 
-#: ../src/EmbyItemFunctionButtons.py:189
+#: ../src/EmbyItemFunctionButtons.py:181
 msgid "Watched"
 msgstr "Gesehen"
 
-#: ../src/plugin.py:32
+#: ../src/EmbyLibraryScreen.py:472
+msgid "With actor"
+msgstr ""
+
+#: ../src/plugin.py:34
 msgid "off"
 msgstr "AUS"

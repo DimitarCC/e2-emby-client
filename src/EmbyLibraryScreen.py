@@ -230,12 +230,7 @@ class E2EmbyLibrary(Screen):
 		if self.selected_widget == "header":
 			self[self.selected_widget].movePrevious()
 		else:
-			if hasattr(self[self.selected_widget].instance, "prevItem"):
-				self[self.selected_widget].instance.moveSelection(
-					self[self.selected_widget].instance.prevItem)
-			else:
-				self[self.selected_widget].instance.moveSelection(
-					self[self.selected_widget].instance.moveLeft)
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
 		if self.selected_widget == "charbar":
@@ -248,12 +243,7 @@ class E2EmbyLibrary(Screen):
 		if self.selected_widget == "header":
 			self[self.selected_widget].moveNext()
 		else:
-			if hasattr(self[self.selected_widget].instance, "nextItem"):
-				self[self.selected_widget].instance.moveSelection(
-					self[self.selected_widget].instance.nextItem)
-			else:
-				self[self.selected_widget].instance.moveSelection(
-					self[self.selected_widget].instance.moveRight)
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
 		if self.selected_widget == "header":
@@ -269,7 +259,7 @@ class E2EmbyLibrary(Screen):
 			if self.selected_widget == "list":
 				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveUp)
 			elif self.selected_widget == "charbar":
-				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevItem)
+				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveUp)
 			else:
 				current_widget_index = self.available_widgets.index(self.selected_widget)
 				y = self.top_pos
@@ -298,7 +288,7 @@ class E2EmbyLibrary(Screen):
 			if self.selected_widget == "list":
 				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveDown)
 			elif self.selected_widget == "charbar":
-				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextItem)
+				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveDown)
 			else:
 				if current_widget_index == len(self.available_widgets) - 1:
 					return
@@ -473,13 +463,13 @@ class E2EmbyLibrary(Screen):
 				base_item = category.get("BaselineItemName", "")
 				h_text = ""
 				if recomm_type == "SimilarToRecentlyPlayed":
-					h_text = f"{_('Because you recently watched')} {base_item}"
+					h_text = "%s %s" % (_('Because you recently watched'), base_item)
 				elif recomm_type == "SimilarToLikedItem":
-					h_text = f"{_('Because you liked')} {base_item}"
+					h_text = "%s %s" % (_('Because you liked'), base_item)
 				elif recomm_type == "HasDirectorFromRecentlyPlayed":
-					h_text = f"{_('From director')} {base_item}"
+					h_text = "%s %s" % (_('From director'), base_item)
 				elif recomm_type == "HasActorFromRecentlyPlayed":
-					h_text = f"{_('With actor')} {base_item}"
+					h_text = "%s %s" % (_('With actor'), base_item)
 				self.lists[widget_name].setHeaderText(h_text)
 				ki += 1
 				items = category.get("Items")

@@ -73,6 +73,20 @@ class EmbyGridList(GUIComponent):
 	# for use with the pager addon. Returns index of current row
 	currentIndex = property(getCurrentRow)
 
+	def getMoveLeftAction(self):
+		if hasattr(self.instance, "prevItem"):
+			return self.instance.prevItem
+		return self.instance.moveLeft
+
+	moveLeft = property(getMoveLeftAction)
+
+	def getMoveRightAction(self):
+		if hasattr(self.instance, "nextItem"):
+			return self.instance.nextItem
+		return self.instance.moveRight
+
+	moveRight = property(getMoveRightAction)
+
 	def onShow(self):
 		pass
 

@@ -46,6 +46,20 @@ class EmbyLibraryCharacterBar(GUIComponent):
 
 	selectedItem = property(getCurrentItem)
 
+	def getMoveUpAction(self):
+		if hasattr(self.instance, "prevItem"):
+			return self.instance.prevItem
+		return self.instance.moveUp
+
+	moveUp = property(getMoveUpAction)
+
+	def getMoveDownAction(self):
+		if hasattr(self.instance, "nextItem"):
+			return self.instance.nextItem
+		return self.instance.moveDown
+
+	moveDown = property(getMoveDownAction)
+
 	def applySkin(self, desktop, parent):
 		attribs = []
 		for (attrib, value) in self.skinAttributes[:]:

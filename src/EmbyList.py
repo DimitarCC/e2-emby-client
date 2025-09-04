@@ -64,6 +64,20 @@ class EmbyList(GUIComponent):
 
 	GUI_WIDGET = eListbox
 
+	def getMoveLeftAction(self):
+		if hasattr(self.instance, "prevItem"):
+			return self.instance.prevItem
+		return self.instance.moveLeft
+
+	moveLeft = property(getMoveLeftAction)
+
+	def getMoveRightAction(self):
+		if hasattr(self.instance, "nextItem"):
+			return self.instance.nextItem
+		return self.instance.moveRight
+
+	moveRight = property(getMoveRightAction)
+
 	def postWidgetCreate(self, instance):
 		create_thumb_cache_dir(self.widget_id)
 		instance.setContent(self.l)
