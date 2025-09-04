@@ -22,13 +22,15 @@ class EmbySeriesItemView(EmbyItemView):
 					<widget name="title" position="60,50" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
 					<widget name="infoline" position="60,160" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 					<widget name="plot" position="60,230" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
-					<widget name="f_buttons" position="60,440" size="924,65" font="Regular;32" transparent="1"/>
-					<!--<widget name="seasons_list" position="40,630" size="900,60" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>-->
-					<widget name="episodes_list" position="40,630" size="e-80,408" iconWidth="407" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
-					<widget name="cast_header" position="40,1186" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-					<widget name="list_cast" position="40,1250" size="e-80,426" iconWidth="180" iconHeight="270" font="Regular;20" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
-					<widget name="chapters_header" position="40,1716" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
-					<widget name="list_chapters" position="40,1800" size="e-80,426" iconWidth="407" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
+					<widget name="f_buttons" position="60,420" size="924,65" font="Regular;32" transparent="1"/>
+					<!--<widget name="seasons_list" position="40,610" size="900,60" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>-->
+					<widget name="episodes_list" position="40,610" size="e-80,408" iconWidth="407" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
+					<widget name="cast_header" position="40,1058" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+					<widget name="list_cast" position="40,1118" size="e-80,426" iconWidth="205" iconHeight="310" font="Regular;19" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
+					<widget name="chapters_header" position="40,1584" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+					<widget name="list_chapters" position="40,1644" size="e-80,310" iconWidth="395" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
+		 			<widget name="header_similar" position="40,1994" size="1100,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
+		 			<widget name="list_similar" position="40,2054" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 				</screen>"""]
 
 	def __init__(self, session, item, backdrop=None, logo=None):
@@ -37,19 +39,12 @@ class EmbySeriesItemView(EmbyItemView):
 		self["subtitle"] = Label()
 		self["seasons_list"] = EmbyList()
 		self["episodes_list"] = EmbyList(type="episodes")
-		self.episodes_controller = EmbyListController(
-			self["episodes_list"], None)
-		self.lists = insert_at_position(
-			self.lists, "episodes_list", self.episodes_controller, 0)
+		self.episodes_controller = EmbyListController(self["episodes_list"], None)
+		self.lists = insert_at_position(self.lists, "episodes_list", self.episodes_controller, 0)
+		self["header_similar"] = Label(_("Similar"))
+		self["list_similar"] = EmbyList()
+		self.lists["list_similar"] = EmbyListController(self["list_similar"], self["header_similar"])
 
-		# self["actions"] = ActionMap(["E2EmbyActions",],
-		#     {
-		#         "cancel": self.close,  # KEY_RED / KEY_EXIT
-		#         # "save": self.addProvider,  # KEY_GREEN
-		#         "ok": self.processItem,
-		#         # "yellow": self.keyYellow,
-		#         # "blue": self.clearData,
-		#     }, -1)
 	def getEpisodes(self):
 		episodes = EmbyApiClient.getEpisodesForSeries(self.series_id)
 		list = []
@@ -68,9 +63,42 @@ class EmbySeriesItemView(EmbyItemView):
 				self.selected_widget == "episodes_list")
 
 	def infoRetrieveInject(self, item):
-		# sub_title = f"S{item.get("ParentIndexNumber", 0)}:E{item.get("IndexNumber", 0)} - {" ".join(item.get("Name", "").splitlines())}"
-		# self["subtitle"].text = sub_title
 		threads.deferToThread(self.getEpisodes)
+
+	def loadExtraItems(self, itemObj):
+		item_id = itemObj.get("Id")
+		extras = EmbyApiClient.getExtrasForItem(item_id)
+		list = []
+		if extras:
+			i = 0
+			for item in extras:
+				list.append((i, item, item.get('Name'), None, "0", True))
+				i += 1
+			self["list_extras"].loadData(list)
+		if len(list) > 0:
+			self.availableWidgets.append("list_extras")
+			self.lists["list_extras"].visible(True)
+		else:
+			self.lists["list_extras"].visible(False)
+
+		similar = EmbyApiClient.getSimilarForItem(item_id)
+		list = []
+		if similar:
+			i = 0
+			for item in similar:
+				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+				list.append((i, item, item.get('Name'), None, played_perc, True))
+				i += 1
+			self["list_similar"].loadData(list)
+		if len(list) > 0:
+			self.availableWidgets.append("list_similar")
+			self.lists["list_similar"].visible(True)
+		else:
+			self.lists["list_similar"].visible(False)
+
+	def injectAfterLoad(self, item):
+		EmbyItemView.injectAfterLoad(self, item)
+		threads.deferToThread(self.loadExtraItems, item)
 
 	def onPlayerClosedResult(self):
 		self.exitResult = EXIT_RESULT_SERIES

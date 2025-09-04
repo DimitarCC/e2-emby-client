@@ -254,7 +254,8 @@ class EmbyRestClient():
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
-				items.extend(loads(response_obj))
+				items_obj = loads(response_obj)
+				items.extend(items_obj.get("Items"))
 				break
 			except TimeoutError:
 				pass
@@ -264,34 +265,16 @@ class EmbyRestClient():
 				break
 		return items
 
-	def getSimilarMoviesForItem(self, item_id, limit=40):
+	def getSimilarForItem(self, item_id, limit=40):
 		items = []
 		headers = self.constructHeaders()
-		url = f"{self.server_root}/emby/Movies/{item_id}/Similar?UserId={self.user_id}&Limit={limit}"
+		url = f"{self.server_root}/emby/Items/{item_id}/Similar?UserId={self.user_id}&Limit={limit}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
-				items.extend(loads(response_obj))
-				break
-			except TimeoutError:
-				pass
-			except ReadTimeout:
-				pass
-			except:
-				break
-		return items
-
-	def getSimilarSeriesForItem(self, item_id, limit=40):
-		items = []
-		headers = self.constructHeaders()
-		url = f"{self.server_root}/emby/Shows/{item_id}/Similar?UserId={self.user_id}&Limit={limit}"
-		for attempt in range(config.plugins.e2embyclient.conretries.value):
-			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
-				if response.status_code != 404:
-					response_obj = response.content
-					items.extend(loads(response_obj))
+				res_json_obj = loads(response_obj)
+				items.extend(res_json_obj.get('Items'))
 				break
 			except TimeoutError:
 				pass

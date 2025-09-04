@@ -139,23 +139,24 @@ class EmbyGridList(GUIComponent):
 
 	def applySkin(self, desktop, parent):
 		attribs = []
-		for (attrib, value) in self.skinAttributes[:]:
-			if attrib == "font":
-				self.font = parseFont(value, parent.scale)
-			elif attrib == "badgeFont":
-				self.badgeFont = parseFont(value, parent.scale)
-			elif attrib == "foregroundColor":
-				self.foreColor = parseColor(value).argb()
-			elif attrib == "iconType":
-				self.icon_type = value
-			elif attrib == "iconWidth":
-				self.iconWidth = int(value)
-			elif attrib == "iconHeight":
-				self.iconHeight = int(value)
-			elif attrib == "spacing":
-				self.spacing = int(value)
-			else:
-				attribs.append((attrib, value))
+		if self.skinAttributes is not None:
+			for (attrib, value) in self.skinAttributes[:]:
+				if attrib == "font":
+					self.font = parseFont(value, parent.scale)
+				elif attrib == "badgeFont":
+					self.badgeFont = parseFont(value, parent.scale)
+				elif attrib == "foregroundColor":
+					self.foreColor = parseColor(value).argb()
+				elif attrib == "iconType":
+					self.icon_type = value
+				elif attrib == "iconWidth":
+					self.iconWidth = int(value)
+				elif attrib == "iconHeight":
+					self.iconHeight = int(value)
+				elif attrib == "spacing":
+					self.spacing = int(value)
+				else:
+					attribs.append((attrib, value))
 		self.skinAttributes = attribs
 		self.l.setFont(0, self.font)
 		self.l.setFont(1, self.badgeFont)
