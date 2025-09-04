@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-04 19:01+0300\n"
+"POT-Creation-Date: 2025-09-04 18:03+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -160,6 +160,11 @@ msgstr "Парола"
 #: ../src/setup.xml
 msgid "Password for the Connection."
 msgstr "Парола за връзката."
+
+#: ../src/plugin.py:31
+#, fuzzy
+msgid "Persistent thumbnail cache in"
+msgstr "Временен кеш за постерите"
 
 #: ../src/EmbyItemFunctionButtons.py:175
 msgid "Play"
