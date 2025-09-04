@@ -55,6 +55,23 @@ class EmbyMovieItemView(EmbyItemView):
 			self["plot"].move(plot_pos.x(), plot_pos.y() + tagline_h + 15)
 		EmbyItemView.preLayoutFinished(self)
 
+	def processItem(self):
+		EmbyItemView.processItem(self)
+		if self.selected_widget == "list_parent_boxsets":
+			selected_item = self[self.selected_widget].selectedItem
+			from .EmbyBoxSetItemView import EmbyBoxSetItemView
+			self.session.openWithCallback(self.exitCallback, EmbyBoxSetItemView, selected_item)
+		elif self.selected_widget == "list_similar":
+			selected_item = self[self.selected_widget].selectedItem
+			from .EmbyMovieItemView import EmbyMovieItemView as MovieView
+			self.session.openWithCallback(self.exitCallback, MovieView, selected_item)
+
+	def exitCallback(self, *result):
+		if not len(result):
+			return
+		result = result[0]
+		self.exitResult = result
+
 	def loadExtraItems(self, itemObj):
 		item_id = itemObj.get("Id")
 		extras = EmbyApiClient.getExtrasForItem(item_id)
