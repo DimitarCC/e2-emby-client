@@ -19,8 +19,7 @@ def playItem(selected_item, session, callback, startPos=0):
 	infobar = InfoBar.instance
 	if infobar:
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
-		session.openWithCallback(callback, EmbyPlayer, item=selected_item,
-								 startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
+		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
 
 
 class EmbyItemFunctionButtons(GUIComponent):
@@ -116,8 +115,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 	def resumePlay(self):
 		startPos = int(self.item.get("UserData", {}).get(
 			"PlaybackPositionTicks", "0")) / 10_000_000
-		playItem(self.item, self.screen.session,
-				 self.playerExitCallback, startPos=startPos)
+		playItem(self.item, self.screen.session, self.playerExitCallback, startPos=startPos)
 
 	def playFromBeguinning(self):
 		playItem(self.item, self.screen.session, self.playerExitCallback)
@@ -128,20 +126,16 @@ class EmbyItemFunctionButtons(GUIComponent):
 	def toggleWatched(self):
 		played = self.item.get("UserData", {}).get("Played", False)
 		if played:
-			threads.deferToThread(EmbyApiClient.sendUnWatched, self.item).addCallback(
-				self.setWatchedCallback)
+			threads.deferToThread(EmbyApiClient.sendUnWatched, self.item).addCallback(self.setWatchedCallback)
 		else:
-			threads.deferToThread(EmbyApiClient.sendWatched, self.item).addCallback(
-				self.setWatchedCallback)
+			threads.deferToThread(EmbyApiClient.sendWatched, self.item).addCallback(self.setWatchedCallback)
 
 	def toggleFavorite(self):
 		isFavorite = self.item.get("UserData", {}).get("IsFavorite", False)
 		if isFavorite:
-			threads.deferToThread(EmbyApiClient.sendNotFavorite, self.item).addCallback(
-				self.setFavoriteCallback)
+			threads.deferToThread(EmbyApiClient.sendNotFavorite, self.item).addCallback(self.setFavoriteCallback)
 		else:
-			threads.deferToThread(EmbyApiClient.sendFavorite, self.item).addCallback(
-				self.setFavoriteCallback)
+			threads.deferToThread(EmbyApiClient.sendFavorite, self.item).addCallback(self.setFavoriteCallback)
 
 	def gotoSeries(self):
 		series_id = self.item.get("SeriesId")
@@ -169,8 +163,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		self.item = item
 		type = item.get("Type", None)
 		runtime_ticks = int(item.get("RunTimeTicks", "0"))
-		position_ticks = int(item.get("UserData", {}).get(
-			"PlaybackPositionTicks", "0"))
+		position_ticks = int(item.get("UserData", {}).get("PlaybackPositionTicks", "0"))
 		trailers = item.get("RemoteTrailers", [])
 		played = item.get("UserData", {}).get("Played", False)
 		isFavorite = item.get("UserData", {}).get("IsFavorite", False)
@@ -185,14 +178,11 @@ class EmbyItemFunctionButtons(GUIComponent):
 			self.buttons.append(
 				(len(self.buttons), self.trailerIcon, _("Play trailer"), self.playTrailer))
 
-		self.buttons.append((len(self.buttons), self.watchedIcon if played else self.unWatchedIcon, _(
-			"Watched"), self.toggleWatched))
+		self.buttons.append((len(self.buttons), self.watchedIcon if played else self.unWatchedIcon, _("Watched"), self.toggleWatched))
 
-		self.buttons.append((len(self.buttons), self.favoriteIcon if isFavorite else self.notFavoriteIcon, _(
-			"Favorite"), self.toggleFavorite))
+		self.buttons.append((len(self.buttons), self.favoriteIcon if isFavorite else self.notFavoriteIcon, _("Favorite"), self.toggleFavorite))
 		if type == "Episode":
-			self.buttons.append(
-				(len(self.buttons), self.tvIcon, _("Go to series"), self.gotoSeries))
+			self.buttons.append((len(self.buttons), self.tvIcon, _("Go to series"), self.gotoSeries))
 		self.updateInfo()
 
 	def updateInfo(self):
@@ -240,8 +230,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		back_color = backColorSelected if selected else backColor
 		offset = 0
 		res.append(MultiContentEntryRectangle(
-			pos=(xPos, yPos), size=(textWidth + pixd_width +
-									(55 if text else 40), rec_height),
+			pos=(xPos, yPos), size=(textWidth + pixd_width + (55 if text else 40), rec_height),
 			cornerRadius=8,
 			backgroundColor=back_color, backgroundColorSelected=back_color))
 		offset = xPos + textWidth + pixd_width + (55 if text else 40)

@@ -24,7 +24,7 @@ class EmbyMovieItemView(EmbyItemView):
 					<widget name="list_cast" position="40,700" size="e-80,426" iconWidth="180" iconHeight="270" font="Regular;20" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 					<widget name="chapters_header" position="40,1166" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 					<widget name="list_chapters" position="40,1230" size="e-80,426" iconWidth="395" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
-			   </screen>"""]
+			</screen>"""]
 
 	def __init__(self, session, item, backdrop=None, logo=None):
 		EmbyItemView.__init__(self, session, item, backdrop, logo)

@@ -78,9 +78,7 @@ class EmbyRestClient():
 				url = f"{self.server_root}/emby/UserSettings/{self.user_id}"
 				try:
 					headers = self.constructHeaders()
-					response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-								   # set a timeout to prevent blocking
-																  config.plugins.e2embyclient.read_con_timeout.value))
+					response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 					status_code = response.status_code
 					if status_code == 200 or status_code == 204:
 						response_str = response.content
@@ -96,9 +94,7 @@ class EmbyRestClient():
 		if self.access_token:
 			url = f"{self.server_root}/emby/Users/{self.user_id}/Views"
 			try:
-				response_libs = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-									# set a timeout to prevent blocking
-																   config.plugins.e2embyclient.read_con_timeout.value))
+				response_libs = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				libs_response = response_libs.content
 				libs_json_obj = loads(libs_response)
 				libs = libs_json_obj.get('Items')
@@ -115,9 +111,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,EndDate,DateCreated,Status,ChildCount{',Chapters,Taglines,People' if loadFullInfo else ''}&{includeItemsParam}{includeItems}{parent_part}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				res_json_obj = loads(response_obj)
 				items = res_json_obj.get('Items')
@@ -141,9 +135,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items/Resume?IncludeItemTypes={include_items}&MediaTypes=Video&ParentId={library_id}&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				res_json_obj = loads(response_obj)
 				items = res_json_obj.get('Items')
@@ -185,9 +177,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes={include_items}&ParentId={library_id}&SortBy=PremiereDate&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				res_json_obj = loads(response_obj)
 				items = res_json_obj.get('Items')
@@ -206,9 +196,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				item = loads(response_obj)
 				break
@@ -226,9 +214,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Shows/{item_id}/Episodes?UserId={self.user_id}&Fields=Overview"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				json_obj = loads(response_obj)
 				items.extend(json_obj.get("Items", []))
@@ -247,9 +233,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Shows/{item_id}/Seasons?UserId={self.user_id}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				json_obj = loads(response_obj)
 				items.extend(json_obj.get("Items", []))
@@ -268,9 +252,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?IncludeItemTypes=Playlist%2CBoxSet&Recursive=true&SortBy=SortName&ListItemIds={item_id}&Limit={limit}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				items.extend(loads(response_obj))
 				break
@@ -288,9 +270,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Movies/{item_id}/Similar?UserId={self.user_id}&Limit={limit}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				items.extend(loads(response_obj))
 				break
@@ -308,9 +288,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Shows/{item_id}/Similar?UserId={self.user_id}&Limit={limit}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
 					response_obj = response.content
 					items.extend(loads(response_obj))
@@ -329,9 +307,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}/SpecialFeatures"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
 					response_obj = response.content
 					items.extend(loads(response_obj))
@@ -350,9 +326,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=BoxSet&CollapseBoxSetItems=true&ParentId={library_id}&Fields=Genres,SortName,Path,Overview,RunTimeTicks,ProviderIds,DateCreated&Filter=IsFolder"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
 					response_obj = response.content
 					res_json_obj = loads(response_obj)
@@ -372,9 +346,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes=Movie&ParentId={boxset_id}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
 					response_obj = response.content
 					res_json_obj = loads(response_obj)
@@ -396,9 +368,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series&ParentId={library_id}&GroupItemsIntoCollections={'true' if shouldShowBoxsets else 'false'}&Fields=SortName,PremiereDate,DateCreated"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-							   # set a timeout to prevent blocking
-															  config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
 					response_obj = response.content
 					res_json_obj = loads(response_obj)
@@ -477,7 +447,6 @@ class EmbyRestClient():
 					filename = logo_tag
 					if orig_image_type == "Chapter":
 						filename = f"{filename}_{image_index}"
-					# im_tmp_path = "%s%s/%s_%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, filename, orig_item_id, format)
 
 					if config.plugins.e2embyclient.thumbcache_loc.value == "/tmp":
 						im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{orig_item_id or item_id}_{file_addon}_{filename}_{orig_item_id}.{format}"
@@ -502,9 +471,7 @@ class EmbyRestClient():
 						im.putalpha(alpha_channel)
 						im.save(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png", compress_type=3)
 						result = LoadPixmap(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png")
-						# pix = LoadPixmap(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png")
 					else:
-						# pix = LoadPixmap(im_tmp_path)
 						result = im_tmp_path if image_type != "Logo" else LoadPixmap(im_tmp_path)
 					if image_type in ["Logo", "Backdrop"] or config.plugins.e2embyclient.thumbcache_loc.value == "off":
 						try:
@@ -545,7 +512,6 @@ class EmbyRestClient():
 				response = get(logo_url, timeout=(
 					config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
-					# im_tmp_path = "%s%s/%s.%s" % (config.plugins.e2embyclient.thumbcache_loc.value, EMBY_THUMB_CACHE_DIR, logo_tag, format)
 					if config.plugins.e2embyclient.thumbcache_loc.value == "off":
 						im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{logo_tag}.{format}"
 					else:
@@ -577,8 +543,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayedItems/{item_id}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-					 config.plugins.e2embyclient.read_con_timeout.value))
+				post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				return True, True
 			except TimeoutError:
 				pass
@@ -594,8 +559,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayedItems/{item_id}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				delete(url, headers=headers, timeout=(
-					config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				delete(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				return True, False
 			except TimeoutError:
 				pass
@@ -611,8 +575,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/FavoriteItems/{item_id}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value,
-					 config.plugins.e2embyclient.read_con_timeout.value))
+				post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				return True, True
 			except TimeoutError:
 				pass
@@ -628,8 +591,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Users/{self.user_id}/FavoriteItems/{item_id}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				delete(url, headers=headers,
-					   timeout=config.plugins.e2embyclient.con_timeout.value)
+				delete(url, headers=headers, timeout=config.plugins.e2embyclient.con_timeout.value)
 				return True, False
 			except ReadTimeout:
 				pass
@@ -638,8 +600,7 @@ class EmbyRestClient():
 		return False, False
 
 	def updateTimeProgress(self, playSessionId, item_id, media_source_id, aIndex, sIndex, pos):
-		self.updateProgress(playSessionId, item_id,
-							media_source_id, "TimeUpdate", aIndex, sIndex, pos)
+		self.updateProgress(playSessionId, item_id, media_source_id, "TimeUpdate", aIndex, sIndex, pos)
 
 	def updateProgress(self, playSessionId, item_id, media_source_id, event, aIndex, sIndex, pos):
 		headers = self.constructHeaders()
@@ -656,8 +617,7 @@ class EmbyRestClient():
 		post_data["PositionTicks"] = pos
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				post(url, headers=headers, json=post_data, timeout=(
-					config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				post(url, headers=headers, json=post_data, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 			except TimeoutError:
 				pass
 			except ReadTimeout:
@@ -682,8 +642,7 @@ class EmbyRestClient():
 			post_data["SubtitleStreamIndex"] = defSubtitleIndex
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				post(url, headers=headers, json=post_data, timeout=(
-					config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				post(url, headers=headers, json=post_data, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 			except TimeoutError:
 				pass
 			except ReadTimeout:
@@ -696,8 +655,7 @@ class EmbyRestClient():
 		url = f"{self.server_root}/emby/Items/{item_id}/PlaybackInfo?UserId={self.user_id}&IsPlayback=true&AutoOpenLiveStream=true&AudioStreamIndex={defAudioIndex}&SubtitleStreamIndex={defSubtitleIndex}&MediaSourceId={media_source_id}"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = post(url, headers=headers, timeout=(
-					config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response = post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				json = loads(response.content)
 				playSessionId = json.get("PlaySessionId")
 				return playSessionId

@@ -3,7 +3,7 @@ from Components.config import config, ConfigSelection, ConfigSubsection, ConfigS
 from Components.Sources.StaticText import StaticText
 from Screens.Setup import Setup
 from Tools.BoundFunction import boundFunction
-from . import _
+from . import _, PluginLanguageDomain
 
 
 def initConnection(index):

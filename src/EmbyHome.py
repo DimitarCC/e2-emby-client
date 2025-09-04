@@ -283,7 +283,7 @@ class E2EmbyHome(Screen):
 			self.loadEmbyList(self["list_watching"], "Resume")
 		if "list_recent_movies" in self.availableWidgets:
 			self.loadEmbyList(self["list_recent_movies"],
-							  "LastMovies", self.movie_libs_ids)
+							"LastMovies", self.movie_libs_ids)
 
 	def reloadSeriesWidgets(self):
 		self.last_widget_info_load_success = None
@@ -292,7 +292,7 @@ class E2EmbyHome(Screen):
 			self.loadEmbyList(self["list_watching"], "Resume")
 		if "list_recent_tvshows" in self.availableWidgets:
 			self.loadEmbyList(self["list_recent_tvshows"],
-							  "LastSeries", self.tvshow_libs_ids)
+							"LastSeries", self.tvshow_libs_ids)
 
 	def downloadCover(self, item_id, icon_img, orig_item_id):
 		try:

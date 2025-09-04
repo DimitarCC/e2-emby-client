@@ -40,7 +40,7 @@ class EmbyList(GUIComponent):
 		self.l.setBuildFunc(self.buildEntry)
 		self.spacing_sides = 15
 		self.orientations = {"horizontal": eListbox.orHorizontal,
-							 "vertical": eListbox.orVertical}
+							"vertical": eListbox.orVertical}
 		self.orientation = eListbox.orHorizontal
 		self.iconWidth = 270
 		self.iconHeight = 152
@@ -269,7 +269,7 @@ class EmbyList(GUIComponent):
 			self.updatingIndexesInProgress.append(item_index)
 
 		icon_pix = EmbyApiClient.getPersonImage(widget_id=self.widget_id, person_name=person_name, logo_tag=icon_img,
-														   height=self.iconHeight, req_width=self.iconWidth, req_height=self.iconHeight)
+														height=self.iconHeight, req_width=self.iconWidth, req_height=self.iconHeight)
 		if not hasattr(self, "data"):
 			return False
 		if item_id not in self.thumbs:
@@ -303,7 +303,7 @@ class EmbyList(GUIComponent):
 			req_height = self.iconHeight
 
 		icon_pix = EmbyApiClient.getItemImage(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight,
-														 image_type=self.icon_type, image_index=image_index, req_width=req_width, req_height=req_height, orig_item_id=orig_item_id)
+														image_type=self.icon_type, image_index=image_index, req_width=req_width, req_height=req_height, orig_item_id=orig_item_id)
 		if not icon_pix and self.type != "chapters":
 			backdrop_image_tags = item.get("BackdropImageTags")
 			parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
@@ -451,7 +451,7 @@ class EmbyList(GUIComponent):
 				cornerRadius=6,
 				cornerEdges=2 | 4,
 				text=str(unplayed_items_count),
-				textBColor=0x000000, textBWidth=2,
+				textBColor=0x222222, textBWidth=1,
 				backcolor=0x32772b, backcolor_sel=0x32772b,
 				color=0xffffff, color_sel=0xffffff))
 		self.index_currently_redrawing = -1

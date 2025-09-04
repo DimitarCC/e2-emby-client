@@ -51,15 +51,15 @@ class E2EmbyLibrary(Screen):
 					<widget name="list_recent_added" position="40,968" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 					<widget name="list_recommend_header_0" position="55,1286" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_0" position="40,1336" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
-		 			<widget name="list_recommend_header_1" position="55,1644" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_recommend_header_1" position="55,1644" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_1" position="40,1694" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
-		 			<widget name="list_recommend_header_2" position="55,2002" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_recommend_header_2" position="55,2002" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_2" position="40,2052" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
-		 			<widget name="list_recommend_header_3" position="55,2360" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_recommend_header_3" position="55,2360" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_3" position="40,2410" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
-		 			<widget name="list_recommend_header_4" position="55,2718" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_recommend_header_4" position="55,2718" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_4" position="40,2768" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
-		 			<widget name="list_recommend_header_5" position="55,3076" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_recommend_header_5" position="55,3076" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_5" position="40,3126" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 				</screen>"""]  # noqa: E124
 
@@ -197,7 +197,7 @@ class E2EmbyLibrary(Screen):
 	def trigger_sel_changed_event(self):
 		sel_widget = self.selected_widget if self.selected_widget != "header" else self.available_widgets[0]
 		threads.deferToThread(self.loadSelectedItemDetails,
-							  self[sel_widget].selectedItem, self[sel_widget])
+							self[sel_widget].selectedItem, self[sel_widget])
 
 	def pageUp(self):
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevPage)
@@ -377,7 +377,7 @@ class E2EmbyLibrary(Screen):
 			index = 0
 			if char != "#":
 				index = next((i for i, x in enumerate(self.list_data)
-							 if x[1].get("Name")[0].upper() == char), -1)
+							if x[1].get("Name")[0].upper() == char), -1)
 			self.selected_widget = "list"
 			self[self.selected_widget].toggleSelection(True)
 			self[self.selected_widget].instance.moveSelectionTo(index)
@@ -393,7 +393,7 @@ class E2EmbyLibrary(Screen):
 			elif item_type == "Series":
 				embyScreenClass = EmbySeriesItemView
 			self.session.openWithCallback(self.exitCallback, embyScreenClass,
-										  selected_item, self.mode == MODE_RECOMMENDATIONS and self.backdrop_pix, self.mode != MODE_LIST and self.logo_pix)
+										selected_item, self.mode == MODE_RECOMMENDATIONS and self.backdrop_pix, self.mode != MODE_LIST and self.logo_pix)
 
 	def exitCallback(self, *result):
 		if not len(result):
