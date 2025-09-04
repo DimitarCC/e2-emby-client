@@ -1,25 +1,24 @@
-from twisted.internet import threads
-from uuid import uuid4
-from enigma import eTimer, iPlayableService, eServiceReference
-from Screens.InfoBar import MoviePlayer
-from Screens.AudioSelection import AudioSelection
-from Components.ServiceEventTracker import ServiceEventTracker
-from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
-from Components.Sources.StaticText import StaticText
-from Components.Label import Label
-from Components.Sources.Progress import Progress
-from Components.config import config
+
 from requests import get, post, delete
 from requests.exceptions import ReadTimeout
-from Components.SystemInfo import BoxInfo
+from uuid import uuid4
+
+from twisted.internet import threads
+
+from enigma import eTimer, iPlayableService, eServiceReference
+from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
+from Components.config import config
+from Components.Label import Label
+from Components.ServiceEventTracker import ServiceEventTracker
+from Components.Sources.Progress import Progress
+from Components.Sources.StaticText import StaticText
+from Screens.AudioSelection import AudioSelection
+from Screens.InfoBar import MoviePlayer
 
 from .EmbyRestClient import EmbyApiClient
 from .subrip import SubRipParser
 from .TolerantDict import TolerantDict
-
-distro = BoxInfo.getItem("distro")
-
-SUBTITLE_TUPLE_SIZE = 6 if distro == "openatv" else 5
+from .Variables import SUBTITLE_TUPLE_SIZE
 
 
 class EmbyPlayer(MoviePlayer):

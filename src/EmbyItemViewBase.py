@@ -1,17 +1,16 @@
-from os import path
+from os.path import join
+from PIL import Image
 from twisted.internet import threads
-from Screens.Screen import Screen, ScreenSummary
 from Components.ActionMap import ActionMap
 from Components.Label import Label
 from Components.Pixmap import Pixmap
+from Screens.Screen import Screen, ScreenSummary
 
 from .EmbyRestClient import EmbyApiClient
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyItemFunctionButtons import EmbyItemFunctionButtons
 from .Variables import plugin_dir
 from . import _
-
-from PIL import Image
 
 
 EXIT_RESULT_MOVIE = 1
@@ -36,7 +35,7 @@ class EmbyItemViewBase(Screen):
 		self.top_widget_pos_y = 0
 
 		self.mask_alpha = Image.open(
-			path.join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
+			join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
 		if self.mask_alpha.mode != "L":
 			self.mask_alpha = self.mask_alpha.convert("L")
 
