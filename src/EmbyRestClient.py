@@ -235,8 +235,8 @@ class EmbyRestClient():
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
-				json_obj = loads(response_obj)
-				items.extend(json_obj.get("Items", []))
+				items_obj = loads(response_obj)
+				items.extend(items_obj.get("Items"))
 				break
 			except TimeoutError:
 				pass

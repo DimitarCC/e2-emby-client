@@ -40,7 +40,7 @@ class E2EmbyLibrary(Screen):
 					<widget name="charbar" position="40,130" size="40,e-130-70" scrollbarMode="showNever" itemHeight="40" font="Regular;20" transparent="1" />
 					<widget name="list" position="90,130" size="e-20-90,e-130-70" scrollbarMode="showOnDemand" iconWidth="225" iconHeight="315" font="Regular;22" transparent="1" />
 					{(pager if PAGERSUPPORT else "")}
-					<widget name="backdrop" position="0,0" size="e,e" alphatest="blend" zPosition="-10" scaleFlags="moveRightTop"/>
+					<widget name="backdrop" position="0,0" size="e,e" alphatest="blend" zPosition="-3" scaleFlags="moveRightTop"/>
 					<widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
 					<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
 					<widget name="subtitle" position="60,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
@@ -401,10 +401,8 @@ class E2EmbyLibrary(Screen):
 		if items:
 			i = 0
 			for item in items:
-				played_perc = item.get("UserData", {}).get(
-					"PlayedPercentage", "0")
-				list.append((i, item, item.get('Name'),
-							None, played_perc, True))
+				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+				list.append((i, item, item.get('Name'), None, played_perc, True))
 				i += 1
 			self["list"].loadData(list)
 		self.list_data = list
@@ -604,7 +602,7 @@ class E2EmbyLibrary(Screen):
 			item_id = parent_b_item_id
 		if orig_item_id != self.last_item_id:
 			return
-		self.downloadCover(item_id, icon_img, orig_item_id)
+		threads.deferToThread(self.downloadCover, item_id, icon_img, orig_item_id)
 
 	def downloadCover(self, item_id, icon_img, orig_item_id):
 		try:

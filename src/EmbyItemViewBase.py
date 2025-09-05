@@ -87,11 +87,9 @@ class EmbyItemViewBase(Screen):
 			keys = list(self.lists.keys())
 			top_widget = keys[0] if len(keys) > 1 else self.availableWidgets[0]
 			if top_widget != "f_buttons":
-				self.top_widget_pos_y = self.lists[top_widget].getTopLeftCornerPos()[
-					1]
+				self.top_widget_pos_y = self.lists[top_widget].getTopLeftCornerPos()[1]
 			else:
-				self.top_widget_pos_y = self[top_widget].instance.position(
-				).y()
+				self.top_widget_pos_y = self[top_widget].instance.position().y()
 			load_res = self.loadItemInfoFromServer(self.item_id)
 			self.preLayoutFinished()
 			self.loadItemInUI(load_res)
@@ -111,7 +109,15 @@ class EmbyItemViewBase(Screen):
 	def up(self):
 		keys = list(self.lists.keys())
 		keys = [key for key in keys if key in self.availableWidgets]
-		if self.selected_widget != "f_buttons":
+		if self.selected_widget == "episodes_list":
+			self.selected_widget = "seasons_list"
+			self["episodes_list"].toggleSelection(False)
+			self["seasons_list"].enableSelection(True)
+		elif self.selected_widget == "seasons_list":
+			self["seasons_list"].enableSelection(False)
+			self.selected_widget = "f_buttons"
+			self["f_buttons"].enableSelection(True)
+		elif self.selected_widget != "f_buttons":
 			current_widget_index = keys.index(self.selected_widget)
 			if current_widget_index == 0:
 				self.lists[self.selected_widget].enableSelection(False)
@@ -134,7 +140,20 @@ class EmbyItemViewBase(Screen):
 	def down(self):
 		keys = list(self.lists.keys())
 		keys = [key for key in keys if key in self.availableWidgets]
-		if self.selected_widget != "f_buttons":
+		if self.selected_widget == "f_buttons":
+			if "seasons_list" in self:
+				self.selected_widget = "seasons_list"
+				self["f_buttons"].enableSelection(False)
+				self["seasons_list"].enableSelection(True)
+			else:
+				self.selected_widget = keys[0]
+				self.lists[self.selected_widget].enableSelection(True)
+				self["f_buttons"].enableSelection(False)
+		elif self.selected_widget == "seasons_list":
+			self.selected_widget = keys[0]
+			self.lists[self.selected_widget].enableSelection(True)
+			self["seasons_list"].enableSelection(False)
+		elif self.selected_widget != "f_buttons":
 			current_widget_index = keys.index(self.selected_widget)
 			if current_widget_index == len(keys) - 1:
 				return
@@ -150,10 +169,6 @@ class EmbyItemViewBase(Screen):
 				if selEnabled:
 					self.selected_widget = item
 				selEnabled = False
-		else:
-			self.selected_widget = keys[0]
-			self.lists[self.selected_widget].enableSelection(True)
-			self["f_buttons"].enableSelection(False)
 
 	def left(self):
 		if self.selected_widget == "f_buttons":

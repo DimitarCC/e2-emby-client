@@ -37,4 +37,4 @@ class EmbyListController():
 		return self
 
 	def getHeight(self):
-		return self.list.instance.size().height() + 40
+		return self.list.instance.size().height() + (40 if not self.header else self.header.instance.size().height() + 10)

@@ -167,12 +167,13 @@ class EmbyItemFunctionButtons(GUIComponent):
 		trailers = item.get("RemoteTrailers", [])
 		played = item.get("UserData", {}).get("Played", False)
 		isFavorite = item.get("UserData", {}).get("IsFavorite", False)
-		if position_ticks:
-			self.buttons.append((len(self.buttons), self.resumeIcon, _("Resume") + " (" + convert_ticks_to_time(position_ticks, is_chapters=True) + ")", self.resumePlay))
-			self.buttons.append((len(self.buttons), self.playStartIcon, _("Play from start"), self.playFromBeguinning))
-		else:
-			self.buttons.append(
-				(len(self.buttons), self.playIcon, _("Play"), self.playFromBeguinning))
+		if type != "Series" and type != "BoxSet":
+			if position_ticks:
+				self.buttons.append((len(self.buttons), self.resumeIcon, _("Resume") + " (" + convert_ticks_to_time(position_ticks, is_chapters=True) + ")", self.resumePlay))
+				self.buttons.append((len(self.buttons), self.playStartIcon, _("Play from start"), self.playFromBeguinning))
+			else:
+				self.buttons.append(
+					(len(self.buttons), self.playIcon, _("Play"), self.playFromBeguinning))
 
 		if len(trailers) > 0:
 			self.buttons.append(
@@ -210,7 +211,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		s = self.instance.size()
 		return s.width(), s.height()
 
-	def constructButton(self, res, current_draw_idex, icon, text, height, xPos, yPos, selected=False, spacing=None, backColorSelected=0x32772b, backColor=0x606060, textColor=0xffffff):
+	def constructButton(self, res, current_draw_idex, icon, text, height, xPos, yPos, selected=False, spacing=None, backColorSelected=0x32772b, backColor=0x222222, textColor=0xffffff):
 		if not spacing:
 			spacing = self.spacing
 

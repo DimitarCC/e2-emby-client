@@ -139,7 +139,7 @@ msgstr "Филм"
 
 #: ../src/EmbyInfoLine.py:175 ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
-msgstr "Филми"
+msgstr "Филма"
 
 #: ../src/EmbyHome.py:99
 msgid "My Media"
@@ -162,9 +162,8 @@ msgid "Password for the Connection."
 msgstr "Парола за връзката."
 
 #: ../src/plugin.py:31
-#, fuzzy
 msgid "Persistent thumbnail cache in"
-msgstr "Временен кеш за постерите"
+msgstr "Постоянен кеш за постерите в"
 
 #: ../src/EmbyItemFunctionButtons.py:175
 msgid "Play"
@@ -225,7 +224,7 @@ msgstr "Сезон"
 
 #: ../src/EmbyInfoLine.py:169
 msgid "Seasons"
-msgstr "Сезони"
+msgstr "Сезона"
 
 #: ../src/EmbyLibraryHeaderButtons.py:111
 msgid "Series"
