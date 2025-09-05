@@ -8,11 +8,10 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-04 18:03+0200\n"
+"POT-Creation-Date: 2025-09-05 12:21+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -49,11 +48,11 @@ msgstr ""
 msgid "Add to Main Menu"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:468
+#: ../src/EmbyLibraryScreen.py:466
 msgid "Because you liked"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:466
+#: ../src/EmbyLibraryScreen.py:464
 msgid "Because you recently watched"
 msgstr ""
 
@@ -122,15 +121,15 @@ msgstr ""
 msgid "Extras"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:183
+#: ../src/EmbyItemFunctionButtons.py:184
 msgid "Favorite"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:470
+#: ../src/EmbyLibraryScreen.py:468
 msgid "From director"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:185
+#: ../src/EmbyItemFunctionButtons.py:186
 msgid "Go to series"
 msgstr ""
 
@@ -166,19 +165,15 @@ msgstr ""
 msgid "Password for the Connection."
 msgstr ""
 
-#: ../src/plugin.py:31
-msgid "Persistent thumbnail cache in"
-msgstr ""
-
-#: ../src/EmbyItemFunctionButtons.py:175
+#: ../src/EmbyItemFunctionButtons.py:176
 msgid "Play"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:172
+#: ../src/EmbyItemFunctionButtons.py:173
 msgid "Play from start"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:179
+#: ../src/EmbyItemFunctionButtons.py:180
 msgid "Play trailer"
 msgstr ""
 
@@ -188,6 +183,10 @@ msgstr ""
 
 #: ../src/setup.xml
 msgid "Port of the Connection."
+msgstr ""
+
+#: ../src/EmbyInfoLine.py:156
+msgid "Present"
 msgstr ""
 
 #: ../src/EmbyLibraryScreen.py:105
@@ -215,7 +214,7 @@ msgstr ""
 msgid "Remove Connection"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:171
+#: ../src/EmbyItemFunctionButtons.py:172
 msgid "Resume"
 msgstr ""
 
@@ -223,7 +222,7 @@ msgstr ""
 msgid "Root URL address of the Connection."
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:167
+#: ../src/EmbyInfoLine.py:167 ../src/EmbySeriesItemView.py:63
 msgid "Season"
 msgstr ""
 
@@ -239,7 +238,7 @@ msgstr ""
 msgid "Setup Actions"
 msgstr ""
 
-#: ../src/EmbyMovieItemView.py:46 ../src/EmbySeriesItemView.py:44
+#: ../src/EmbyMovieItemView.py:46 ../src/EmbySeriesItemView.py:46
 msgid "Similar"
 msgstr ""
 
@@ -295,11 +294,11 @@ msgstr ""
 msgid "User for the Connection."
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:181
+#: ../src/EmbyItemFunctionButtons.py:182
 msgid "Watched"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:472
+#: ../src/EmbyLibraryScreen.py:470
 msgid "With actor"
 msgstr ""
 

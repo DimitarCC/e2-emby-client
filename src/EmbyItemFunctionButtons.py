@@ -233,6 +233,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		res.append(MultiContentEntryRectangle(
 			pos=(xPos, yPos), size=(textWidth + pixd_width + (55 if text else 40), rec_height),
 			cornerRadius=8,
+			borderWidth=2, borderColor=0x404040 if not selected else backColorSelected,
 			backgroundColor=back_color, backgroundColorSelected=back_color))
 		offset = xPos + textWidth + pixd_width + (55 if text else 40)
 
@@ -262,7 +263,6 @@ class EmbyItemFunctionButtons(GUIComponent):
 
 		for button in buttons:
 			selected = button[0] == self.selectedIndex and self.selectionEnabled
-			xPos = self.constructButton(
-				res, button[0], button[1], button[2], height, xPos, yPos, selected)
+			xPos = self.constructButton(res, button[0], button[1], button[2], height, xPos, yPos, selected)
 
 		return res

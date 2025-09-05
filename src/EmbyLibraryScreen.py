@@ -48,8 +48,8 @@ class E2EmbyLibrary(Screen):
 					<widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="list_watching_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_watching" position="40,620" size="e-80,268" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" transparent="1" />
-					<widget name="list_recent_added_header" position="55,918" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
-					<widget name="list_recent_added" position="40,968" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
+					<widget name="list_recent_added_header" position="55,928" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_recent_added" position="40,978" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 					<widget name="list_recommend_header_0" position="55,1286" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_0" position="40,1336" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 					<widget name="list_recommend_header_1" position="55,1644" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
@@ -99,7 +99,7 @@ class E2EmbyLibrary(Screen):
 		self["infoline"] = EmbyInfoLine(self)
 		self["plot"] = Label()
 		self["backdrop"] = Pixmap()
-		self["backdrop_full"] = Pixmap()
+		# self["backdrop_full"] = Pixmap()
 		self["list_watching_header"] = Label(_("Continue watching"))
 		self["list_watching"] = EmbyList()
 		self["list_recent_added_header"] = Label(_("Recently added"))

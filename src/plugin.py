@@ -28,7 +28,7 @@ class MountChoices:
 			if exists(p.mountpoint):
 				d = normpath(p.mountpoint)
 				if p.mountpoint != "/":
-					choices.append((d, f"{_('Persistent thumbnail cache in')} {p.mountpoint}"))
+					choices.append((d, "%s %s" % (_('Persistent thumbnail cache in'), p.mountpoint)))
 		choices.sort()
 		choices.insert(0, ("/tmp", _("Temporary thumbnail cache")))
 		choices.insert(0, ("off", _("off")))

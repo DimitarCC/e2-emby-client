@@ -153,7 +153,7 @@ class EmbyInfoLine(GUIComponent):
 				endDate_str = item.get("EndDate", None)
 				endDate = endDate_str and embyDateToString(endDate_str, type)
 			else:
-				endDate = "Present"
+				endDate = _("Present")
 			if premiereDate == endDate:
 				return premiereDate
 			return f"{premiereDate} - {endDate}"
