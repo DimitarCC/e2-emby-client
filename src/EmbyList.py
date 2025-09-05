@@ -430,7 +430,7 @@ class EmbyList(GUIComponent):
 				desc = f"{embyDateToString(date_str, "Episode")}  {convert_ticks_to_time(item.get("RunTimeTicks"))}\n{desc}"
 			y = self.iconHeight + 32 + 25 + 5
 			res.append(MultiContentEntryText(
-				pos=(self.spacing_sides, y), size=(self.iconWidth, self.itemHeight - y - 15),
+				pos=(self.spacing_sides, y), size=(self.iconWidth, self.itemHeight - y - 28),
 				font=0, flags=RT_HALIGN_LEFT | RT_BLEND | RT_WRAP,
 				text=desc,
 				color=0x666666, color_sel=0x666666))
