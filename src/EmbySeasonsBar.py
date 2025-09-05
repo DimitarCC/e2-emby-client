@@ -79,11 +79,6 @@ class EmbySeasonsBar(GUIComponent):
 		self.l.setItemWidth(self.itemWidth)
 		return GUIComponent.applySkin(self, desktop, parent)
 
-	def enableSelection(self, selection):
-		self.selectionEnabled = selection
-		self.instance.setSelectionEnable(selection)
-		self.updateInfo()
-
 	def setList(self, list):
 		self.seasons = list
 		self.updateInfo()
