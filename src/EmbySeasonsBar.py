@@ -45,6 +45,11 @@ class EmbySeasonsBar(GUIComponent):
 
 	selectedItem = property(getCurrentItem)
 
+	def getCurrentIndex(self):
+		return self.l.getCurrentSelectionIndex()
+
+	selectedIndex = property(getCurrentIndex)
+
 	def getMoveLeftAction(self):
 		if hasattr(self.instance, "prevItem"):
 			return self.instance.prevItem

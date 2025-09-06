@@ -37,6 +37,7 @@ class EmbySeriesItemView(EmbyItemView):
 	def __init__(self, session, item, backdrop=None, logo=None):
 		EmbyItemView.__init__(self, session, item, backdrop, logo)
 		self.series_id = self.item_id
+		self.seasons = []
 		self.episodes = []
 		self["subtitle"] = Label()
 		self["seasons_list"] = EmbySeasonsBar()
@@ -49,17 +50,18 @@ class EmbySeriesItemView(EmbyItemView):
 		self["episodes_list"].onSelectionChanged.append(self.onEpisodeSelectionChanged)
 
 	def onEpisodeSelectionChanged(self, widget=None, item_id=None):
-		season_number_index = self["episodes_list"].selectedItem.get("ParentIndexNumber", 0) - 1
-		if season_number_index > -1:
-			self["seasons_list"].instance.moveSelectionTo(season_number_index)
+		season_number_index = self["episodes_list"].selectedItem.get("ParentIndexNumber", 0)
+		index = next((i for i, s in enumerate(self.seasons) if s.get("IndexNumber", 0) == season_number_index), -1)
+		if index > -1 and self["seasons_list"].selectedIndex != index:
+			self["seasons_list"].instance.moveSelectionTo(index)
 			self["seasons_list"].updateInfo()
 
 	def getEpisodes(self):
-		seasons = EmbyApiClient.getSeasonsForSeries(self.series_id)
+		self.seasons = EmbyApiClient.getSeasonsForSeries(self.series_id)
 		list = []
-		if seasons:
+		if self.seasons:
 			i = 0
-			for season in seasons:
+			for season in self.seasons:
 				season_nr = season.get("IndexNumber", 0)
 				if season_nr == 0:
 					title = _("Specials")
