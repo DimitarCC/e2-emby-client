@@ -60,7 +60,13 @@ class EmbySeriesItemView(EmbyItemView):
 		if seasons:
 			i = 0
 			for season in seasons:
-				list.append((i, season, "%s %d" % (_("Season"), season.get("IndexNumber")), None, "0", True))
+				season_nr = season.get("IndexNumber", 0)
+				if season_nr == 0:
+					title = _("Specials")
+				else:
+					title = "%s %d" % (_("Season"), season_nr)
+
+				list.append((i, season, title, None, "0", True))
 				i += 1
 			self["seasons_list"].setList(list)
 		self.episodes = EmbyApiClient.getEpisodesForSeries(self.series_id)
@@ -68,10 +74,13 @@ class EmbySeriesItemView(EmbyItemView):
 		if self.episodes:
 			i = 0
 			for ep in self.episodes:
-				if ep.get("ParentIndexNumber", 0) == 0:
-					continue
+				season_nr = ep.get("ParentIndexNumber", -1)
+				# if season_nr == -1: # FIXME: Move specials to another section or navigate to first non special season
+				# 	continue
 				played_perc = ep.get("UserData", {}).get("PlayedPercentage", "0")
 				title = f"S{ep.get("ParentIndexNumber", 0)}:E{ep.get("IndexNumber", 0)} - {" ".join(ep.get("Name", "").splitlines())}"
+				if season_nr < 1:
+					title = f"{" ".join(ep.get("Name", "").splitlines())}"
 				list.append((i, ep, title, None, played_perc, True))
 				i += 1
 			self["episodes_list"].loadData(list)
