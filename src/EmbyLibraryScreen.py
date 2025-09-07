@@ -446,7 +446,7 @@ class E2EmbyLibrary(Screen):
 				if not self.selected_widget:
 					self.selected_widget = self.available_widgets[0]
 					self.lists[self.selected_widget].enableSelection(True)
-					# self.onSelectedIndexChanged()
+					self.onSelectedIndexChanged()
 			else:
 				self.available_widgets.remove("list_recent_added")
 
