@@ -594,6 +594,9 @@ class EmbyRestClient():
 		post_data["EventName"] = event
 		post_data["AudioStreamIndex"] = aIndex
 		post_data["IsPaused"] = event == "Pause"
+		if event == "Stop":
+			post_data["IsPaused"] = True
+			post_data["PlaybackRate"] = 0
 		if sIndex > -1:
 			post_data["SubtitleStreamIndex"] = sIndex
 		post_data["PositionTicks"] = pos
@@ -618,10 +621,14 @@ class EmbyRestClient():
 		post_data["MediaSourceId"] = media_source_id
 		post_data["PlaySessionId"] = playSessionId
 		post_data["AudioStreamIndex"] = defAudioIndex + 1
+		if stopped:
+			post_data["IsPaused"] = True
+			post_data["PlaybackRate"] = 1
 		if playPos > -1:
 			post_data["PositionTicks"] = playPos
 		if defSubtitleIndex > -1:
 			post_data["SubtitleStreamIndex"] = defSubtitleIndex
+
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				post(url, headers=headers, json=post_data, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))

@@ -1,3 +1,4 @@
+# coding: utf-8
 
 from requests import get, post, delete
 from requests.exceptions import ReadTimeout
@@ -15,13 +16,29 @@ from Components.Sources.StaticText import StaticText
 from Screens.AudioSelection import AudioSelection
 from Screens.InfoBar import MoviePlayer
 
+from .EmbyList import EmbyList
+from .EmbyPlayerInfobarInfo import EmbyPlayerInfobarInfo
 from .EmbyRestClient import EmbyApiClient
+from .HelperFunctions import convert_ticks_to_time
 from .subrip import SubRipParser
 from .TolerantDict import TolerantDict
 from .Variables import SUBTITLE_TUPLE_SIZE
 
 
 class EmbyPlayer(MoviePlayer):
+	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="transparent">
+					<widget name="info_line" position="e-60-1200,958" size="1200,40" font="Bold;24" fontAdditional="Bold;24" transparent="1" zPosition="5"/>
+					<widget name="info_bkg" backgroundColor="#10111111" position="-2,540" zPosition="-1" size="e+4,315" widgetBorderWidth="1" widgetBorderColor="#444444" />
+					<widget name="list_chapters" position="40,560" size="e-80,310" iconWidth="340" iconHeight="188" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
+					<eLabel backgroundColor="#10111111" position="60,900" zPosition="-1" size="e-120,115" cornerRadius="8" widgetBorderWidth="1" widgetBorderColor="#444444" />
+					<widget name="statusicon" position="100,935" zPosition="3" size="48,48" scale="1" pixmaps="icons/pvr/play.svg,icons/pvr/pause.svg,icons/pvr/stop.svg,icons/pvr/ff.svg,icons/pvr/rew.svg,icons/pvr/slow.svg"/>
+					<widget name="speed" foregroundColor="white" halign="left" position="160,935" size="48,48" font="Bold; 24" transparent="1"/>
+					<widget name="title" position="235,950" size="1120,50" font="Regular; 40" valign="center" noWrap="1" backgroundColor="#02111111" transparent="1"/>
+					<widget name="time_elapsed" position="210,905" size="100,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="white"/>
+					<widget name="time_remaining_total" position="e-270-30,905" size="200,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="white"/>
+					<widget source="progress" render="Progress" backgroundColor="#02333333" foregroundColor="#32772b" position="340,925" zPosition="2" size="e-270-340-40,12" transparent="1" cornerRadius="6"/>
+				</screen>"""]
+
 	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None):
 		item_id = int(item.get("Id", "0"))
 		item_name = item.get("Name", "Stream")
@@ -36,16 +53,18 @@ class EmbyPlayer(MoviePlayer):
 			url = f"{EmbyApiClient.server_root}{directStreamUrl}"
 			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
 		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
-		self.skinName = ["EmbyPlayer", "CatchupPlayer", "MoviePlayer"]
+		self.session = session
 		AudioSelection.fillSubtitleExt = self.subtitleListIject
 		if self.onAudioSubTrackChanged not in AudioSelection.hooks:
 			AudioSelection.hooks.append(self.onAudioSubTrackChanged)
 		self.onPlayStateChanged.append(self.__playStateChanged)
+		self.onHide.append(self.__onHide)
 		self.init_seek_to = startPos
 		self.curAudioIndex = -1
 		self.curSubsIndex = -1
 		self.firstSubIndex = -1
 		self.item = item or {}
+		self.chapters = []
 		self.play_session_id = play_session_id
 		self.skip_progress_update = False
 		self.current_seek_step = 0
@@ -56,14 +75,22 @@ class EmbyPlayer(MoviePlayer):
 		self.currentSubsList = TolerantDict({})
 		self.currentSubPTS = -1
 		self.currentSubEndPTS = -1
+		self.selected_widget = None
+		self["info_line"] = EmbyPlayerInfobarInfo(self)
+		self["list_chapters"] = EmbyList(type="chapters")
+		self["list_chapters"].hide()
 		self["progress"] = Progress()
 		self["progress_summary"] = Progress()
 		self["progress"].value = 0
 		self["progress_summary"].value = 0
+		self["title"] = Label(self.getTitle())
+		self["info_bkg"] = Label("")
+		self["info_bkg"].hide()
 		self["time_info"] = Label("")
 		self["time_elapsed"] = Label("")
 		self["time_duration"] = Label("")
 		self["time_remaining"] = Label("")
+		self["time_remaining_total"] = Label("")
 		self["time_info_summary"] = StaticText("")
 		self["time_elapsed_summary"] = StaticText("")
 		self["time_duration_summary"] = StaticText("")
@@ -79,6 +106,7 @@ class EmbyPlayer(MoviePlayer):
 		self.seek_timer = eTimer()
 		self.seek_timer.callback.append(self.onSeekRequest)
 		self.onProgressTimer()
+		self.loadChapters()
 		self["NumberSeekActions"] = NumberActionMap(["NumberActions"],
 		{
 			"1": self.numberSeek,
@@ -88,9 +116,97 @@ class EmbyPlayer(MoviePlayer):
 			"7": self.numberSeek,
 			"9": self.numberSeek,
 		}, -10)
+		self["InfobarMovieActions"] = ActionMap(["InfobarMovieListActions", "MovieSelectionActions", "E2EmbyActions"],
+		{
+			"up": self.showChapters,
+			"down": self.showNextPlaylist,
+			"movieList": self.showChapters,
+			"showEventInfo": self.showInfo,
+			"ok": self.processItem,
+		}, -10)
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
-			iPlayableService.evStart: self.__evServiceStart,
-			iPlayableService.evEnd: self.__evServiceEnd, })
+			iPlayableService.evStart: self.__evServiceStart, })
+
+	def __onHide(self):
+		self["list_chapters"].hide()
+		self["info_bkg"].hide()
+		self.selected_widget = None
+
+	def getTitle(self):
+		type = self.item.get("Type")
+		title = ""
+		if type == "Episode":
+			title = f"{self.item.get("SeriesName", "")} • S{self.item.get("ParentIndexNumber", 0)}:E{self.item.get("IndexNumber", 0)} • {" ".join(self.item.get("Name", "").splitlines())}"
+		else:
+			title = " ".join(self.item.get("Name", "").splitlines())
+		return title
+
+	def loadChapters(self):
+		media_sources = self.item.get("MediaSources", [])
+		default_media_source = next((ms for ms in media_sources if ms.get("Type") == "Default"), None)
+		if default_media_source:
+			self.chapters = default_media_source.get("Chapters", [])
+
+	def seekBack(self):
+		pass
+
+	def left(self):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
+
+	def seekFwd(self):
+		pass
+
+	def right(self):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
+
+	def processItem(self):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			chapter = self["list_chapters"].selectedItem
+			startPos = int(chapter.get("StartPositionTicks", "0")) / 10_000_000
+			self.doSeek(int(startPos) * 90000)
+			self.showAfterSeek()
+		else:
+			self.toggleShow()
+
+	def find_current_chapter_index(self):
+		pts = self.getPosition()
+		for i in range(len(self.chapters) - 1):
+			startPos = int(self.chapters[i].get("StartPositionTicks", "0")) / 10_000_000
+			startPosNext = int(self.chapters[i + 1].get("StartPositionTicks", "0")) / 10_000_000
+			if startPos <= pts < startPosNext:
+				return i
+		return len(self.chapters) - 1  # Last chapter
+
+	def showChapters(self):
+		if self.chapters:
+			list = []
+			i = 0
+			for ch in self.chapters:
+				pos_ticks = int(ch.get("StartPositionTicks"))
+				ch["Id"] = f"{self.item.get('Id')}_{ch.get("ChapterIndex")}"
+				list.append((i, ch, f"{ch.get('Name')}\n{convert_ticks_to_time(pos_ticks, True)}", None, "0", True))
+				i += 1
+			self["list_chapters"].loadData(list)
+			self["list_chapters"].show()
+			self["info_bkg"].show()
+			self.selected_widget = "list_chapters"
+			self["list_chapters"].instance.moveSelectionTo(self.find_current_chapter_index())
+			self.showAfterSeek()
+			self.hideTimer.stop()
+		else:
+			self["list_chapters"].hide()
+
+	def showInfo(self):
+		self.showAfterSeek()
+
+	def showNextPlaylist(self):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			self["list_chapters"].hide()
+			self["info_bkg"].hide()
+			self.selected_widget = None
+			self.showAfterSeek()
 
 	def getLength(self):
 		seek = self.getSeek()
@@ -154,6 +270,7 @@ class EmbyPlayer(MoviePlayer):
 			self["time_duration_summary"].setText(text_duration)
 			text_remaining = "+00:00:00"
 			self["time_remaining"].setText(text_remaining)
+			self["time_remaining_total"].setText(text_remaining + " / " + text_duration)
 			self["time_remaining_summary"].setText(text_remaining)
 			return
 
@@ -172,6 +289,7 @@ class EmbyPlayer(MoviePlayer):
 		self["time_duration_summary"].setText(text_duration)
 		text_remaining = "+%d:%02d:%02d" % (r / 3600, r % 3600 / 60, r % 60)
 		self["time_remaining"].setText(text_remaining)
+		self["time_remaining_total"].setText(text_remaining + " / " + text_duration)
 		self["time_remaining_summary"].setText(text_remaining)
 
 	def onProgressTimer(self):
@@ -242,6 +360,7 @@ class EmbyPlayer(MoviePlayer):
 			self.selected_subtitle = (0, 0, 0, 0, "")
 			self.curSubsIndex = -1
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
+			self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 			return
 
 		self.enableSubtitle(None)
@@ -255,6 +374,7 @@ class EmbyPlayer(MoviePlayer):
 			self.selected_subtitle = subtitle
 			self.curSubsIndex = subtitle[3]
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
+			self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 		else:
 			pass  # TODO: add message, log, etc...
 
@@ -265,7 +385,10 @@ class EmbyPlayer(MoviePlayer):
 			return
 		media_source = media_sources[0]
 		media_streams = media_source.get("MediaStreams")
-		i = len(subtitlesList) + 1
+		if len(subtitlesList) > 0:
+			i = subtitlesList[-1][1] + 1
+		else:
+			i = 1
 		for stream in media_streams:
 			type_stream = stream.get("Type")
 			isExternal = stream.get("IsExternal")
@@ -317,7 +440,6 @@ class EmbyPlayer(MoviePlayer):
 		audioTracks = service and service.audioTracks()
 		selectedAudio = audioTracks.getCurrentTrack()
 		if selectedAudio > -1:
-			print(f"[EmbyPlayer] CURRENT/SELECTED AUDIO TRACK: {self.curAudioIndex} / {selectedAudio}")
 			if self.curAudioIndex != selectedAudio + 1:
 				self.curAudioIndex = selectedAudio + 1
 				threads.deferToThread(self.updateEmbyProgressInternal, "AudioTrackChange")
@@ -331,6 +453,7 @@ class EmbyPlayer(MoviePlayer):
 			self.curSubsIndex = -1
 		if old_subs_index != self.curSubsIndex:
 			threads.deferToThread(self.updateEmbyProgressInternal, "SubtitleTrackChange")
+		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 
 	def setAudioTrack(self, aIndex):
 		track = aIndex
@@ -355,8 +478,10 @@ class EmbyPlayer(MoviePlayer):
 		init_play_pos = -1
 		self.curAudioIndex, subtitle = self.getSelectedAudioSubStreamFromEmby()
 		self.setAudioTrack(aIndex=self.curAudioIndex)
+		self.curAudioIndex += 1
 		self.runSubtitles(subtitle=subtitle)
 		self.curSubsIndex = subtitle and subtitle[3] or -1
+		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 		if self.init_seek_to and self.init_seek_to > -1:
 			self.doSeek(int(self.init_seek_to) * 90000)
 			init_play_pos = int(self.init_seek_to) * 10_000_000
@@ -392,6 +517,7 @@ class EmbyPlayer(MoviePlayer):
 			self.onAudioSubTrackChanged()
 			self.progress_timer.stop()
 		elif playstateString == 'END':
+			self.__evServiceEnd()
 			self.progress_timer.stop()
 
 	def clearHooks(self):
@@ -400,6 +526,7 @@ class EmbyPlayer(MoviePlayer):
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)
 
 	def leavePlayer(self):
+		self.__evServiceEnd()
 		self.clearHooks()
 		self.handleLeave("quit")
 

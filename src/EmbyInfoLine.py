@@ -22,11 +22,6 @@ class EmbyInfoLine(GUIComponent):
 		self.font = gFont("Regular", 18)
 		self.fontAdditional = gFont("Regular", 18)
 		self.foreColorAdditional = 0xffffff
-		self.l_t = LoadPixmap("%s/l_t.png" % plugin_dir)
-		self.l_b = LoadPixmap("%s/l_b.png" % plugin_dir)
-		self.r_t = LoadPixmap("%s/r_t.png" % plugin_dir)
-		self.r_b = LoadPixmap("%s/r_b.png" % plugin_dir)
-		self.b_back = LoadPixmap("%s/b_back.png" % plugin_dir)
 		self.star24 = LoadPixmap(resolveFilename(
 			SCOPE_GUISKIN, "icons/emby_star.png"))
 		if not self.star24:
@@ -134,10 +129,10 @@ class EmbyInfoLine(GUIComponent):
 		if height > 1080 and width > 1920:
 			return "UHD"
 
-		if height > 720 and width > 1280:
+		if (height > 720 or width > 1280) and width > height:
 			return "FHD"
 
-		if height == 720 and width == 1280:
+		if (height == 720 or width == 1280) and width > height:
 			return "HD"
 		return "SD"
 
@@ -216,8 +211,7 @@ class EmbyInfoLine(GUIComponent):
 		mpaa = item.get("OfficialRating", None)
 		runtime_ticks = int(item.get("RunTimeTicks", "0"))
 		runtime = runtime_ticks and convert_ticks_to_time(runtime_ticks)
-		position_ticks = int(item.get("UserData", {}).get(
-			"PlaybackPositionTicks", "0"))
+		position_ticks = int(item.get("UserData", {}).get("PlaybackPositionTicks", "0"))
 		status = item.get("Status", "")
 		ends_at = embyEndsAtToString(runtime_ticks, position_ticks)
 		items = self.constructItems(item)
@@ -229,8 +223,7 @@ class EmbyInfoLine(GUIComponent):
 
 		audioCodec, audioCh = self.constructAudioLabel(streams)
 
-		has_subtitles = any(stream.get("Type") ==
-							"Subtitle" for stream in streams)
+		has_subtitles = any(stream.get("Type") == "Subtitle" for stream in streams)
 
 		if user_rating:
 			pixd_size = self.star24.size()
