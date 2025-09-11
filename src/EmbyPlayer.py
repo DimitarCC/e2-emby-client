@@ -26,17 +26,16 @@ from .Variables import SUBTITLE_TUPLE_SIZE
 
 
 class EmbyPlayer(MoviePlayer):
-	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="transparent">
-					<widget name="info_line" position="e-60-1200,958" size="1200,40" font="Bold;24" fontAdditional="Bold;24" transparent="1" zPosition="5"/>
+	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="#ff000000">
+					<widget name="info_line" position="240,954" size="e-40-240,45" font="Regular; 35" fontAdditional="Bold;24" transparent="1" zPosition="5"/>
 					<widget name="info_bkg" backgroundColor="#10111111" position="-2,540" zPosition="-1" size="e+4,315" widgetBorderWidth="1" widgetBorderColor="#444444" />
 					<widget name="list_chapters" position="40,560" size="e-80,310" iconWidth="340" iconHeight="188" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
 					<eLabel backgroundColor="#10111111" position="60,900" zPosition="-1" size="e-120,115" cornerRadius="8" widgetBorderWidth="1" widgetBorderColor="#444444" />
-					<widget name="statusicon" position="100,935" zPosition="3" size="48,48" scale="1" pixmaps="icons/pvr/play.svg,icons/pvr/pause.svg,icons/pvr/stop.svg,icons/pvr/ff.svg,icons/pvr/rew.svg,icons/pvr/slow.svg"/>
-					<widget name="speed" foregroundColor="white" halign="left" position="160,935" size="48,48" font="Bold; 24" transparent="1"/>
-					<widget name="title" position="235,950" size="1120,50" font="Regular; 40" valign="center" noWrap="1" backgroundColor="#02111111" transparent="1"/>
-					<widget name="time_elapsed" position="210,905" size="100,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="white"/>
-					<widget name="time_remaining_total" position="e-270-30,905" size="200,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="white"/>
-					<widget source="progress" render="Progress" backgroundColor="#02333333" foregroundColor="#32772b" position="340,925" zPosition="2" size="e-270-340-40,12" transparent="1" cornerRadius="6"/>
+					<widget name="statusicon" position="120,935" zPosition="3" size="48,48" scale="1" pixmaps="icons/pvr/play.svg,icons/pvr/pause.svg,icons/pvr/stop.svg,icons/pvr/ff.svg,icons/pvr/rew.svg,icons/pvr/slow.svg"/>
+					<widget name="speed" foregroundColor="white" halign="left" position="200,935" size="48,48" font="Bold; 24" transparent="1"/>
+					<widget name="time_elapsed" position="210,905" size="100,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="#ffffff"/>
+					<widget name="time_remaining_total" position="e-270-10,905" size="200,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="#ffffff"/>
+					<widget source="progress" render="Progress" backgroundColor="#02333333" foregroundColor="#32772b" position="340,925" zPosition="2" size="e-260-340,12" transparent="1" cornerRadius="6"/>
 				</screen>"""]
 
 	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None):
@@ -83,7 +82,6 @@ class EmbyPlayer(MoviePlayer):
 		self["progress_summary"] = Progress()
 		self["progress"].value = 0
 		self["progress_summary"].value = 0
-		self["title"] = Label(self.getTitle())
 		self["info_bkg"] = Label("")
 		self["info_bkg"].hide()
 		self["time_info"] = Label("")
@@ -132,15 +130,6 @@ class EmbyPlayer(MoviePlayer):
 		self["info_bkg"].hide()
 		self.selected_widget = None
 
-	def getTitle(self):
-		type = self.item.get("Type")
-		title = ""
-		if type == "Episode":
-			title = f"{self.item.get("SeriesName", "")} • S{self.item.get("ParentIndexNumber", 0)}:E{self.item.get("IndexNumber", 0)} • {" ".join(self.item.get("Name", "").splitlines())}"
-		else:
-			title = " ".join(self.item.get("Name", "").splitlines())
-		return title
-
 	def loadChapters(self):
 		media_sources = self.item.get("MediaSources", [])
 		default_media_source = next((ms for ms in media_sources if ms.get("Type") == "Default"), None)
@@ -148,14 +137,20 @@ class EmbyPlayer(MoviePlayer):
 			self.chapters = default_media_source.get("Chapters", [])
 
 	def seekBack(self):
-		pass
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			return
+		MoviePlayer.seekBack(self)
+		self.showAfterSeek()
 
 	def left(self):
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def seekFwd(self):
-		pass
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			return
+		MoviePlayer.seekFwd(self)
+		self.showAfterSeek()
 
 	def right(self):
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -389,11 +384,8 @@ class EmbyPlayer(MoviePlayer):
 			i = subtitlesList[-1][1] + 1
 		else:
 			i = 1
-		for stream in media_streams:
-			type_stream = stream.get("Type")
-			isExternal = stream.get("IsExternal")
-			if type_stream != "Subtitle" or not isExternal:
-				continue
+		subtitletracks = [sub for sub in media_streams if sub.get("Type") == "Subtitle" and sub.get("IsExternal")]
+		for stream in subtitletracks:
 			index = int(stream.get("Index"))
 			subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{index}/stream.srt?api_key={EmbyApiClient.access_token}"
 			if SUBTITLE_TUPLE_SIZE == 5:
@@ -402,53 +394,65 @@ class EmbyPlayer(MoviePlayer):
 				subtitlesList.append((2, i, 4, index, stream.get("Language"), "", self.runSubtitles, subs_uri))
 			i += 1
 
+	def getEmbyTrackLists(self):
+		media_sources = self.item.get("MediaSources")
+		if not media_sources:
+			return [], []
+		media_source = media_sources[0]
+		media_streams = media_source.get("MediaStreams")
+		audiotracks = [au for au in media_streams if au.get("Type") == "Audio"]
+		subtitletracks = [sub for sub in media_streams if sub.get("Type") == "Subtitle"]
+		return audiotracks, subtitletracks
+
 	def getSelectedAudioSubStreamFromEmby(self):
+		aIndex = 0
+		curAudioIndex = 0
+		subtitle = None
 		item_id = int(self.item.get("Id", "0"))
 		media_sources = self.item.get("MediaSources")
 		if not media_sources:
 			return 0, None
 		media_source = media_sources[0]
-		media_streams = media_source.get("MediaStreams")
+		audiotracks, subtitletracks = self.getEmbyTrackLists()
 		defaultAudioIndex = media_source.get("DefaultAudioStreamIndex", -1)
-		defaultSubtitlendex = media_source.get("DefaultSubtitleStreamIndex", -1)
-		aIndexSet = False
-		aIndex = 0
-		subtitle = None
-		for stream in media_streams:
-			type_stream = stream.get("Type")
-			index = int(stream.get("Index"))
-			if type_stream == "Audio":
-				if defaultAudioIndex != index and not aIndexSet:
-					aIndex += 1
-				else:
-					aIndexSet = True
+		defaultSubtitleIndex = media_source.get("DefaultSubtitleStreamIndex", -1)
+		aIndex = next((i for i, track in enumerate(audiotracks) if track.get("Index") == defaultAudioIndex), 0)
+		if audiotracks:
+			curAudioIndex = audiotracks[aIndex].get("Index")
 
-			isExternal = stream.get("IsExternal")
-			if type_stream == "Subtitle" and self.firstSubIndex == -1:
-				self.firstSubIndex = index
-			if type_stream == "Subtitle" and isExternal:
-				if defaultSubtitlendex == index:
-					subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{index}/stream.srt?api_key={EmbyApiClient.access_token}"
+		if defaultSubtitleIndex > -1 and subtitletracks:
+			sindex = next((i for i, track in enumerate(subtitletracks) if track.get("Index") == defaultSubtitleIndex), None)
+			if sindex:
+				subtitle_obj = subtitletracks[sindex]
+				isExternal = subtitle_obj.get("IsExternal")
+				sub_index_emby = subtitle_obj.get("Index")
+				if isExternal:
+					subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{sub_index_emby}/stream.srt?api_key={EmbyApiClient.access_token}"
 					if SUBTITLE_TUPLE_SIZE == 5:
-						subtitle = (2, index - self.firstSubIndex + 1, 4, index, stream.get("Language"), self.runSubtitles, subs_uri)
+						subtitle = (2, sindex + 1, 4, sub_index_emby, subtitle_obj.get("Language"), self.runSubtitles, subs_uri)
 					else:
-						subtitle = (2, index - self.firstSubIndex + 1, 4, index, stream.get("Language"), "", self.runSubtitles, subs_uri)
-		return aIndex, subtitle
+						subtitle = (2, sindex + 1, 4, sub_index_emby, subtitle_obj.get("Language"), "", self.runSubtitles, subs_uri)
+
+		return aIndex, curAudioIndex, subtitle
 
 	def onAudioSubTrackChanged(self):
 		service = self.session.nav.getCurrentService()
 		audioTracks = service and service.audioTracks()
 		selectedAudio = audioTracks.getCurrentTrack()
+		audioTracks, subtitleTracks = self.getEmbyTrackLists()
 		if selectedAudio > -1:
-			if self.curAudioIndex != selectedAudio + 1:
-				self.curAudioIndex = selectedAudio + 1
+			audio_track_obj_emby = audioTracks[selectedAudio] if audioTracks else {}
+			emby_atrack_index = audio_track_obj_emby.get("Index", 0)
+			if self.curAudioIndex != emby_atrack_index:
+				self.curAudioIndex = emby_atrack_index
 				threads.deferToThread(self.updateEmbyProgressInternal, "AudioTrackChange")
 		old_subs_index = self.curSubsIndex
 		if self.selected_subtitle:
 			if len(self.selected_subtitle) > SUBTITLE_TUPLE_SIZE:
 				self.curSubsIndex = self.selected_subtitle[3]
 			else:
-				self.curSubsIndex = self.firstSubIndex + self.selected_subtitle[1] - 1
+				sel_sub_index = self.selected_subtitle[1] - 1
+				self.curSubsIndex = subtitleTracks[sel_sub_index].get("Index") if sel_sub_index > -1 else -1
 		else:
 			self.curSubsIndex = -1
 		if old_subs_index != self.curSubsIndex:
@@ -476,9 +480,9 @@ class EmbyPlayer(MoviePlayer):
 
 	def initSeekProcess(self):
 		init_play_pos = -1
-		self.curAudioIndex, subtitle = self.getSelectedAudioSubStreamFromEmby()
-		self.setAudioTrack(aIndex=self.curAudioIndex)
-		self.curAudioIndex += 1
+		audioIndex, curAudioIndex, subtitle = self.getSelectedAudioSubStreamFromEmby()
+		self.setAudioTrack(aIndex=audioIndex)
+		self.curAudioIndex = curAudioIndex
 		self.runSubtitles(subtitle=subtitle)
 		self.curSubsIndex = subtitle and subtitle[3] or -1
 		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)

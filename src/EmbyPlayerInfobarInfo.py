@@ -1,4 +1,4 @@
-from enigma import eLabel, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
+from enigma import eLabel, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_HALIGN_LEFT, RT_VALIGN_CENTER, RT_HALIGN_CENTER, getDesktop, eSize, RT_ELLIPSIS, RT_BLEND
 from skin import parseColor, parseFont
 
 from Components.GUIComponent import GUIComponent
@@ -82,21 +82,45 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 		s = self.instance.size()
 		return s.width(), s.height()
 
-	def constructLabelBox(self, res, text, height, xPos, yPos, spacing=None, borderColor=0x757472, backColor=0x55111111, textColor=0xffffff):
+	def getTitle(self):
+		type = self.item.get("Type")
+		title = ""
+		if type == "Episode":
+			title = f"{self.item.get("SeriesName", "")} • S{self.item.get("ParentIndexNumber", 0)}:E{self.item.get("IndexNumber", 0)} • {" ".join(self.item.get("Name", "").splitlines())}"
+		else:
+			title = " ".join(self.item.get("Name", "").splitlines())
+		return title
+
+	def constructLabelBox(self, res, header, text, height, xPos, yPos, spacing=None, borderColor=0x757472, backColor=0x55111111, textColor=0xffffff):
 		if not spacing:
 			spacing = self.spacing
 
+		headerWidth = self._calcTextWidth(header, font=self.fontAdditional, size=eSize(self.getDesktopWith() // 3, 0))[0] if header else 0
+
 		textWidth, textHeight = self._calcTextWidth(text, font=self.fontAdditional, size=eSize(self.getDesktopWith() // 3, 0))
 		rec_height = textHeight + 10
-		xPos -= spacing + textWidth + 30
+		xPos -= spacing + textWidth + headerWidth + 30 + (26 if headerWidth else 0)
+		if headerWidth:
+			res.append(MultiContentEntryText(
+				pos=(xPos + 1, yPos + (height - rec_height) // 2 + 1), size=(headerWidth + 26, rec_height + 1),
+				font=1, flags=RT_HALIGN_CENTER | RT_VALIGN_CENTER | RT_BLEND,
+				text=header,
+				cornerRadius=4,
+				cornerEdges=1 | 4,
+				border_color=borderColor, border_width=1,
+				backcolor=0x02333333, backcolor_sel=0x02333333,
+				color=textColor, color_sel=textColor))
+
 		res.append(MultiContentEntryText(
-			pos=(xPos + 1, yPos + (height - rec_height) // 2 + 1), size=(textWidth + 26, rec_height - 4),
-			font=1, flags=RT_HALIGN_CENTER | RT_VALIGN_CENTER,
+			pos=(xPos + headerWidth + (26 if headerWidth else 0), yPos + (height - rec_height) // 2 + 1), size=(textWidth + 26, rec_height + 1),
+			font=1, flags=RT_HALIGN_CENTER | RT_VALIGN_CENTER | RT_BLEND,
 			text=text,
 			cornerRadius=4,
+			cornerEdges=2 | 8 if headerWidth else 15,
 			border_color=borderColor, border_width=1,
 			backcolor=backColor, backcolor_sel=backColor,
 			color=textColor, color_sel=textColor))
+
 		return xPos
 
 	def constructResolutionLabel(self):
@@ -118,28 +142,30 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 	def constructVideoLabel(self):
 		source = self.item.get("MediaSources", [{}])[0]
 		streams = source.get("MediaStreams", [])
-		atrack = streams[0]
-		return "VID   |   " + atrack.get("DisplayTitle", "").split(" (")[0].upper()
+		vtrack = next((v_track for v_track in streams if v_track.get("Type") == "Video"), None)
+		return vtrack.get("DisplayTitle", "").split(" (")[0].upper() if vtrack else ""
 
 	def constructAudioLabel(self):
 		source = self.item.get("MediaSources", [{}])[0]
 		streams = source.get("MediaStreams", [])
 		atrack = streams[self.curAtrackIndex]
-		return "AUD   |   " + atrack.get("DisplayTitle", "").split(" (")[0]
+		return atrack.get("DisplayTitle", "").split(" (")[0]
 
 	def constructSubtitleLabel(self):
-		if self.curSubsIndex < 2:
+		if not self.curSubsIndex or self.curSubsIndex < 0:
 			return ""
 		source = self.item.get("MediaSources", [{}])[0]
 		streams = source.get("MediaStreams", [])
-		strack = streams[self.curSubsIndex]
-		return "CC   |   " + strack.get("DisplayTitle", "")
+		strack = next((sub for sub in streams if sub.get("Type") == "Subtitle" and sub.get("Index") == self.curSubsIndex), {})
+		return strack.get("DisplayTitle", "")
 
 	def buildEntry(self, item):
 		xPos = self.instance.size().width()
 		yPos = 0
 		height = self.instance.size().height()
 		res = [None]
+
+		title = self.getTitle()
 
 		mpaa = item.get("OfficialRating", None)
 		resString = self.constructVideoLabel()
@@ -148,15 +174,21 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 
 		if resString:
 			xPos -= 20
-			xPos = self.constructLabelBox(res, resString, height, xPos, yPos)
+			xPos = self.constructLabelBox(res, "VIDEO  ", resString, height, xPos, yPos)
 
 		if alabel:
-			xPos = self.constructLabelBox(res, alabel, height, xPos, yPos)
+			xPos = self.constructLabelBox(res, "AUDIO  ", alabel, height, xPos, yPos)
 
 		if slabel:
-			xPos = self.constructLabelBox(res, slabel, height, xPos, yPos)
+			xPos = self.constructLabelBox(res, "CC  ", slabel, height, xPos, yPos)
 
 		if mpaa:
-			xPos = self.constructLabelBox(res, mpaa, height, xPos, yPos)
+			xPos = self.constructLabelBox(res, None, mpaa, height, xPos, yPos)
+
+		res.append(MultiContentEntryText(
+			pos=(0, 0), size=(xPos - 10, height),
+			font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER | RT_BLEND | RT_ELLIPSIS,
+			text=title,
+			color=0xffffff, color_sel=0xffffff))
 
 		return res
