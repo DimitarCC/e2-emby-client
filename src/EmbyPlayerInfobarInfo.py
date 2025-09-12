@@ -186,7 +186,7 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 			xPos = self.constructLabelBox(res, None, mpaa, height, xPos, yPos)
 
 		res.append(MultiContentEntryText(
-			pos=(0, 0), size=(xPos - 10, height),
+			pos=(0, 0), size=(xPos - 35, height),
 			font=0, flags=RT_HALIGN_LEFT | RT_VALIGN_CENTER | RT_BLEND | RT_ELLIPSIS,
 			text=title,
 			color=0xffffff, color_sel=0xffffff))
