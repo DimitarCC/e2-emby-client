@@ -45,6 +45,8 @@ class EmbyPlayer(MoviePlayer):
 		ref = None
 		if media_sources:
 			media_source = media_sources[0]
+			defaultAudioIndex = media_source.get("DefaultAudioStreamIndex", -1)
+			defaultSubtitleIndex = media_source.get("DefaultSubtitleStreamIndex", -1)
 			container = media_source.get("Container")
 			media_source_id = media_source.get("Id")
 			play_session_id = str(uuid4())
@@ -104,6 +106,7 @@ class EmbyPlayer(MoviePlayer):
 		self.seek_timer = eTimer()
 		self.seek_timer.callback.append(self.onSeekRequest)
 		self.onProgressTimer()
+		self["info_line"].updateInfo(self.item, defaultAudioIndex, defaultSubtitleIndex)
 		self.loadChapters()
 		self["NumberSeekActions"] = NumberActionMap(["NumberActions"],
 		{
