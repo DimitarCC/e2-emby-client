@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-05 12:21+0300\n"
+"POT-Creation-Date: 2025-09-16 16:09+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -12,6 +12,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.7\n"
 
+#: ../src/EmbyInfoLine.py:170
+#, python-format
+msgid "%d Movies"
+msgstr "%d Филма"
+
 #: ../src/setup.xml
 msgid "---"
 msgstr "---"
@@ -20,11 +25,11 @@ msgstr "---"
 msgid "A client for Emby server"
 msgstr "Клиент за Emby сървер"
 
-#: ../src/EmbySetup.py:54 ../src/EmbySetup.py:69
+#: ../src/EmbySetup.py:61 ../src/EmbySetup.py:76
 msgid "Add"
 msgstr "Добавяне"
 
-#: ../src/EmbySetup.py:58
+#: ../src/EmbySetup.py:65
 msgid "Add Connection"
 msgstr "Добавяне на сървер/потребител"
 
@@ -44,11 +49,11 @@ msgstr "Добавяне в меню разширения"
 msgid "Add to Main Menu"
 msgstr "Добавяне в главно меню"
 
-#: ../src/EmbyLibraryScreen.py:466
+#: ../src/EmbyLibraryScreen.py:465
 msgid "Because you liked"
 msgstr "Защото харесахте"
 
-#: ../src/EmbyLibraryScreen.py:464
+#: ../src/EmbyLibraryScreen.py:463
 msgid "Because you recently watched"
 msgstr "Защото гледахте наскоро"
 
@@ -80,7 +85,7 @@ msgstr "Таймаут на връзката"
 msgid "Connections"
 msgstr "Връзки"
 
-#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:103
+#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:102
 msgid "Continue watching"
 msgstr "Продължаване на гледането"
 
@@ -96,7 +101,7 @@ msgstr "E2EmbyClient връзка"
 msgid "E2EmbyClient Setup"
 msgstr "E2EmbyClient настройки"
 
-#: ../src/EmbySetup.py:66
+#: ../src/EmbySetup.py:73
 msgid "Edit"
 msgstr "Редакция"
 
@@ -121,7 +126,7 @@ msgstr "Екстри"
 msgid "Favorite"
 msgstr "Любими"
 
-#: ../src/EmbyLibraryScreen.py:468
+#: ../src/EmbyLibraryScreen.py:467
 msgid "From director"
 msgstr "От режисьор"
 
@@ -133,13 +138,13 @@ msgstr "Отиди на сериал"
 msgid "Included in Collections"
 msgstr "Включен в поредици"
 
-#: ../src/EmbyInfoLine.py:173
+#: ../src/EmbyInfoLine.py:168
 msgid "Movie"
 msgstr "Филм"
 
-#: ../src/EmbyInfoLine.py:175 ../src/EmbyLibraryHeaderButtons.py:107
+#: ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
-msgstr "Филма"
+msgstr "Филми"
 
 #: ../src/EmbyHome.py:99
 msgid "My Media"
@@ -161,6 +166,10 @@ msgstr "Парола"
 msgid "Password for the Connection."
 msgstr "Парола за връзката."
 
+#: ../src/plugin.py:31
+msgid "Persistent thumbnail cache in"
+msgstr "Постоянен кеш за постерите в"
+
 #: ../src/EmbyItemFunctionButtons.py:176
 msgid "Play"
 msgstr "Възпроизвеждане"
@@ -174,6 +183,14 @@ msgid "Play trailer"
 msgstr "Трейлър възпр."
 
 #: ../src/setup.xml
+msgid "Playback system"
+msgstr "Система за възпроизвеждане"
+
+#: ../src/setup.xml
+msgid "Player Settings"
+msgstr "Плейър настройки"
+
+#: ../src/setup.xml
 msgid "Port"
 msgstr "Порт"
 
@@ -181,11 +198,11 @@ msgstr "Порт"
 msgid "Port of the Connection."
 msgstr "Порт за връзката."
 
-#: ../src/EmbyInfoLine.py:156
+#: ../src/EmbyInfoLine.py:151
 msgid "Present"
 msgstr "Настояще"
 
-#: ../src/EmbyLibraryScreen.py:105
+#: ../src/EmbyLibraryScreen.py:104
 msgid "Recently added"
 msgstr "Последно добавени филми"
 
@@ -202,11 +219,11 @@ msgstr "Последно добавени сериали"
 msgid "Recommendations"
 msgstr "Препоръчани"
 
-#: ../src/EmbySetup.py:55 ../src/EmbySetup.py:67
+#: ../src/EmbySetup.py:62 ../src/EmbySetup.py:74
 msgid "Remove"
 msgstr "Изтриване"
 
-#: ../src/EmbySetup.py:59
+#: ../src/EmbySetup.py:66
 msgid "Remove Connection"
 msgstr "Изтриване на връзка"
 
@@ -218,11 +235,11 @@ msgstr "Продължаване"
 msgid "Root URL address of the Connection."
 msgstr "Главен адрес за връзката."
 
-#: ../src/EmbyInfoLine.py:167 ../src/EmbySeriesItemView.py:63
+#: ../src/EmbyInfoLine.py:162 ../src/EmbySeriesItemView.py:69
 msgid "Season"
 msgstr "Сезон"
 
-#: ../src/EmbyInfoLine.py:169
+#: ../src/EmbyInfoLine.py:164
 msgid "Seasons"
 msgstr "Сезона"
 
@@ -230,13 +247,17 @@ msgstr "Сезона"
 msgid "Series"
 msgstr "Сериали"
 
-#: ../src/EmbySetup.py:60
+#: ../src/EmbySetup.py:67
 msgid "Setup Actions"
 msgstr "Setup Actions"
 
-#: ../src/EmbyMovieItemView.py:46 ../src/EmbySeriesItemView.py:46
+#: ../src/EmbyMovieItemView.py:46 ../src/EmbySeriesItemView.py:47
 msgid "Similar"
 msgstr "Подобни"
+
+#: ../src/EmbySeriesItemView.py:67
+msgid "Specials"
+msgstr "Специални"
 
 #: ../src/setup.xml
 msgid "Specify the connection retries count."
@@ -253,6 +274,10 @@ msgstr "Задава се времето за отказ при невъзмож
 #: ../src/setup.xml
 msgid "Specify the timeout for connections read operations."
 msgstr "Задава се времето за отказ при четене от сървера."
+
+#: ../src/setup.xml
+msgid "Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer"
+msgstr "Задава каква ще бъде системата за възпроизвеждане за медия файловете. Може да бъде GStreamer/ExtePlayer3/HiPlayer."
 
 #: ../src/setup.xml
 msgid "Specify where thumbnail cache will be storred."
@@ -294,7 +319,7 @@ msgstr "Потребител за логване в сървера."
 msgid "Watched"
 msgstr "Гледан"
 
-#: ../src/EmbyLibraryScreen.py:470
+#: ../src/EmbyLibraryScreen.py:469
 msgid "With actor"
 msgstr "С участието на"
 

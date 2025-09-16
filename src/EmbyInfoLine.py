@@ -167,7 +167,7 @@ class EmbyInfoLine(GUIComponent):
 			if itemsCount == 1:
 				return "1 %s" % _('Movie')
 			elif itemsCount > 1:
-				return "%d %s" % (itemsCount, _('Movies'))
+				return _('%d Movies') % itemsCount
 		return ""
 
 	def constructGenres(self, item):

@@ -52,10 +52,7 @@ class EmbyItemViewBase(Screen):
 		self["actions"] = ActionMap(["E2EmbyActions",],
 									{
 			"cancel": self.__closeScreen,  # KEY_RED / KEY_EXIT
-			# "save": self.addProvider,  # KEY_GREEN
 			"ok": self.processItem,
-			# "yellow": self.keyYellow,
-			# "blue": self.clearData,
 		}, -1)
 		self["nav_actions"] = ActionMap(["NavigationActions",],
 										{
@@ -63,7 +60,6 @@ class EmbyItemViewBase(Screen):
 			"down": self.down,
 			"left": self.left,
 			"right": self.right,
-			# "blue": self.clearData,
 		}, -2)
 
 	def __closeScreen(self):

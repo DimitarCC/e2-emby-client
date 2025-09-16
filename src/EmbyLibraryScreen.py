@@ -84,8 +84,7 @@ class E2EmbyLibrary(Screen):
 		self.setTitle(_("Emby Library"))
 		self.sel_timer = eTimer()
 		self.sel_timer.callback.append(self.trigger_sel_changed_event)
-		self.mask_alpha = Image.open(
-			join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
+		self.mask_alpha = Image.open(join(plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
 		if self.mask_alpha.mode != "L":
 			self.mask_alpha = self.mask_alpha.convert("L")
 		self.list_data = []
@@ -101,7 +100,7 @@ class E2EmbyLibrary(Screen):
 		self["backdrop"] = Pixmap()
 		# self["backdrop_full"] = Pixmap()
 		self["list_watching_header"] = Label(_("Continue watching"))
-		self["list_watching"] = EmbyList()
+		self["list_watching"] = EmbyList(type="item_fit")
 		self["list_recent_added_header"] = Label(_("Recently added"))
 		self["list_recent_added"] = EmbyList()
 		self["list_recommend_header_0"] = Label("")

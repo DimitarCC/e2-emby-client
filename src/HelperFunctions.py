@@ -83,6 +83,32 @@ def resize_and_center_image(image_bytes, target_size, dest_file, background_colo
 	background.convert("RGB").save(dest_file, format='JPEG')
 
 
+def resize_fit_width_crop_height(image_bytes, target_size, dest_file, background_color=(0, 0, 0)):
+    # Open image
+    img = Image.open(BytesIO(image_bytes)).convert("RGBA")
+    original_width, original_height = img.size
+    target_width, target_height = target_size
+
+    # Scale by width
+    ratio = target_width / original_width
+    new_height = int(original_height * ratio)
+    resized_img = img.resize((target_width, new_height), Image.LANCZOS)
+
+    # Crop vertically to target height
+    if new_height > target_height:
+        top = (new_height - target_height) // 2
+        bottom = top + target_height
+        cropped_img = resized_img.crop((0, top, target_width, bottom))
+    else:
+        # If height is smaller, pad with background
+        cropped_img = Image.new("RGBA", target_size, background_color + (255,))
+        y = (target_height - new_height) // 2
+        cropped_img.paste(resized_img, (0, y), resized_img)
+
+    # Save as JPEG
+    cropped_img.convert("RGB").save(dest_file, format='JPEG')
+
+
 def insert_at_position(d, key, value, index):
 	# Ensure index is within bounds
 	index = max(0, min(index, len(d)))

@@ -52,7 +52,7 @@ class EmbyPlayer(MoviePlayer):
 			play_session_id = str(uuid4())
 			directStreamUrl = f"/videos/{item_id}/original.{container}?DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
 			url = f"{EmbyApiClient.server_root}{directStreamUrl}"
-			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % ("4097", item_id, url.replace(":", "%3a"), item_name))
+			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), item_name))
 		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
 		self.session = session
 		AudioSelection.fillSubtitleExt = self.subtitleListIject
@@ -154,6 +154,36 @@ class EmbyPlayer(MoviePlayer):
 			return
 		MoviePlayer.seekFwd(self)
 		self.showAfterSeek()
+		self.hideTimer.stop()
+
+	def seekFwdManual(self, fwd=True):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			return
+		MoviePlayer.seekFwdManual(self, fwd)
+		self.showAfterSeek()
+		self.hideTimer.stop()
+
+	def seekBackManual(self, fwd=False):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			return
+		MoviePlayer.seekBackManual(self, fwd)
+		self.showAfterSeek()
+		self.hideTimer.stop()
+
+	def seekBackSeekbar(self, fwd=False):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			return
+		MoviePlayer.seekBackSeekbar(self, fwd)
+
+	def seekFwdSeekbar(self, fwd=True):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			return
+		MoviePlayer.seekFwdSeekbar(self, fwd)
+
+	def seekFwdVod(self, fwd=True):
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			return
+		MoviePlayer.seekFwdVod(self, fwd)
 
 	def right(self):
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -167,6 +197,7 @@ class EmbyPlayer(MoviePlayer):
 			self.showAfterSeek()
 		else:
 			self.toggleShow()
+			MoviePlayer.okButton(self)
 
 	def find_current_chapter_index(self):
 		pts = self.getPosition()
@@ -294,6 +325,10 @@ class EmbyPlayer(MoviePlayer):
 		curr_pos = self.getPosition()
 		if not self.skip_progress_update:
 			self.setProgress(curr_pos if self.current_pos == -1 else self.current_pos)
+		if self.selected_widget == "list_chapters":
+			cur_ch_index = self.find_current_chapter_index()
+			if cur_ch_index != self["list_chapters"].getCurrentIndex():
+				self["list_chapters"].instance.moveSelectionTo(cur_ch_index)
 
 	def updateEmbyProgress(self):
 		threads.deferToThread(self.updateEmbyProgressInternal, "TimeUpdate", self.current_pos)
@@ -518,6 +553,7 @@ class EmbyPlayer(MoviePlayer):
 		if playstateString == '>':
 			threads.deferToThread(self.updateEmbyProgressInternal, "Unpause")
 			self.onAudioSubTrackChanged()
+			self.showAfterSeek()
 			self.progress_timer.start(1000)
 		elif playstateString == '||':
 			threads.deferToThread(self.updateEmbyProgressInternal, "Pause")

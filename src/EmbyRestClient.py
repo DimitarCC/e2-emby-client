@@ -12,7 +12,7 @@ from Components.SystemInfo import BoxInfo
 from Tools.LoadPixmap import LoadPixmap
 
 from .Variables import REQUEST_USER_AGENT, EMBY_THUMB_CACHE_DIR
-from .HelperFunctions import crop_image_from_bytes, resize_and_center_image
+from .HelperFunctions import crop_image_from_bytes, resize_and_center_image, resize_fit_width_crop_height
 
 
 class DirectoryParser:
@@ -394,7 +394,7 @@ class EmbyRestClient():
 				break
 		return items
 
-	def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id="", widget_id=""):
+	def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id="", widget_id="", fit_type="fill"):
 		filename_suffix = ""
 
 		addon = ""
@@ -435,8 +435,10 @@ class EmbyRestClient():
 					else:
 						im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{orig_item_id or item_id}_{file_addon}_{filename}_{filename_suffix}.{format}"
 					if req_width > 0 and req_height > 0:
-						resize_and_center_image(
-							response.content, (req_width, req_height), im_tmp_path)
+						if fit_type == "fit_width_crop_height":
+							resize_fit_width_crop_height(response.content, (req_width, req_height), im_tmp_path)
+						else:
+							resize_and_center_image(response.content, (req_width, req_height), im_tmp_path)
 					else:
 						with open(im_tmp_path, "wb") as f:
 							f.write(response.content)

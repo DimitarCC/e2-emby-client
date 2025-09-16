@@ -1,8 +1,10 @@
 from Components.ActionMap import HelpableActionMap
 from Components.config import config, ConfigSelection, ConfigSubsection, ConfigSubList, ConfigInteger, ConfigYesNo, ConfigText, ConfigNothing, ConfigDirectory
 from Components.Sources.StaticText import StaticText
+from Components.SystemInfo import BoxInfo
 from Screens.Setup import Setup
 from Tools.BoundFunction import boundFunction
+from Tools.Directories import isPluginInstalled
 from . import _, PluginLanguageDomain
 
 
@@ -29,6 +31,11 @@ def initConfig():
 	config.plugins.e2embyclient.connections = ConfigSubList()
 	choicelist = [(i, "%d ms" % i) for i in range(50, 1500, 50)]  # noqa: F821
 	config.plugins.e2embyclient.changedelay = ConfigSelection(default=150, choices=choicelist)
+	isServiceAppInstalled = isPluginInstalled("ServiceApp")
+	play_system_choices = [("4097", "HiPlayer" if BoxInfo.getItem("mediaservice") == "servicehisilicon" else "GStreamer")]
+	if isServiceAppInstalled:
+		play_system_choices.append(("5002", "Exteplayer3"))
+	config.plugins.e2embyclient.play_system = ConfigSelection(default="4097", choices=play_system_choices)
 	for idx in range(config.plugins.e2embyclient.connectioncount.value):
 		initConnection(idx)
 

@@ -168,12 +168,17 @@ class EmbyList(GUIComponent):
 			for itm in items:
 				item = itm[1]
 				item_id = item.get("Id")
-				if self.type == "item":
+				if self.type in ["item", "item_fit"]:
+					fileAddon = f"x{self.iconHeight}"
+					fileSuffix = f"_{self.iconHeight}"
+					if self.type == "item_fit":
+						fileAddon = ""
+						fileSuffix = ""
 					icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
 					parent_icon_img = item.get("ParentThumbImageTag")
 					if parent_icon_img:
 						icon_img = parent_icon_img
-					f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}x{self.iconHeight}_{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
+					f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}{fileAddon}_{icon_img}__{self.iconWidth}{fileSuffix}.jpg"
 				elif self.type == "episodes":
 					icon_img = item.get("ImageTags").get("Primary")
 					f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}x{self.iconHeight}_{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
@@ -221,7 +226,7 @@ class EmbyList(GUIComponent):
 			item_popped = self.itemsForThumbs.pop(0)
 			item_index = item_popped[0]
 			item = item_popped[1]
-			if self.type == "item":
+			if self.type in ["item", "item_fit"]:
 				icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
 				item_id = item.get("Id")
 				parent_id = item.get("ParentThumbItemId")
@@ -313,13 +318,19 @@ class EmbyList(GUIComponent):
 		image_index = -1
 		req_width = -1
 		req_height = -1
+		fit_type = "fill"
+		iconHeight = self.iconHeight
+		if self.type == "item_fit":
+			fit_type = "fit_width_crop_height"
+			iconHeight = -1
 		if self.type == "chapters":
 			image_index = item.get("ChapterIndex", -1)
+		if self.type in ["item_fit", "chapters"]:
 			req_width = self.iconWidth
 			req_height = self.iconHeight
 
-		icon_pix = EmbyApiClient.getItemImage(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=self.iconHeight,
-														image_type=self.icon_type, image_index=image_index, req_width=req_width, req_height=req_height, orig_item_id=orig_item_id)
+		icon_pix = EmbyApiClient.getItemImage(widget_id=self.widget_id, item_id=item_id, logo_tag=icon_img, width=self.iconWidth, height=iconHeight,
+														image_type=self.icon_type, image_index=image_index, req_width=req_width, req_height=req_height, orig_item_id=orig_item_id, fit_type=fit_type)
 		if not icon_pix and self.type != "chapters":
 			backdrop_image_tags = item.get("BackdropImageTags")
 			parent_backdrop_image_tags = item.get("ParentBackdropImageTags")
