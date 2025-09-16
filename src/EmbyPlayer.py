@@ -29,7 +29,7 @@ class EmbyPlayer(MoviePlayer):
 	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="#ff000000">
 					<widget name="info_line" position="240,954" size="e-40-240,45" font="Regular; 35" fontAdditional="Bold;24" transparent="1" zPosition="5"/>
 					<widget name="info_bkg" backgroundColor="#10111111" position="-2,540" zPosition="-1" size="e+4,315" widgetBorderWidth="1" widgetBorderColor="#444444" />
-					<widget name="list_chapters" position="40,560" size="e-80,310" iconWidth="340" iconHeight="188" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
+					<widget name="list_chapters" position="35,560" size="e-70,310" iconWidth="340" iconHeight="188" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
 					<eLabel backgroundColor="#10111111" position="60,900" zPosition="-1" size="e-120,115" cornerRadius="8" widgetBorderWidth="1" widgetBorderColor="#444444" />
 					<widget name="statusicon" position="120,935" zPosition="3" size="48,48" scale="1" pixmaps="icons/pvr/play.svg,icons/pvr/pause.svg,icons/pvr/stop.svg,icons/pvr/ff.svg,icons/pvr/rew.svg,icons/pvr/slow.svg"/>
 					<widget name="speed" foregroundColor="white" halign="left" position="200,935" size="48,48" font="Bold; 24" transparent="1"/>
@@ -64,6 +64,7 @@ class EmbyPlayer(MoviePlayer):
 		self.curAudioIndex = -1
 		self.curSubsIndex = -1
 		self.firstSubIndex = -1
+		self.supressChapterSelect = False
 		self.item = item or {}
 		self.chapters = []
 		self.play_session_id = play_session_id
@@ -132,6 +133,7 @@ class EmbyPlayer(MoviePlayer):
 		self["list_chapters"].hide()
 		self["info_bkg"].hide()
 		self.selected_widget = None
+		self.supressChapterSelect = False
 
 	def loadChapters(self):
 		media_sources = self.item.get("MediaSources", [])
@@ -147,10 +149,12 @@ class EmbyPlayer(MoviePlayer):
 
 	def left(self):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def seekFwd(self):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekFwd(self)
 		self.showAfterSeek()
@@ -158,6 +162,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def seekFwdManual(self, fwd=True):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekFwdManual(self, fwd)
 		self.showAfterSeek()
@@ -165,6 +170,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def seekBackManual(self, fwd=False):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekBackManual(self, fwd)
 		self.showAfterSeek()
@@ -172,21 +178,25 @@ class EmbyPlayer(MoviePlayer):
 
 	def seekBackSeekbar(self, fwd=False):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekBackSeekbar(self, fwd)
 
 	def seekFwdSeekbar(self, fwd=True):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekFwdSeekbar(self, fwd)
 
 	def seekFwdVod(self, fwd=True):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekFwdVod(self, fwd)
 
 	def right(self):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def processItem(self):
@@ -235,6 +245,7 @@ class EmbyPlayer(MoviePlayer):
 			self["list_chapters"].hide()
 			self["info_bkg"].hide()
 			self.selected_widget = None
+			self.supressChapterSelect = False
 			self.showAfterSeek()
 
 	def getLength(self):
@@ -325,7 +336,7 @@ class EmbyPlayer(MoviePlayer):
 		curr_pos = self.getPosition()
 		if not self.skip_progress_update:
 			self.setProgress(curr_pos if self.current_pos == -1 else self.current_pos)
-		if self.selected_widget == "list_chapters":
+		if self.selected_widget == "list_chapters" and not self.supressChapterSelect:
 			cur_ch_index = self.find_current_chapter_index()
 			if cur_ch_index != self["list_chapters"].getCurrentIndex():
 				self["list_chapters"].instance.moveSelectionTo(cur_ch_index)
