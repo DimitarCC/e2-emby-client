@@ -374,11 +374,11 @@ class EmbyPlayer(MoviePlayer):
 		pos = seek.getPlayPosition()
 		currentPTS = int(pos[1])
 
-		if self.currentSubEndPTS > -1 and currentPTS > self.currentSubEndPTS - (50 * 90):
+		if self.currentSubEndPTS > -1 and currentPTS >= self.currentSubEndPTS:
 			self.onhideSubs()
 
 		currentLine = None
-		window_matches = self.currentSubsList.get_all_in_window(currentPTS, 50 * 90)
+		window_matches = self.currentSubsList.get_all_in_window(currentPTS, 150 * 90)
 		if window_matches and len(window_matches) > 0:
 			currentLine = window_matches[0][1]
 
@@ -470,8 +470,8 @@ class EmbyPlayer(MoviePlayer):
 			curAudioIndex = audiotracks[aIndex].get("Index")
 
 		if defaultSubtitleIndex > -1 and subtitletracks:
-			sindex = next((i for i, track in enumerate(subtitletracks) if track.get("Index") == defaultSubtitleIndex), None)
-			if sindex:
+			sindex = next((i for i, track in enumerate(subtitletracks) if track.get("Index") == defaultSubtitleIndex), -1)
+			if sindex > -1:
 				subtitle_obj = subtitletracks[sindex]
 				isExternal = subtitle_obj.get("IsExternal")
 				sub_index_emby = subtitle_obj.get("Index")
