@@ -8,18 +8,22 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-16 16:09+0300\n"
+"POT-Creation-Date: 2025-09-19 11:50+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../src/EmbyInfoLine.py:170
+#: ../src/EmbyInfoLine.py:168
 #, python-format
-msgid "%d Movies"
-msgstr ""
+msgid "%d Movie"
+msgid_plural "%d Movies"
+msgstr[0] ""
+msgstr[1] ""
 
 #: ../src/setup.xml
 msgid "---"
@@ -142,10 +146,6 @@ msgstr ""
 msgid "Included in Collections"
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:168
-msgid "Movie"
-msgstr ""
-
 #: ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
 msgstr ""
@@ -202,7 +202,8 @@ msgstr ""
 msgid "Port of the Connection."
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:151
+#. TRANSLATORS: "Present" means the show is still running
+#: ../src/EmbyInfoLine.py:152
 msgid "Present"
 msgstr ""
 
@@ -239,11 +240,11 @@ msgstr ""
 msgid "Root URL address of the Connection."
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:162 ../src/EmbySeriesItemView.py:69
+#: ../src/EmbyInfoLine.py:163 ../src/EmbySeriesItemView.py:69
 msgid "Season"
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:164
+#: ../src/EmbyInfoLine.py:165
 msgid "Seasons"
 msgstr ""
 
@@ -280,7 +281,7 @@ msgid "Specify the timeout for connections read operations."
 msgstr ""
 
 #: ../src/setup.xml
-msgid "Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer"
+msgid "Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer."
 msgstr ""
 
 #: ../src/setup.xml

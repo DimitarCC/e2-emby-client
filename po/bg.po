@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-16 16:09+0300\n"
+"POT-Creation-Date: 2025-09-19 11:50+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -12,10 +12,12 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.7\n"
 
-#: ../src/EmbyInfoLine.py:170
-#, python-format
-msgid "%d Movies"
-msgstr "%d Филма"
+#: ../src/EmbyInfoLine.py:168
+#, fuzzy, python-format
+msgid "%d Movie"
+msgid_plural "%d Movies"
+msgstr[0] "%d Филма"
+msgstr[1] "%d Филма"
 
 #: ../src/setup.xml
 msgid "---"
@@ -138,10 +140,6 @@ msgstr "Отиди на сериал"
 msgid "Included in Collections"
 msgstr "Включен в поредици"
 
-#: ../src/EmbyInfoLine.py:168
-msgid "Movie"
-msgstr "Филм"
-
 #: ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
 msgstr "Филми"
@@ -198,7 +196,8 @@ msgstr "Порт"
 msgid "Port of the Connection."
 msgstr "Порт за връзката."
 
-#: ../src/EmbyInfoLine.py:151
+#. TRANSLATORS: "Present" means the show is still running
+#: ../src/EmbyInfoLine.py:152
 msgid "Present"
 msgstr "Настояще"
 
@@ -235,11 +234,11 @@ msgstr "Продължаване"
 msgid "Root URL address of the Connection."
 msgstr "Главен адрес за връзката."
 
-#: ../src/EmbyInfoLine.py:162 ../src/EmbySeriesItemView.py:69
+#: ../src/EmbyInfoLine.py:163 ../src/EmbySeriesItemView.py:69
 msgid "Season"
 msgstr "Сезон"
 
-#: ../src/EmbyInfoLine.py:164
+#: ../src/EmbyInfoLine.py:165
 msgid "Seasons"
 msgstr "Сезона"
 
@@ -276,7 +275,7 @@ msgid "Specify the timeout for connections read operations."
 msgstr "Задава се времето за отказ при четене от сървера."
 
 #: ../src/setup.xml
-msgid "Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer"
+msgid "Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer."
 msgstr "Задава каква ще бъде системата за възпроизвеждане за медия файловете. Може да бъде GStreamer/ExtePlayer3/HiPlayer."
 
 #: ../src/setup.xml
