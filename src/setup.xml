@@ -15,7 +15,7 @@
 		<item level="0" text="---"></item>
 		<item level="0" text="Player Settings"></item>
 		<item level="0" text="---"></item>
-		<item level="0" text="Playback system" description="Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer">config.plugins.e2embyclient.play_system</item>
+		<item level="0" text="Playback system" description="Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer.">config.plugins.e2embyclient.play_system</item>
 		<item level="0" text="---"></item>
 		<item level="0" text="Connections"></item>
 		<item level="0" text="---"></item>

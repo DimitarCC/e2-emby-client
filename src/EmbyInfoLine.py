@@ -148,6 +148,7 @@ class EmbyInfoLine(GUIComponent):
 				endDate_str = item.get("EndDate", None)
 				endDate = endDate_str and embyDateToString(endDate_str, type)
 			else:
+				# TRANSLATORS: "Present" means the show is still running
 				endDate = _("Present")
 			if premiereDate == endDate:
 				return premiereDate
@@ -164,10 +165,7 @@ class EmbyInfoLine(GUIComponent):
 				return "%d %s" % (seasonsCount, _('Seasons'))
 		elif type == "BoxSet":
 			itemsCount = item.get("ChildCount", 0)
-			if itemsCount == 1:
-				return "1 %s" % _('Movie')
-			elif itemsCount > 1:
-				return _('%d Movies') % itemsCount
+			return ngettext("%d Movie", "%d Movies", itemsCount) % itemsCount
 		return ""
 
 	def constructGenres(self, item):

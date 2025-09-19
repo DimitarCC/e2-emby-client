@@ -2,20 +2,23 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-16 16:09+0300\n"
+"POT-Creation-Date: 2025-09-19 11:50+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: jbleyel\n"
 "Language-Team: \n"
+"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Language: de\n"
-"X-Generator: Poedit 3.6\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.7\n"
 
-#: ../src/EmbyInfoLine.py:170
-#, fuzzy, python-format
-msgid "%d Movies"
-msgstr "Filme"
+#: ../src/EmbyInfoLine.py:168
+#, python-format
+msgid "%d Movie"
+msgid_plural "%d Movies"
+msgstr[0] "%d Film"
+msgstr[1] "%d Filme"
 
 #: ../src/setup.xml
 msgid "---"
@@ -138,10 +141,6 @@ msgstr "Gehe zu Serien"
 msgid "Included in Collections"
 msgstr "Enthalten in Collections"
 
-#: ../src/EmbyInfoLine.py:168
-msgid "Movie"
-msgstr "Film"
-
 #: ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
 msgstr "Filme"
@@ -167,9 +166,8 @@ msgid "Password for the Connection."
 msgstr "Passwort für die Verbindung."
 
 #: ../src/plugin.py:31
-#, fuzzy
 msgid "Persistent thumbnail cache in"
-msgstr "Temporärer Vorschaubilder Cache"
+msgstr "Permanenter Vorschaubilder Cache in"
 
 #: ../src/EmbyItemFunctionButtons.py:176
 msgid "Play"
@@ -185,12 +183,11 @@ msgstr "Trailer abspielen"
 
 #: ../src/setup.xml
 msgid "Playback system"
-msgstr ""
+msgstr "Player System"
 
 #: ../src/setup.xml
-#, fuzzy
 msgid "Player Settings"
-msgstr "GUI Einstellungen"
+msgstr "Player Einstellungen"
 
 #: ../src/setup.xml
 msgid "Port"
@@ -200,9 +197,10 @@ msgstr "Port"
 msgid "Port of the Connection."
 msgstr "Port der Verbindung."
 
-#: ../src/EmbyInfoLine.py:151
+#. TRANSLATORS: "Present" means the show is still running
+#: ../src/EmbyInfoLine.py:152
 msgid "Present"
-msgstr ""
+msgstr "Läuft"
 
 #: ../src/EmbyLibraryScreen.py:104
 msgid "Recently added"
@@ -237,11 +235,11 @@ msgstr "Fortsetzen"
 msgid "Root URL address of the Connection."
 msgstr "Basis-URL-Adresse der Verbindung."
 
-#: ../src/EmbyInfoLine.py:162 ../src/EmbySeriesItemView.py:69
+#: ../src/EmbyInfoLine.py:163 ../src/EmbySeriesItemView.py:69
 msgid "Season"
 msgstr "Staffel"
 
-#: ../src/EmbyInfoLine.py:164
+#: ../src/EmbyInfoLine.py:165
 msgid "Seasons"
 msgstr "Staffeln"
 
@@ -259,7 +257,7 @@ msgstr "Ähnlich"
 
 #: ../src/EmbySeriesItemView.py:67
 msgid "Specials"
-msgstr ""
+msgstr "Specials"
 
 #: ../src/setup.xml
 msgid "Specify the connection retries count."
@@ -278,8 +276,8 @@ msgid "Specify the timeout for connections read operations."
 msgstr "Zeitlimit für Verbindungen zum Abrufen festlegen."
 
 #: ../src/setup.xml
-msgid "Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer"
-msgstr ""
+msgid "Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer."
+msgstr "Auswahl des Player Systems."
 
 #: ../src/setup.xml
 msgid "Specify where thumbnail cache will be storred."
