@@ -198,10 +198,14 @@ class E2EmbyHome(Screen):
 
 	def left(self):
 		self.last_widget_info_load_success = None
+		if self.selected_widget == "list":
+			self.clearInfoPane()
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
 		self.last_widget_info_load_success = None
+		if self.selected_widget == "list":
+			self.clearInfoPane()
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
@@ -322,6 +326,9 @@ class E2EmbyHome(Screen):
 		colType = item.get("CollectionType")
 		isLib = colType is not None and colType != "BoxSet"
 
+		if orig_item_id != self.last_item_id:
+			return
+
 		# if not isLib and self.last_item_id and orig_item_id == self.last_item_id:
 		#     return
 
@@ -330,7 +337,7 @@ class E2EmbyHome(Screen):
 
 		if isLib:
 			self.last_widget_info_load_success = widget
-			self.clearInfoPane()
+			# self.clearInfoPane()
 
 			item = EmbyApiClient.getRandomItemFromLibrary(item_id, colType)
 			item_id = item.get("Id")

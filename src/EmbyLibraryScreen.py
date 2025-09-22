@@ -520,6 +520,9 @@ class E2EmbyLibrary(Screen):
 		orig_item_id = item.get("Id")
 		item_id = orig_item_id
 
+		if orig_item_id != self.last_item_id:
+			return
+
 		parent_b_item_id = item.get("ParentLogoItemId")
 		if parent_b_item_id:
 			item_id = parent_b_item_id
