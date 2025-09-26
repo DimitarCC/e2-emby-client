@@ -188,9 +188,6 @@ class E2EmbyLibrary(Screen):
 		if not item_id:
 			item_id = self[sel_widget].selectedItem.get("Id")
 
-		self["backdrop"].setPixmap(None)
-		self.backdrop_pix = None
-
 		self.sel_timer.stop()
 		self.sel_timer.start(config.plugins.e2embyclient.changedelay.value, True)
 
@@ -229,6 +226,8 @@ class E2EmbyLibrary(Screen):
 		if self.selected_widget == "header":
 			self[self.selected_widget].movePrevious()
 		else:
+			self.backdrop_pix = None
+			self["backdrop"].setPixmap(None)
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
@@ -242,6 +241,8 @@ class E2EmbyLibrary(Screen):
 		if self.selected_widget == "header":
 			self[self.selected_widget].moveNext()
 		else:
+			self.backdrop_pix = None
+			self["backdrop"].setPixmap(None)
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
@@ -273,6 +274,9 @@ class E2EmbyLibrary(Screen):
 					self.lists[item].move(40, y).enableSelection(False)
 					y += self.lists[item].getHeight() + 40
 
+				self.backdrop_pix = None
+				self["backdrop"].setPixmap(None)
+
 				self.onSelectedIndexChanged()
 
 	def down(self):
@@ -303,6 +307,9 @@ class E2EmbyLibrary(Screen):
 					if selEnabled:
 						self.selected_widget = item
 					selEnabled = False
+
+				self.backdrop_pix = None
+				self["backdrop"].setPixmap(None)
 				self.onSelectedIndexChanged()
 
 	def toggleItemsSectionVisibility(self, visible):

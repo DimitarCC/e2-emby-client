@@ -182,17 +182,6 @@ class E2EmbyHome(Screen):
 		if not item_id:
 			item_id = self[self.selected_widget].selectedItem.get("Id")
 
-		if not widget:
-			self.clearInfoPane()
-
-		self["backdrop"].setPixmap(None)
-		self.backdrop_pix = None
-
-		colType = self[self.selected_widget].selectedItem.get("CollectionType")
-		isLib = colType is not None and colType != "BoxSet"
-		if isLib:
-			self.clearInfoPane()
-
 		self.sel_timer.stop()
 		self.sel_timer.start(config.plugins.e2embyclient.changedelay.value, True)
 
@@ -200,17 +189,20 @@ class E2EmbyHome(Screen):
 		self.last_widget_info_load_success = None
 		if self.selected_widget == "list":
 			self.clearInfoPane()
+		self.backdrop_pix = None
+		self["backdrop"].setPixmap(None)
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
 		self.last_widget_info_load_success = None
 		if self.selected_widget == "list":
 			self.clearInfoPane()
+		self.backdrop_pix = None
+		self["backdrop"].setPixmap(None)
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
-		current_widget_index = self.availableWidgets.index(
-			self.selected_widget)
+		current_widget_index = self.availableWidgets.index(self.selected_widget)
 		if current_widget_index == 0:
 			return
 		y = self.top_slot_y
@@ -227,6 +219,10 @@ class E2EmbyHome(Screen):
 
 		if self[self.selected_widget].isLibrary:
 			self.last_widget_info_load_success = None
+			self.clearInfoPane()
+
+		self.backdrop_pix = None
+		self["backdrop"].setPixmap(None)
 
 		self.onSelectedIndexChanged()
 
@@ -247,6 +243,9 @@ class E2EmbyHome(Screen):
 			if selEnabled:
 				self.selected_widget = item
 			selEnabled = False
+
+		self.backdrop_pix = None
+		self["backdrop"].setPixmap(None)
 		self.onSelectedIndexChanged()
 
 	def processItem(self):
