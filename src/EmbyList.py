@@ -35,7 +35,7 @@ class EmbyList(GUIComponent):
 		self.selectionEnabled = True
 		self.font = gFont("Regular", 18)
 		self.badgeFont = gFont("Regular", 18)
-		self.selectedIndex = 0
+		self.selectedIndex = -1
 		self.lastSelectedItemId = None
 		self.l = eListboxPythonMultiContent()  # noqa: E741
 		self.l.setBuildFunc(self.buildEntry)
@@ -93,7 +93,10 @@ class EmbyList(GUIComponent):
 	def selectionChanged(self):
 		if isinstance(self.selectedItem, tuple):
 			return
-		self.selectedIndex = self.l.getCurrentSelectionIndex()
+		curIndex = self.l.getCurrentSelectionIndex()
+		if self.selectedIndex == curIndex:
+			return
+		self.selectedIndex = curIndex
 		new_page = self.selectedIndex // self.items_per_page
 		if new_page != self.currentPage:
 			self.currentPage = new_page

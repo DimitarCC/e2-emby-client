@@ -21,7 +21,7 @@ class EmbyGridList(GUIComponent):
 	def __init__(self, isLibrary=False):
 		GUIComponent.__init__(self)
 		self.widget_id = uuid4()
-		self.currentSelectedIndex = 0
+		self.currentSelectedIndex = -1
 		self.isLibrary = isLibrary
 		self.data = []
 		self.itemsForThumbs = []
@@ -144,8 +144,11 @@ class EmbyGridList(GUIComponent):
 		return curCol == 0
 
 	def selectionChanged(self):
+		curIndex = self.l.getCurrentSelectionIndex()
+		if self.currentSelectedIndex == curIndex:
+			return
 		self.selectedItem = self.l.getCurrentSelection()
-		self.currentSelectedIndex = self.l.getCurrentSelectionIndex()
+		self.currentSelectedIndex = curIndex
 		newPage = self.getIndexCurrentPage(self.currentSelectedIndex)
 		if self.currentPage != newPage:
 			self.currentPage = newPage
