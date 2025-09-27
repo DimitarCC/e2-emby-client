@@ -226,8 +226,9 @@ class E2EmbyLibrary(Screen):
 		if self.selected_widget == "header":
 			self[self.selected_widget].movePrevious()
 		else:
-			self.backdrop_pix = None
-			self["backdrop"].setPixmap(None)
+			if self[self.selected_widget].selectedIndex > 0:
+				self.backdrop_pix = None
+				self["backdrop"].setPixmap(None)
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
@@ -241,8 +242,9 @@ class E2EmbyLibrary(Screen):
 		if self.selected_widget == "header":
 			self[self.selected_widget].moveNext()
 		else:
-			self.backdrop_pix = None
-			self["backdrop"].setPixmap(None)
+			if self[self.selected_widget].selectedIndex < len(self[self.selected_widget].data) - 1:
+				self.backdrop_pix = None
+				self["backdrop"].setPixmap(None)
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):

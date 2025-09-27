@@ -187,18 +187,21 @@ class E2EmbyHome(Screen):
 
 	def left(self):
 		self.last_widget_info_load_success = None
-		if self.selected_widget == "list":
+		if self.selected_widget == "list" and self[self.selected_widget].selectedIndex > 0:
 			self.clearInfoPane()
-		self.backdrop_pix = None
-		self["backdrop"].setPixmap(None)
+		if self[self.selected_widget].selectedIndex > 0:
+			self.backdrop_pix = None
+			self["backdrop"].setPixmap(None)
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
 		self.last_widget_info_load_success = None
-		if self.selected_widget == "list":
+		if self.selected_widget == "list" and self[self.selected_widget].selectedIndex < len(self[self.selected_widget].data) - 1:
 			self.clearInfoPane()
-		self.backdrop_pix = None
-		self["backdrop"].setPixmap(None)
+
+		if self[self.selected_widget].selectedIndex < len(self[self.selected_widget].data) - 1:
+			self.backdrop_pix = None
+			self["backdrop"].setPixmap(None)
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
