@@ -21,7 +21,7 @@ class EmbyGridList(GUIComponent):
 	def __init__(self, isLibrary=False):
 		GUIComponent.__init__(self)
 		self.widget_id = uuid4()
-		self.currentSelectedIndex = -1
+		self.selectedIndex = -1
 		self.isLibrary = isLibrary
 		self.data = []
 		self.itemsForThumbs = []
@@ -68,7 +68,7 @@ class EmbyGridList(GUIComponent):
 
 	def getCurrentRow(self):
 		max_columns = self.instance.size().width() // self.itemWidth
-		return self.currentSelectedIndex // max_columns
+		return self.selectedIndex // max_columns
 
 	# for use with the pager addon. Returns index of current row
 	currentIndex = property(getCurrentRow)
@@ -133,23 +133,23 @@ class EmbyGridList(GUIComponent):
 		size = self.instance.size()
 		width = size.width()
 		cols = width // self.itemWidth
-		curRow = self.currentSelectedIndex // cols
+		curRow = self.selectedIndex // cols
 		return curRow == 0
 
 	def getIsAtFirstColumn(self):
 		size = self.instance.size()
 		width = size.width()
 		cols = width // self.itemWidth
-		curCol = self.currentSelectedIndex % cols
+		curCol = self.selectedIndex % cols
 		return curCol == 0
 
 	def selectionChanged(self):
 		curIndex = self.l.getCurrentSelectionIndex()
-		if self.currentSelectedIndex == curIndex:
+		if self.selectedIndex == curIndex:
 			return
 		self.selectedItem = self.l.getCurrentSelection()
-		self.currentSelectedIndex = curIndex
-		newPage = self.getIndexCurrentPage(self.currentSelectedIndex)
+		self.selectedIndex = curIndex
+		newPage = self.getIndexCurrentPage(self.selectedIndex)
 		if self.currentPage != newPage:
 			self.currentPage = newPage
 		for x in self.onSelectionChanged:
@@ -320,7 +320,7 @@ class EmbyGridList(GUIComponent):
 		self.index_currently_redrawing = item_index
 		res = [None]
 		orig_id = item.get("Id")
-		selected = self.currentSelectedIndex == item_index
+		selected = self.selectedIndex == item_index
 		if orig_id in self.thumbs:
 			item_icon = self.thumbs[orig_id]
 			if item_index in self.itemsForRedrawDelayed:
