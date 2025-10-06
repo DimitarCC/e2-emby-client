@@ -540,10 +540,10 @@ class EmbyRestClient():
 	def sendUnWatched(self, item):
 		item_id = item.get("Id")
 		headers = self.constructHeaders()
-		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayedItems/{item_id}"
+		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayedItems/{item_id}/Delete"
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				delete(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				return True, False
 			except TimeoutError:
 				pass

@@ -37,8 +37,7 @@ class EmbyInfoLine(GUIComponent):
 		self.l = eListboxPythonMultiContent()  # noqa: E741
 		self.l.setBuildFunc(self.buildEntry)
 		self.spacing = 28
-		self.orientations = {
-			"orHorizontal": eListbox.orHorizontal, "orVertical": eListbox.orVertical}
+		self.orientations = {"orHorizontal": eListbox.orHorizontal, "orVertical": eListbox.orVertical}
 		self.orientation = eListbox.orHorizontal
 		self.l.setItemHeight(35)
 		self.l.setItemWidth(35)

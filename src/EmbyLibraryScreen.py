@@ -193,8 +193,7 @@ class E2EmbyLibrary(Screen):
 
 	def trigger_sel_changed_event(self):
 		sel_widget = self.selected_widget if self.selected_widget != "header" else self.available_widgets[0]
-		threads.deferToThread(self.loadSelectedItemDetails,
-							self[sel_widget].selectedItem, self[sel_widget])
+		threads.deferToThread(self.loadSelectedItemDetails, self[sel_widget].selectedItem, self[sel_widget])
 
 	def pageUp(self):
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.prevPage)
@@ -454,7 +453,7 @@ class E2EmbyLibrary(Screen):
 				if not self.selected_widget:
 					self.selected_widget = self.available_widgets[0]
 					self.lists[self.selected_widget].enableSelection(True)
-					self.onSelectedIndexChanged()
+					# self.onSelectedIndexChanged()
 			else:
 				self.available_widgets.remove("list_recent_added")
 
@@ -499,6 +498,7 @@ class E2EmbyLibrary(Screen):
 
 					is_visible = is_available and self.mode == MODE_RECOMMENDATIONS and self.selected_widget == widget_name
 					self.lists[widget_name].visible(is_visible).enableSelection(is_visible)
+		self.onSelectedIndexChanged()
 
 	def setWidgetsPosition(self, result):
 		sel_widget = self.selected_widget

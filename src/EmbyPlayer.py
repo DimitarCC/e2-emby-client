@@ -143,6 +143,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def seekBack(self):
 		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekBack(self)
 		self.showAfterSeek()

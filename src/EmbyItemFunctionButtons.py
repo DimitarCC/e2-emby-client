@@ -113,8 +113,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 			x()
 
 	def resumePlay(self):
-		startPos = int(self.item.get("UserData", {}).get(
-			"PlaybackPositionTicks", "0")) / 10_000_000
+		startPos = int(self.item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
 		playItem(self.item, self.screen.session, self.playerExitCallback, startPos=startPos)
 
 	def playFromBeguinning(self):
@@ -139,8 +138,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 
 	def gotoSeries(self):
 		series_id = self.item.get("SeriesId")
-		threads.deferToThread(EmbyApiClient.getSingleItem, series_id).addCallback(
-			self.seriesItemRetrieveCallback)
+		threads.deferToThread(EmbyApiClient.getSingleItem, series_id).addCallback(self.seriesItemRetrieveCallback)
 
 	def seriesItemRetrieveCallback(self, result):
 		from .EmbySeriesItemView import EmbySeriesItemView
@@ -150,7 +148,11 @@ class EmbyItemFunctionButtons(GUIComponent):
 		res, val = result
 		if res:
 			self.item["UserData"]["Played"] = val
+			if val:
+				self.item["UserData"]["PlaybackPositionTicks"] = 0
 			self.setItem(self.item)
+			if val:
+				self.screen.exitResult = 4 if self.item.get("Type", None) == "Episode" else 1
 
 	def setFavoriteCallback(self, result):
 		res, val = result
