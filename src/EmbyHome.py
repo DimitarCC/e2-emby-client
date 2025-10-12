@@ -18,6 +18,7 @@ from .EmbySetup import getActiveConnection, EmbySetup
 from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .EmbyLibraryScreen import E2EmbyLibrary
 from .EmbyMovieItemView import EmbyMovieItemView
+from .EmbyNotification import NotificationalScreen
 from .EmbyEpisodeItemView import EmbyEpisodeItemView
 from .EmbyBoxSetItemView import EmbyBoxSetItemView
 from .EmbySeriesItemView import EmbySeriesItemView
@@ -29,7 +30,7 @@ from . import _
 current_thread = None
 
 
-class E2EmbyHome(Screen):
+class E2EmbyHome(NotificationalScreen):
 	skin = ["""<screen name="E2EmbyHome" position="fill">
 				<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
 				<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
@@ -52,7 +53,7 @@ class E2EmbyHome(Screen):
 			</screen>"""]
 
 	def __init__(self, session):
-		Screen.__init__(self, session)
+		NotificationalScreen.__init__(self, session)
 		self.setTitle(_("Emby"))
 
 		self.access_token = None

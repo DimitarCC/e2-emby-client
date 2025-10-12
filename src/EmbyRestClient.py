@@ -11,6 +11,8 @@ from Components.config import config
 from Components.SystemInfo import BoxInfo
 from Tools.LoadPixmap import LoadPixmap
 
+from . import _
+from .EmbyNotification import ShowEmbyTimeoutNotification
 from .Variables import REQUEST_USER_AGENT, EMBY_THUMB_CACHE_DIR
 from .HelperFunctions import crop_image_from_bytes, resize_and_center_image, resize_fit_width_crop_height
 
@@ -57,7 +59,7 @@ class EmbyRestClient():
 	def authorizeUser(self, server_url, server_port, username, password):
 		self.server_root = f"{server_url}:{server_port}"
 		if self.access_token:
-			return
+			return 301
 
 		headers = self.constructHeaders()
 		payload = {
@@ -83,23 +85,41 @@ class EmbyRestClient():
 					if status_code == 200 or status_code == 204:
 						response_str = response.content
 						self.userSettings = loads(response_str)
-				except:
-					pass
-		except:
-			pass
+					elif status_code >= 400:
+						print("[E2EmbyClient][EmbyRestClient][authorizeUser] Authentication failed! invalid token")
+				except Exception as ex:
+					print(f"[E2EmbyClient][EmbyRestClient][authorizeUser] Unknown error: {ex}")
+					return 500
+			elif status_code >= 400:
+				print("[E2EmbyClient][EmbyRestClient][authorizeUser] Authentication failed! Unknown username or wrong password!")
+				return status_code
+		except Exception as ex:
+			print(f"[E2EmbyClient][EmbyRestClient][authorizeUser] Unknown error: {ex}")
+			return 500
 
 	def getLibraries(self):
 		libs = {}
 		headers = self.constructHeaders()
 		if self.access_token:
 			url = f"{self.server_root}/emby/Users/{self.user_id}/Views"
-			try:
-				response_libs = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
-				libs_response = response_libs.content
-				libs_json_obj = loads(libs_response)
-				libs = libs_json_obj.get('Items')
-			except:
-				pass
+			has_timeout_or_error = True
+			for attempt in range(config.plugins.e2embyclient.conretries.value):
+				try:
+					response_libs = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+					libs_response = response_libs.content
+					libs_json_obj = loads(libs_response)
+					libs = libs_json_obj.get('Items')
+					has_timeout_or_error = False
+					break
+				except TimeoutError:
+					pass
+				except ReadTimeout:
+					pass
+				except Exception as ex:
+					print(f"[E2EmbyClient][EmbyRestClient][getLibraries] Unknown error: {ex}")
+					break
+			if has_timeout_or_error:
+				ShowEmbyTimeoutNotification()
 		return libs
 
 	def getItems(self, type_part, sortBy, includeItems, parent_part, loadFullInfo=False, limit=40):
@@ -109,12 +129,14 @@ class EmbyRestClient():
 		if type_part == "/Resume":
 			includeItemsParam = "MediaTypes="
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items{type_part}?Limit={limit}&SortBy={sortBy}&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,EndDate,DateCreated,Status,ChildCount{',Chapters,Taglines,People' if loadFullInfo else ''}&{includeItemsParam}{includeItems}{parent_part}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				res_json_obj = loads(response_obj)
 				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -122,6 +144,8 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getResumableItemsForLibrary(self, library_id, library_type, limit=40):
@@ -133,12 +157,14 @@ class EmbyRestClient():
 		elif library_type == "tvshow":
 			include_items = "Episode"
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items/Resume?IncludeItemTypes={include_items}&MediaTypes=Video&ParentId={library_id}&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				res_json_obj = loads(response_obj)
 				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -146,17 +172,21 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getRecentlyAddedItemsForLibrary(self, library_id, limit=40):
 		items = {}
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items/Latest?ParentId={library_id}&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				items = loads(response_obj)
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -164,6 +194,8 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getRecentlyReleasedItemsForLibrary(self, library_id, library_type, limit=40):
@@ -175,12 +207,14 @@ class EmbyRestClient():
 		elif library_type == "tvshow":
 			include_items = "Episode"
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes={include_items}&ParentId={library_id}&SortBy=PremiereDate&SortOrder=Descending&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				res_json_obj = loads(response_obj)
 				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -188,17 +222,21 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getSingleItem(self, item_id):
 		item = {}
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				item = loads(response_obj)
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -206,18 +244,22 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return item
 
 	def getEpisodesForSeries(self, item_id):
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Shows/{item_id}/Episodes?UserId={self.user_id}&Fields=Overview"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				json_obj = loads(response_obj)
 				items.extend(json_obj.get("Items", []))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -225,18 +267,22 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getSeasonsForSeries(self, item_id):
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Shows/{item_id}/Seasons?UserId={self.user_id}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				items_obj = loads(response_obj)
 				items.extend(items_obj.get("Items"))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -244,18 +290,22 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getBoxsetsForItem(self, item_id, limit=40):
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?IncludeItemTypes=Playlist%2CBoxSet&Recursive=true&SortBy=SortName&ListItemIds={item_id}&Limit={limit}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				items_obj = loads(response_obj)
 				items.extend(items_obj.get("Items"))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -263,18 +313,22 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getSimilarForItem(self, item_id, limit=40):
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Items/{item_id}/Similar?UserId={self.user_id}&Limit={limit}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				res_json_obj = loads(response_obj)
 				items.extend(res_json_obj.get('Items'))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -282,18 +336,22 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getExtrasForItem(self, item_id, limit=40):
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items/{item_id}/SpecialFeatures"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
 					response_obj = response.content
 					items.extend(loads(response_obj))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -301,12 +359,15 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getBoxsetsFromLibrary(self, library_id):
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=BoxSet&CollapseBoxSetItems=true&ParentId={library_id}&Fields=Genres,SortName,Path,Overview,RunTimeTicks,ProviderIds,DateCreated&Filter=IsFolder"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
@@ -314,6 +375,7 @@ class EmbyRestClient():
 					response_obj = response.content
 					res_json_obj = loads(response_obj)
 					items.extend(res_json_obj.get('Items'))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -321,12 +383,15 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getBoxsetsChildren(self, boxset_id):
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes=Movie&ParentId={boxset_id}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
@@ -334,6 +399,7 @@ class EmbyRestClient():
 					response_obj = response.content
 					res_json_obj = loads(response_obj)
 					items.extend(res_json_obj.get('Items'))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -341,14 +407,16 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getItemsFromLibrary(self, library_id):
-		shouldShowBoxsets = self.userSettings.get(
-			f"{library_id}-1-videos-groupItemsIntoCollections", "false") == "true"
+		shouldShowBoxsets = self.userSettings.get(f"{library_id}-1-videos-groupItemsIntoCollections", "false") == "true"
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series&ParentId={library_id}&GroupItemsIntoCollections={'true' if shouldShowBoxsets else 'false'}&Fields=SortName,PremiereDate,DateCreated"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
@@ -356,6 +424,7 @@ class EmbyRestClient():
 					response_obj = response.content
 					res_json_obj = loads(response_obj)
 					items.extend(res_json_obj.get('Items'))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -365,6 +434,8 @@ class EmbyRestClient():
 				break
 
 		# sorted_items = sorted(items, key=lambda x: x.get("SortName"))
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items  # sorted_items
 
 	def getRandomItemFromLibrary(self, parent_id, type, limit=2000):
@@ -380,11 +451,13 @@ class EmbyRestClient():
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Movies/Recommendations?UserId={self.user_id}&categoryLimit=6&GroupProgramsBySeries=true&ParentId={library_id}&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&ItemLimit={limit}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				response_obj = response.content
 				items.extend(loads(response_obj))
+				has_timeout_or_error = False
 				break
 			except TimeoutError:
 				pass
@@ -392,6 +465,8 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return items
 
 	def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id="", widget_id="", fit_type="fill"):
@@ -421,6 +496,7 @@ class EmbyRestClient():
 
 		logo_url = f"{self.server_root}/emby/Items/{item_id}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
 		im_tmp_path = ""
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = get(logo_url, timeout=(
@@ -462,15 +538,19 @@ class EmbyRestClient():
 							remove(im_tmp_path)
 						except:
 							pass
+					has_timeout_or_error = False
 					return result
 				else:
+					has_timeout_or_error = False
 					return None
 			except TimeoutError:
 				pass
 			except ReadTimeout:
 				pass
 			except Exception as ex:
-				print("EXEPTION: " + str(ex))
+				print(f"[E2EmbyClient][EmbyRestClient][getItemImage] Unknown error: {ex}")
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return None
 
 	def getPersonImage(self, person_name, logo_tag, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, req_width=-1, req_height=-1, widget_id=""):
@@ -491,18 +571,17 @@ class EmbyRestClient():
 
 		encoded = quote(person_name)
 		logo_url = f"{self.server_root}/emby/Persons/{encoded}/Images/{image_type}?tag={logo_tag}&quality=60&format={format}{addon}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(logo_url, timeout=(
-					config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(logo_url, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
 					if config.plugins.e2embyclient.thumbcache_loc.value == "off":
 						im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{logo_tag}.{format}"
 					else:
 						im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{logo_tag}.{format}"
 					if req_width > 0 and req_height > 0:
-						crop_image_from_bytes(
-							response.content, req_width, req_height, im_tmp_path)
+						crop_image_from_bytes(response.content, req_width, req_height, im_tmp_path)
 					else:
 						with open(im_tmp_path, "wb") as f:
 							f.write(response.content)
@@ -512,22 +591,29 @@ class EmbyRestClient():
 							remove(im_tmp_path)
 						except:
 							pass
+					has_timeout_or_error = False
 					return pix
+				has_timeout_or_error = False
+				break
 			except TimeoutError:
 				pass
 			except ReadTimeout:
 				pass
 			except:
 				pass
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return None
 
 	def sendWatched(self, item):
 		item_id = item.get("Id")
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayedItems/{item_id}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				has_timeout_or_error = False
 				return True, True
 			except TimeoutError:
 				pass
@@ -535,15 +621,19 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return False, False
 
 	def sendUnWatched(self, item):
 		item_id = item.get("Id")
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/PlayedItems/{item_id}/Delete"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				has_timeout_or_error = False
 				return True, False
 			except TimeoutError:
 				pass
@@ -551,15 +641,19 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return False, False
 
 	def sendFavorite(self, item):
 		item_id = item.get("Id")
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/FavoriteItems/{item_id}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				has_timeout_or_error = False
 				return True, True
 			except TimeoutError:
 				pass
@@ -567,20 +661,26 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return False, False
 
 	def sendNotFavorite(self, item):
 		item_id = item.get("Id")
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/FavoriteItems/{item_id}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				delete(url, headers=headers, timeout=config.plugins.e2embyclient.con_timeout.value)
+				has_timeout_or_error = False
 				return True, False
 			except ReadTimeout:
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return False, False
 
 	def updateTimeProgress(self, playSessionId, item_id, media_source_id, aIndex, sIndex, pos):
@@ -602,15 +702,19 @@ class EmbyRestClient():
 		if sIndex > -1:
 			post_data["SubtitleStreamIndex"] = sIndex
 		post_data["PositionTicks"] = pos
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				post(url, headers=headers, json=post_data, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				has_timeout_or_error = False
 			except TimeoutError:
 				pass
 			except ReadTimeout:
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 
 	def setPlaySessionParameters(self, playSessionId, item_id, media_source_id, defAudioIndex, defSubtitleIndex, playPos=-1, stopped=False):
 		headers = self.constructHeaders()
@@ -630,25 +734,30 @@ class EmbyRestClient():
 			post_data["PositionTicks"] = playPos
 		if defSubtitleIndex > -1:
 			post_data["SubtitleStreamIndex"] = defSubtitleIndex
-
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				post(url, headers=headers, json=post_data, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				has_timeout_or_error = False
 			except TimeoutError:
 				pass
 			except ReadTimeout:
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 
 	def getPlaySession(self, item_id, media_source_id, defAudioIndex, defSubtitleIndex):
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Items/{item_id}/PlaybackInfo?UserId={self.user_id}&IsPlayback=true&AutoOpenLiveStream=true&AudioStreamIndex={defAudioIndex}&SubtitleStreamIndex={defSubtitleIndex}&MediaSourceId={media_source_id}"
+		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
 				response = post(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				json = loads(response.content)
 				playSessionId = json.get("PlaySessionId")
+				has_timeout_or_error = False
 				return playSessionId
 			except TimeoutError:
 				pass
@@ -656,6 +765,8 @@ class EmbyRestClient():
 				pass
 			except:
 				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
 		return ""
 
 

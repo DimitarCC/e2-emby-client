@@ -9,6 +9,7 @@ from Screens.Screen import Screen, ScreenSummary
 from .EmbyRestClient import EmbyApiClient
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyItemFunctionButtons import EmbyItemFunctionButtons
+from .EmbyNotification import NotificationalScreen
 from .Variables import plugin_dir
 from . import _
 
@@ -20,9 +21,9 @@ EXIT_RESULT_EPISODE = 4
 EXIT_RESULT_SEASON = 5
 
 
-class EmbyItemViewBase(Screen):
+class EmbyItemViewBase(NotificationalScreen):
 	def __init__(self, session, item, backdrop=None, logo=None):
-		Screen.__init__(self, session)
+		NotificationalScreen.__init__(self, session)
 		self.setTitle(_("Emby") + item.get("Name"))
 		self.exitResult = None
 		self.init_loaded = False

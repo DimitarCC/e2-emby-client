@@ -21,6 +21,7 @@ from .EmbyBoxSetItemView import EmbyBoxSetItemView
 from .EmbySeriesItemView import EmbySeriesItemView
 from .EmbyLibraryHeaderButtons import EmbyLibraryHeaderButtons
 from .EmbyLibraryCharacterBar import EmbyLibraryCharacterBar
+from .EmbyNotification import NotificationalScreen
 from .Variables import plugin_dir, PAGERSUPPORT
 from . import _
 
@@ -29,7 +30,7 @@ MODE_RECOMMENDATIONS = 0
 MODE_LIST = 1
 
 
-class E2EmbyLibrary(Screen):
+class E2EmbyLibrary(NotificationalScreen):
 	pager = """<widget addon="Pager" connection="list" position="90,145+e-220+10" size="e-20-90,25" transparent="1" backgroundColor="background" zPosition="40" />"""
 	skin = [f"""<screen name="E2EmbyLibrary" position="fill">
 					<widget name="header" position="center,30" size="700,50" font="Bold;32" transparent="1" alphaBlend="1"/>
@@ -65,7 +66,7 @@ class E2EmbyLibrary(Screen):
 				</screen>"""]  # noqa: E124
 
 	def __init__(self, session, library):
-		Screen.__init__(self, session)
+		NotificationalScreen.__init__(self, session)
 		self.exitResult = 0
 		self.library = library
 		self.library_id = int(library.get("Id", "0"))
