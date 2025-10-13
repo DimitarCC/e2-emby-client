@@ -361,7 +361,12 @@ class EmbyPlayer(MoviePlayer):
 		try:
 			response = get(stream_url, timeout=5)
 			if response.status_code != 404:
-				subs_file = response.content.decode("utf-8")
+				intermediate_text = response.content.decode("utf-8", errors='replace')
+				try:
+					intermediate_bytes = intermediate_text.encode('latin1')
+					subs_file = intermediate_bytes.decode(config.plugins.e2embyclient.encodding_nonutf_subs.value)
+				except:
+					subs_file = intermediate_text
 				self.currentSubsList = TolerantDict(self.subs_parser.parse(subs_file))
 				return True
 		except:

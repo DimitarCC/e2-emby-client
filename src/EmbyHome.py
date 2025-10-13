@@ -40,7 +40,7 @@ class E2EmbyHome(NotificationalScreen):
 				<widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
 				<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
 				<widget name="subtitle" position="60,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
-				<widget name="infoline" position="60,240" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
+				<widget name="infoline" position="60,240" size="e-120,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 				<widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
 				<widget name="list_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 				<widget name="list_watching_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>

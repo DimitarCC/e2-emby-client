@@ -2,18 +2,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-19 11:50+0200\n"
+"POT-Creation-Date: 2025-10-13 17:59+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: jbleyel\n"
 "Language-Team: \n"
-"Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.7\n"
 
-#: ../src/EmbyInfoLine.py:168
+#: ../src/EmbyInfoLine.py:167
 #, python-format
 msgid "%d Movie"
 msgid_plural "%d Movies"
@@ -24,15 +24,15 @@ msgstr[1] "%d Filme"
 msgid "---"
 msgstr "---"
 
-#: ../src/plugin.py:15
+#: ../src/plugin.py:16
 msgid "A client for Emby server"
 msgstr "Ein Client für den Emby-Server"
 
-#: ../src/EmbySetup.py:61 ../src/EmbySetup.py:76
+#: ../src/EmbySetup.py:63 ../src/EmbySetup.py:78
 msgid "Add"
 msgstr "Hinzufügen"
 
-#: ../src/EmbySetup.py:65
+#: ../src/EmbySetup.py:67
 msgid "Add Connection"
 msgstr "Verbindung hinzufügen"
 
@@ -52,11 +52,11 @@ msgstr "Zeige in Erweiterungen"
 msgid "Add to Main Menu"
 msgstr "Zeige im Hauptmenü"
 
-#: ../src/EmbyLibraryScreen.py:465
+#: ../src/EmbyLibraryScreen.py:476
 msgid "Because you liked"
 msgstr "Weil du es magst"
 
-#: ../src/EmbyLibraryScreen.py:463
+#: ../src/EmbyLibraryScreen.py:474
 msgid "Because you recently watched"
 msgstr "Weil du es kürzlich gesehen hast"
 
@@ -68,7 +68,7 @@ msgstr "Besetzung/Team"
 msgid "Chapters"
 msgstr "Kapitel"
 
-#: ../src/EmbyHome.py:107
+#: ../src/EmbyHome.py:108
 msgid "Close"
 msgstr "Schließen"
 
@@ -88,11 +88,11 @@ msgstr "Verbindungszeitüberschreitung"
 msgid "Connections"
 msgstr "Verbindungen"
 
-#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:102
+#: ../src/EmbyHome.py:102 ../src/EmbyLibraryScreen.py:103
 msgid "Continue watching"
 msgstr "Weitersehen"
 
-#: ../src/plugin.py:14 ../src/plugin.py:59
+#: ../src/plugin.py:15 ../src/plugin.py:68
 msgid "E2Emby"
 msgstr "E2Emby"
 
@@ -104,18 +104,26 @@ msgstr "E2EmbyClient-Verbindung"
 msgid "E2EmbyClient Setup"
 msgstr "E2EmbyClient-Einrichtung"
 
-#: ../src/EmbySetup.py:73
+#: ../src/plugin.py:57
+msgid "E2EmbyClient works only with FHD (1920x1080) skins. Please load FHD skin."
+msgstr ""
+
+#: ../src/EmbySetup.py:75
 msgid "Edit"
 msgstr "Bearbeiten"
 
-#: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:56
-#: ../src/EmbyItemViewBase.py:26 ../src/EmbyMovieItemView.py:40
+#: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:57
+#: ../src/EmbyItemViewBase.py:27 ../src/EmbyMovieItemView.py:40
 msgid "Emby"
 msgstr "Emby"
 
-#: ../src/EmbyLibraryScreen.py:84
+#: ../src/EmbyLibraryScreen.py:85
 msgid "Emby Library"
 msgstr "Emby-Bibliothek"
+
+#: ../src/setup.xml
+msgid "Encodding for non UTF-8 subtitles"
+msgstr ""
 
 #: ../src/HelperFunctions.py:43
 msgid "Ends at"
@@ -125,15 +133,15 @@ msgstr "Endet um"
 msgid "Extras"
 msgstr "Extras"
 
-#: ../src/EmbyItemFunctionButtons.py:184
+#: ../src/EmbyItemFunctionButtons.py:186
 msgid "Favorite"
 msgstr "Favorit"
 
-#: ../src/EmbyLibraryScreen.py:467
+#: ../src/EmbyLibraryScreen.py:478
 msgid "From director"
 msgstr "Von Regiseur"
 
-#: ../src/EmbyItemFunctionButtons.py:186
+#: ../src/EmbyItemFunctionButtons.py:188
 msgid "Go to series"
 msgstr "Gehe zu Serien"
 
@@ -145,7 +153,7 @@ msgstr "Enthalten in Collections"
 msgid "Movies"
 msgstr "Filme"
 
-#: ../src/EmbyHome.py:99
+#: ../src/EmbyHome.py:100
 msgid "My Media"
 msgstr "Meine Medien"
 
@@ -165,19 +173,19 @@ msgstr "Passwort"
 msgid "Password for the Connection."
 msgstr "Passwort für die Verbindung."
 
-#: ../src/plugin.py:31
+#: ../src/plugin.py:32
 msgid "Persistent thumbnail cache in"
 msgstr "Permanenter Vorschaubilder Cache in"
 
-#: ../src/EmbyItemFunctionButtons.py:176
+#: ../src/EmbyItemFunctionButtons.py:178
 msgid "Play"
 msgstr "Abspielen"
 
-#: ../src/EmbyItemFunctionButtons.py:173
+#: ../src/EmbyItemFunctionButtons.py:175
 msgid "Play from start"
 msgstr "Von Anfang an abspielen"
 
-#: ../src/EmbyItemFunctionButtons.py:180
+#: ../src/EmbyItemFunctionButtons.py:182
 msgid "Play trailer"
 msgstr "Trailer abspielen"
 
@@ -198,19 +206,19 @@ msgid "Port of the Connection."
 msgstr "Port der Verbindung."
 
 #. TRANSLATORS: "Present" means the show is still running
-#: ../src/EmbyInfoLine.py:152
+#: ../src/EmbyInfoLine.py:151
 msgid "Present"
 msgstr "Läuft"
 
-#: ../src/EmbyLibraryScreen.py:104
+#: ../src/EmbyLibraryScreen.py:105
 msgid "Recently added"
 msgstr "Kürzlich hinzugefügt"
 
-#: ../src/EmbyHome.py:103
+#: ../src/EmbyHome.py:104
 msgid "Recently added movies"
 msgstr "Kürzlich hinzugefügte Filme"
 
-#: ../src/EmbyHome.py:105
+#: ../src/EmbyHome.py:106
 msgid "Recently added tvshows"
 msgstr "Kürzlich hinzugefügte Serien"
 
@@ -219,15 +227,15 @@ msgstr "Kürzlich hinzugefügte Serien"
 msgid "Recommendations"
 msgstr "Empfehlungen"
 
-#: ../src/EmbySetup.py:62 ../src/EmbySetup.py:74
+#: ../src/EmbySetup.py:64 ../src/EmbySetup.py:76
 msgid "Remove"
 msgstr "Entfernen"
 
-#: ../src/EmbySetup.py:66
+#: ../src/EmbySetup.py:68
 msgid "Remove Connection"
 msgstr "Verbindung entfernen"
 
-#: ../src/EmbyItemFunctionButtons.py:172
+#: ../src/EmbyItemFunctionButtons.py:174
 msgid "Resume"
 msgstr "Fortsetzen"
 
@@ -235,11 +243,11 @@ msgstr "Fortsetzen"
 msgid "Root URL address of the Connection."
 msgstr "Basis-URL-Adresse der Verbindung."
 
-#: ../src/EmbyInfoLine.py:163 ../src/EmbySeriesItemView.py:69
+#: ../src/EmbyInfoLine.py:162 ../src/EmbySeriesItemView.py:69
 msgid "Season"
 msgstr "Staffel"
 
-#: ../src/EmbyInfoLine.py:165
+#: ../src/EmbyInfoLine.py:164
 msgid "Seasons"
 msgstr "Staffeln"
 
@@ -247,7 +255,7 @@ msgstr "Staffeln"
 msgid "Series"
 msgstr "Serien"
 
-#: ../src/EmbySetup.py:67
+#: ../src/EmbySetup.py:69
 msgid "Setup Actions"
 msgstr "Einrichtungsaktionen"
 
@@ -258,6 +266,10 @@ msgstr "Ähnlich"
 #: ../src/EmbySeriesItemView.py:67
 msgid "Specials"
 msgstr "Specials"
+
+#: ../src/setup.xml
+msgid "Specify encodding that will be used to decode subtiles that are not UTF-8."
+msgstr ""
 
 #: ../src/setup.xml
 msgid "Specify the connection retries count."
@@ -283,9 +295,14 @@ msgstr "Auswahl des Player Systems."
 msgid "Specify where thumbnail cache will be storred."
 msgstr "Definiere Ziel für Vorschaubilder Cache."
 
-#: ../src/plugin.py:33
+#: ../src/plugin.py:34
 msgid "Temporary thumbnail cache"
 msgstr "Temporärer Vorschaubilder Cache"
+
+#: ../src/EmbyNotification.py:90
+#, python-format
+msgid "The connection with server has been lost after %d attempts"
+msgstr ""
 
 #: ../src/setup.xml
 msgid "Thumb cache location"
@@ -315,14 +332,14 @@ msgstr "Benutzer"
 msgid "User for the Connection."
 msgstr "Benutzer für die Verbindung."
 
-#: ../src/EmbyItemFunctionButtons.py:182
+#: ../src/EmbyItemFunctionButtons.py:184
 msgid "Watched"
 msgstr "Gesehen"
 
-#: ../src/EmbyLibraryScreen.py:469
+#: ../src/EmbyLibraryScreen.py:480
 msgid "With actor"
 msgstr "Mit Darsteller"
 
-#: ../src/plugin.py:34
+#: ../src/plugin.py:35
 msgid "off"
 msgstr "AUS"

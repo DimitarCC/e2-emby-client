@@ -36,6 +36,8 @@ def initConfig():
 	if isServiceAppInstalled:
 		play_system_choices.append(("5002", "Exteplayer3"))
 	config.plugins.e2embyclient.play_system = ConfigSelection(default="4097", choices=play_system_choices)
+	subs_encoddings_choices = [("latin1", "Latin"), ("windows-1251", "Cyrillic"), ("Shift_JIS", "Japanese/日本語"), ("Big5", "Chinese (Traditional)/繁體中文"), ("GB2312", "Chinese (Simplified)/简体中文"), ("Windows-1256", "Arabic/العربية")]
+	config.plugins.e2embyclient.encodding_nonutf_subs = ConfigSelection(default="latin1", choices=subs_encoddings_choices)
 	for idx in range(config.plugins.e2embyclient.connectioncount.value):
 		initConnection(idx)
 

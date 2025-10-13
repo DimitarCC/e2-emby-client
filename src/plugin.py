@@ -1,10 +1,11 @@
+from enigma import getDesktop
 from os import makedirs
 from os.path import exists, normpath
 from Components.config import config, ConfigSelection
 from Components.Harddisk import harddiskmanager
 from Plugins.Plugin import PluginDescriptor
 
-from .EmbySetup import initConfig
+from .EmbySetup import EmbySetup, initConfig
 from .EmbyHome import E2EmbyHome
 from .Variables import EMBY_THUMB_CACHE_DIR
 from . import _
@@ -50,6 +51,14 @@ MountChoices()
 
 
 def main(session, **kwargs):
+	screenwidth = getDesktop(0).size().width()
+	if screenwidth < 1920:
+		from Screens.MessageBox import MessageBox
+		session.open(MessageBox, _("E2EmbyClient works only with FHD (1920x1080) skins. Please load FHD skin."), MessageBox.TYPE_ERROR, simple=True, timeout=20)
+		return
+	if not config.plugins.e2embyclient.connectioncount.value:
+		session.open(EmbySetup)
+		return
 	session.open(E2EmbyHome)
 
 

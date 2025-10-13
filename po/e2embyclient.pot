@@ -8,17 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-19 11:50+0200\n"
+"POT-Creation-Date: 2025-10-13 17:59+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../src/EmbyInfoLine.py:168
+#: ../src/EmbyInfoLine.py:167
 #, python-format
 msgid "%d Movie"
 msgid_plural "%d Movies"
@@ -29,15 +28,15 @@ msgstr[1] ""
 msgid "---"
 msgstr ""
 
-#: ../src/plugin.py:15
+#: ../src/plugin.py:16
 msgid "A client for Emby server"
 msgstr ""
 
-#: ../src/EmbySetup.py:61 ../src/EmbySetup.py:76
+#: ../src/EmbySetup.py:63 ../src/EmbySetup.py:78
 msgid "Add"
 msgstr ""
 
-#: ../src/EmbySetup.py:65
+#: ../src/EmbySetup.py:67
 msgid "Add Connection"
 msgstr ""
 
@@ -57,11 +56,11 @@ msgstr ""
 msgid "Add to Main Menu"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:465
+#: ../src/EmbyLibraryScreen.py:476
 msgid "Because you liked"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:463
+#: ../src/EmbyLibraryScreen.py:474
 msgid "Because you recently watched"
 msgstr ""
 
@@ -73,7 +72,7 @@ msgstr ""
 msgid "Chapters"
 msgstr ""
 
-#: ../src/EmbyHome.py:107
+#: ../src/EmbyHome.py:108
 msgid "Close"
 msgstr ""
 
@@ -93,11 +92,11 @@ msgstr ""
 msgid "Connections"
 msgstr ""
 
-#: ../src/EmbyHome.py:101 ../src/EmbyLibraryScreen.py:102
+#: ../src/EmbyHome.py:102 ../src/EmbyLibraryScreen.py:103
 msgid "Continue watching"
 msgstr ""
 
-#: ../src/plugin.py:14 ../src/plugin.py:59
+#: ../src/plugin.py:15 ../src/plugin.py:68
 msgid "E2Emby"
 msgstr ""
 
@@ -109,17 +108,25 @@ msgstr ""
 msgid "E2EmbyClient Setup"
 msgstr ""
 
-#: ../src/EmbySetup.py:73
+#: ../src/plugin.py:57
+msgid "E2EmbyClient works only with FHD (1920x1080) skins. Please load FHD skin."
+msgstr ""
+
+#: ../src/EmbySetup.py:75
 msgid "Edit"
 msgstr ""
 
-#: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:56
-#: ../src/EmbyItemViewBase.py:26 ../src/EmbyMovieItemView.py:40
+#: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:57
+#: ../src/EmbyItemViewBase.py:27 ../src/EmbyMovieItemView.py:40
 msgid "Emby"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:84
+#: ../src/EmbyLibraryScreen.py:85
 msgid "Emby Library"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Encodding for non UTF-8 subtitles"
 msgstr ""
 
 #: ../src/HelperFunctions.py:43
@@ -130,15 +137,15 @@ msgstr ""
 msgid "Extras"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:184
+#: ../src/EmbyItemFunctionButtons.py:186
 msgid "Favorite"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:467
+#: ../src/EmbyLibraryScreen.py:478
 msgid "From director"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:186
+#: ../src/EmbyItemFunctionButtons.py:188
 msgid "Go to series"
 msgstr ""
 
@@ -150,7 +157,7 @@ msgstr ""
 msgid "Movies"
 msgstr ""
 
-#: ../src/EmbyHome.py:99
+#: ../src/EmbyHome.py:100
 msgid "My Media"
 msgstr ""
 
@@ -170,19 +177,19 @@ msgstr ""
 msgid "Password for the Connection."
 msgstr ""
 
-#: ../src/plugin.py:31
+#: ../src/plugin.py:32
 msgid "Persistent thumbnail cache in"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:176
+#: ../src/EmbyItemFunctionButtons.py:178
 msgid "Play"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:173
+#: ../src/EmbyItemFunctionButtons.py:175
 msgid "Play from start"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:180
+#: ../src/EmbyItemFunctionButtons.py:182
 msgid "Play trailer"
 msgstr ""
 
@@ -203,19 +210,19 @@ msgid "Port of the Connection."
 msgstr ""
 
 #. TRANSLATORS: "Present" means the show is still running
-#: ../src/EmbyInfoLine.py:152
+#: ../src/EmbyInfoLine.py:151
 msgid "Present"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:104
+#: ../src/EmbyLibraryScreen.py:105
 msgid "Recently added"
 msgstr ""
 
-#: ../src/EmbyHome.py:103
+#: ../src/EmbyHome.py:104
 msgid "Recently added movies"
 msgstr ""
 
-#: ../src/EmbyHome.py:105
+#: ../src/EmbyHome.py:106
 msgid "Recently added tvshows"
 msgstr ""
 
@@ -224,15 +231,15 @@ msgstr ""
 msgid "Recommendations"
 msgstr ""
 
-#: ../src/EmbySetup.py:62 ../src/EmbySetup.py:74
+#: ../src/EmbySetup.py:64 ../src/EmbySetup.py:76
 msgid "Remove"
 msgstr ""
 
-#: ../src/EmbySetup.py:66
+#: ../src/EmbySetup.py:68
 msgid "Remove Connection"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:172
+#: ../src/EmbyItemFunctionButtons.py:174
 msgid "Resume"
 msgstr ""
 
@@ -240,11 +247,11 @@ msgstr ""
 msgid "Root URL address of the Connection."
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:163 ../src/EmbySeriesItemView.py:69
+#: ../src/EmbyInfoLine.py:162 ../src/EmbySeriesItemView.py:69
 msgid "Season"
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:165
+#: ../src/EmbyInfoLine.py:164
 msgid "Seasons"
 msgstr ""
 
@@ -252,7 +259,7 @@ msgstr ""
 msgid "Series"
 msgstr ""
 
-#: ../src/EmbySetup.py:67
+#: ../src/EmbySetup.py:69
 msgid "Setup Actions"
 msgstr ""
 
@@ -262,6 +269,10 @@ msgstr ""
 
 #: ../src/EmbySeriesItemView.py:67
 msgid "Specials"
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Specify encodding that will be used to decode subtiles that are not UTF-8."
 msgstr ""
 
 #: ../src/setup.xml
@@ -288,8 +299,13 @@ msgstr ""
 msgid "Specify where thumbnail cache will be storred."
 msgstr ""
 
-#: ../src/plugin.py:33
+#: ../src/plugin.py:34
 msgid "Temporary thumbnail cache"
+msgstr ""
+
+#: ../src/EmbyNotification.py:90
+#, python-format
+msgid "The connection with server has been lost after %d attempts"
 msgstr ""
 
 #: ../src/setup.xml
@@ -320,14 +336,14 @@ msgstr ""
 msgid "User for the Connection."
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:182
+#: ../src/EmbyItemFunctionButtons.py:184
 msgid "Watched"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:469
+#: ../src/EmbyLibraryScreen.py:480
 msgid "With actor"
 msgstr ""
 
-#: ../src/plugin.py:34
+#: ../src/plugin.py:35
 msgid "off"
 msgstr ""

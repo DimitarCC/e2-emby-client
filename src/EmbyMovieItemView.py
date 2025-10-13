@@ -19,7 +19,7 @@ class EmbyMovieItemView(EmbyItemView):
 					<widget name="backdrop" position="0,0" size="e,e" alphatest="blend" zPosition="-3" scaleFlags="moveRightTop"/>
 					<widget name="title_logo" position="60,60" size="924,80" alphatest="blend"/>
 					<widget name="title" position="60,50" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
-					<widget name="infoline" position="60,160" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1"/>
+					<widget name="infoline" position="60,160" size="e-120,60" font="Bold;32" fontAdditional="Bold;28" transparent="1"/>
 					<widget name="tagline" position="60,230" size="1400,50" alphatest="blend" font="Bold;42" foregroundColor="#00ccac68" transparent="1" shadowColor="black" shadowOffset="-1,-1"/>
 					<widget name="plot" position="60,230" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="f_buttons" position="60,480" size="924,65" font="Regular;26" transparent="1"/>

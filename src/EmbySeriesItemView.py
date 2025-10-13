@@ -21,7 +21,7 @@ class EmbySeriesItemView(EmbyItemView):
 					<widget name="backdrop" position="0,0" size="e,e" alphatest="blend" zPosition="-3" scaleFlags="moveRightTop"/>
 					<widget name="title_logo" position="60,60" size="924,80" alphatest="blend"/>
 					<widget name="title" position="60,50" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
-					<widget name="infoline" position="60,160" size="1200,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
+					<widget name="infoline" position="60,160" size="e-120,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 					<widget name="plot" position="60,230" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="f_buttons" position="60,440" size="924,65" font="Regular;32" transparent="1"/>
 					<widget name="seasons_list" position="50,560" size="5*200,60" itemWidth="200" font="Regular;28" transparent="1"/>
