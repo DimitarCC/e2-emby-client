@@ -499,8 +499,7 @@ class EmbyRestClient():
 		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:
-				response = get(logo_url, timeout=(
-					config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response = get(logo_url, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 				if response.status_code != 404:
 					filename = logo_tag
 					if orig_image_type == "Chapter":
@@ -518,6 +517,13 @@ class EmbyRestClient():
 					else:
 						with open(im_tmp_path, "wb") as f:
 							f.write(response.content)
+
+					if config.plugins.e2embyclient.storeposter.value and image_type == "Backdrop":
+						poster_url = f"{self.server_root}/emby/Items/{item_id}/Images/Primary?tag={logo_tag}&quality=60&format=jpg"
+						response_poster = get(poster_url, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+						if response_poster.status_code != 404:
+							with open(f"/tmp{EMBY_THUMB_CACHE_DIR}/poster.png", "wb") as f:
+								f.write(response_poster.content)
 
 					if alpha_channel:
 						im = Image.open(im_tmp_path).convert("RGBA")
