@@ -10,7 +10,6 @@
 		<item level="0" text="---"></item>
 		<item level="0" text="Thumb cache location" description="Specify where thumbnail cache will be storred.">config.plugins.e2embyclient.thumbcache_loc</item>
 		<item level="0" text="UI scroll delay" description="Specify the delay between selection changed events.">config.plugins.e2embyclient.changedelay</item>
-		<item level="0" text="Load poster for use with external plugins" description="Load poster in /tmp/emby/.... so to be able to be used from external plugins like LCD4Linux.">config.plugins.e2embyclient.storeposter</item>
 		<item level="0" text="Add to Main Menu" description="Add E2EmbyClient to the Main Menu list of options.">config.plugins.e2embyclient.add_to_mainmenu</item>
 		<item level="0" text="Add to Extensions Menu" description="Add E2EmbyClient to the Extensions Menu list of options.">config.plugins.e2embyclient.add_to_extensionmenu</item>
 		<item level="0" text="---"></item>

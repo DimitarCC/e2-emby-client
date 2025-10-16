@@ -10,26 +10,32 @@ from enigma import eTimer, iPlayableService, eServiceReference
 from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
 from Components.config import config
 from Components.Label import Label
+from Components.Pixmap import Pixmap
 from Components.ServiceEventTracker import ServiceEventTracker
 from Components.Sources.Progress import Progress
 from Components.Sources.StaticText import StaticText
 from Screens.AudioSelection import AudioSelection
 from Screens.InfoBar import MoviePlayer
+from Tools.LoadPixmap import LoadPixmap
 
+from .EmbyInfoLine import EmbyInfoLine
 from .EmbyList import EmbyList
 from .EmbyPlayerInfobarInfo import EmbyPlayerInfobarInfo
 from .EmbyRestClient import EmbyApiClient
 from .HelperFunctions import convert_ticks_to_time
 from .subrip import SubRipParser
 from .TolerantDict import TolerantDict
-from .Variables import SUBTITLE_TUPLE_SIZE
+from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR
 
 
 class EmbyPlayer(MoviePlayer):
 	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="#ff000000">
 					<widget name="info_line" position="240,954" size="e-40-240,45" font="Regular; 35" fontAdditional="Bold;24" transparent="1" zPosition="5"/>
 					<widget name="info_bkg" backgroundColor="#10111111" position="-2,540" zPosition="-1" size="e+4,315" widgetBorderWidth="1" widgetBorderColor="#444444" />
+		 			<widget name="poster" backgroundColor="#10111111" position="30,557" zPosition="2" size="187,280" cornerRadius="6" widgetBorderWidth="1" widgetBorderColor="#444444" scale="1" />
 					<widget name="list_chapters" position="35,560" size="e-70,310" iconWidth="340" iconHeight="188" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
+		 			<widget name="info_panel_line" position="275,560" size="e-340,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
+					<widget name="plot" position="275,630" size="e-340,230" alphatest="blend" font="Regular;30" transparent="1"/>
 					<eLabel backgroundColor="#10111111" position="60,900" zPosition="-1" size="e-120,115" cornerRadius="8" widgetBorderWidth="1" widgetBorderColor="#444444" />
 					<widget name="statusicon" position="120,935" zPosition="3" size="48,48" scale="1" pixmaps="icons/pvr/play.svg,icons/pvr/pause.svg,icons/pvr/stop.svg,icons/pvr/ff.svg,icons/pvr/rew.svg,icons/pvr/slow.svg"/>
 					<widget name="speed" foregroundColor="white" halign="left" position="200,935" size="48,48" font="Bold; 24" transparent="1"/>
@@ -78,6 +84,12 @@ class EmbyPlayer(MoviePlayer):
 		self.currentSubPTS = -1
 		self.currentSubEndPTS = -1
 		self.selected_widget = None
+		self["poster"] = Pixmap()
+		self["poster"].hide()
+		self["info_panel_line"] = EmbyInfoLine(self)
+		self["info_panel_line"].hide()
+		self["plot"] = Label()
+		self["plot"].hide()
 		self["info_line"] = EmbyPlayerInfobarInfo(self)
 		self["list_chapters"] = EmbyList(type="chapters")
 		self["list_chapters"].hide()
@@ -108,7 +120,9 @@ class EmbyPlayer(MoviePlayer):
 		self.seek_timer.callback.append(self.onSeekRequest)
 		self.onProgressTimer()
 		self["info_line"].updateInfo(self.item, defaultAudioIndex, defaultSubtitleIndex)
+		self["info_panel_line"].updateInfo(self.item)
 		self.loadChapters()
+		self.info_shown = False
 		self["NumberSeekActions"] = NumberActionMap(["NumberActions"],
 		{
 			"1": self.numberSeek,
@@ -132,7 +146,11 @@ class EmbyPlayer(MoviePlayer):
 	def __onHide(self):
 		self["list_chapters"].hide()
 		self["info_bkg"].hide()
+		self["poster"].hide()
+		self["info_panel_line"].hide()
+		self["plot"].hide()
 		self.selected_widget = None
+		self.info_shown = False
 		self.supressChapterSelect = False
 
 	def loadChapters(self):
@@ -239,7 +257,27 @@ class EmbyPlayer(MoviePlayer):
 			self["list_chapters"].hide()
 
 	def showInfo(self):
-		self.showAfterSeek()
+		if self.selected_widget and self.selected_widget == "list_chapters":
+			self.__onHide()
+
+		if not self.info_shown:
+			self["poster"].show()
+			poster_path = f"/tmp{EMBY_THUMB_CACHE_DIR}/poster.jpg"
+			self["poster"].setPixmap(LoadPixmap(poster_path))
+			self["info_panel_line"].show()
+			self["plot"].text = self.item.get("Overview", "")
+			self["plot"].show()
+			self["info_bkg"].show()
+			self.showAfterSeek()
+			self.hideTimer.stop()
+			self.info_shown = True
+		else:
+			self["poster"].hide()
+			self["info_panel_line"].hide()
+			self["plot"].hide()
+			self["info_bkg"].hide()
+			self.info_shown = False
+			self.showAfterSeek()
 
 	def showNextPlaylist(self):
 		if self.selected_widget and self.selected_widget == "list_chapters":

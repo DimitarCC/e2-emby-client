@@ -21,7 +21,6 @@ def initConnection(index):
 def initConfig():
 	config.plugins.e2embyclient = ConfigSubsection()
 	config.plugins.e2embyclient.add_to_mainmenu = ConfigYesNo(default=False)
-	config.plugins.e2embyclient.storeposter = ConfigYesNo(default=False)
 	config.plugins.e2embyclient.add_to_extensionmenu = ConfigYesNo(default=False)
 	config.plugins.e2embyclient.conretries = ConfigInteger(default=5, limits=(5, 20))
 	config.plugins.e2embyclient.con_timeout = ConfigInteger(default=2, limits=(1, 20))

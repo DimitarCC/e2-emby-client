@@ -3,6 +3,7 @@ from os import remove, scandir
 from requests import get, post, delete
 from requests.exceptions import ReadTimeout
 from secrets import choice
+from shutil import copyfile
 from urllib.parse import quote
 
 from PIL import Image
@@ -518,11 +519,12 @@ class EmbyRestClient():
 						with open(im_tmp_path, "wb") as f:
 							f.write(response.content)
 
-					if config.plugins.e2embyclient.storeposter.value and image_type == "Backdrop":
+					if "Backdrop" in image_type:
+						copyfile(im_tmp_path, f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_orig.png")
 						poster_url = f"{self.server_root}/emby/Items/{item_id}/Images/Primary?tag={logo_tag}&quality=60&format=jpg"
 						response_poster = get(poster_url, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 						if response_poster.status_code != 404:
-							with open(f"/tmp{EMBY_THUMB_CACHE_DIR}/poster.png", "wb") as f:
+							with open(f"/tmp{EMBY_THUMB_CACHE_DIR}/poster.jpg", "wb") as f:
 								f.write(response_poster.content)
 
 					if alpha_channel:
