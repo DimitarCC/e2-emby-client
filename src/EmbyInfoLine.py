@@ -177,21 +177,20 @@ class EmbyInfoLine(GUIComponent):
 		return ""
 
 	def constructAudioLabel(self, streams):
-		dts_list = list(
-			filter(lambda track: track.get("Codec") == "dts", streams))
+		if not streams:
+			return None, None
+
+		dts_list = list(filter(lambda track: track.get("Codec") == "dts", streams))
 
 		if dts_list:
-			sorted_dts_list = sorted(
-				dts_list, key=lambda track: track.get("ChannelLayout"))
+			sorted_dts_list = sorted(dts_list, key=lambda track: track.get("ChannelLayout", ""))
 			dts_track = sorted_dts_list[-1]
-			return dts_track.get("Profile"), dts_track.get("ChannelLayout")
+			return dts_track.get("Profile"), dts_track.get("ChannelLayout", "")
 
-		dolby_list = list(filter(lambda track: track.get(
-			"Codec") in ["eac3", "ac3"], streams))
+		dolby_list = list(filter(lambda track: track.get("Codec") in ["eac3", "ac3"], streams))
 
 		if dolby_list:
-			sorted_dolby_list = sorted(
-				dolby_list, key=lambda track: track.get("ChannelLayout"))
+			sorted_dolby_list = sorted(dolby_list, key=lambda track: track.get("ChannelLayout", ""))
 			dolby_track = sorted_dolby_list[-1]
 			return "DOLBY", dolby_track.get("ChannelLayout", "").replace("stereo", "2.0")
 		return None, None
