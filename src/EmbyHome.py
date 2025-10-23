@@ -1,4 +1,5 @@
 from os.path import join
+from pathlib import Path
 from twisted.internet import threads
 from PIL import Image
 
@@ -24,7 +25,7 @@ from .EmbyBoxSetItemView import EmbyBoxSetItemView
 from .EmbySeriesItemView import EmbySeriesItemView
 from .EmbyItemViewBase import EXIT_RESULT_MOVIE, EXIT_RESULT_SERIES, EXIT_RESULT_EPISODE
 from .HelperFunctions import create_thumb_cache_dir, delete_thumb_cache_dir
-from .Variables import plugin_dir
+from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR
 from . import _
 
 current_thread = None
@@ -478,7 +479,9 @@ class E2EmbyHome(NotificationalScreen):
 		self.home_loaded = True
 
 	def __onClose(self):
-		pass
+		Path.unlink(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png", missing_ok=True)
+		Path.unlink(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_orig.png", missing_ok=True)
+		Path.unlink(f"/tmp{EMBY_THUMB_CACHE_DIR}/poster.jpg", missing_ok=True)
 
 	def loadEmbyList(self, widget, type, parent_ids=[]):
 		items = []
