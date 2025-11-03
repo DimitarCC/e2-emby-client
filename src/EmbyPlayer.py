@@ -28,6 +28,11 @@ from .TolerantDict import TolerantDict
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR
 from .Globals import IsPlayingFile
 
+try:
+    from yt_dlp import YoutubeDL
+except ImportError:
+    YoutubeDL = None
+
 
 class EmbyPlayer(MoviePlayer):
 	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="#ff000000">
@@ -45,13 +50,14 @@ class EmbyPlayer(MoviePlayer):
 					<widget source="progress" render="Progress" backgroundColor="#02333333" foregroundColor="#32772b" position="340,925" zPosition="2" size="e-260-340,12" transparent="1" cornerRadius="6"/>
 				</screen>"""]
 
-	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None):
+	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False):
 		IsPlayingFile = True
 		item_id = int(item.get("Id", "0"))
 		item_name = item.get("Name", "Stream")
 		media_sources = item.get("MediaSources")
 		ref = None
-		if media_sources:
+		play_session_id = ""
+		if media_sources and not is_trailer:
 			media_source = media_sources[0]
 			defaultAudioIndex = media_source.get("DefaultAudioStreamIndex", -1)
 			defaultSubtitleIndex = media_source.get("DefaultSubtitleStreamIndex", -1)
@@ -61,8 +67,24 @@ class EmbyPlayer(MoviePlayer):
 			directStreamUrl = f"/videos/{item_id}/original.{container}?DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
 			url = f"{EmbyApiClient.server_root}{directStreamUrl}"
 			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), item_name))
+		if is_trailer and YoutubeDL:
+			trailers = item.get("RemoteTrailers", [])
+			if trailers:
+				trailer = trailers[0]
+				url_trailer = trailer.get("Url", "").strip()
+				if url_trailer and "youtube" in url_trailer:
+					try:
+						ydl = YoutubeDL({"format": "b", "no_color": True, "usenetrc": True})
+						result = ydl.extract_info(url_trailer, download=False)
+						result = ydl.sanitize_info(result)
+						if result and result.get("url"):
+							url = result["url"].strip()
+							ref = eServiceReference("%s:0:1:%x:1010:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), f"Trailer - {item_name}"))
+					except Exception as e:
+						print(f" failed {e}")
 		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
 		self.session = session
+		self.is_trailer = is_trailer
 		AudioSelection.fillSubtitleExt = self.subtitleListIject
 		if self.onAudioSubTrackChanged not in AudioSelection.hooks:
 			AudioSelection.hooks.append(self.onAudioSubTrackChanged)
@@ -121,7 +143,10 @@ class EmbyPlayer(MoviePlayer):
 		self.seek_timer = eTimer()
 		self.seek_timer.callback.append(self.onSeekRequest)
 		self.onProgressTimer()
-		self["info_line"].updateInfo(self.item, defaultAudioIndex, defaultSubtitleIndex)
+		if is_trailer:
+			self["info_line"].updateInfo(self.item, -1, -1)
+		else:
+			self["info_line"].updateInfo(self.item, defaultAudioIndex, defaultSubtitleIndex)
 		self["info_panel_line"].updateInfo(self.item)
 		self.loadChapters()
 		self.info_shown = False
@@ -156,6 +181,8 @@ class EmbyPlayer(MoviePlayer):
 		self.supressChapterSelect = False
 
 	def loadChapters(self):
+		if self.is_trailer:
+			return
 		media_sources = self.item.get("MediaSources", [])
 		default_media_source = next((ms for ms in media_sources if ms.get("Type") == "Default"), None)
 		if default_media_source:
@@ -240,7 +267,7 @@ class EmbyPlayer(MoviePlayer):
 		return len(self.chapters) - 1  # Last chapter
 
 	def showChapters(self):
-		if self.chapters:
+		if self.chapters and not self.is_trailer:
 			list = []
 			i = 0
 			for ch in self.chapters:
@@ -259,6 +286,8 @@ class EmbyPlayer(MoviePlayer):
 			self["list_chapters"].hide()
 
 	def showInfo(self):
+		if self.is_trailer:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.__onHide()
 
@@ -383,9 +412,13 @@ class EmbyPlayer(MoviePlayer):
 				self["list_chapters"].instance.moveSelectionTo(cur_ch_index)
 
 	def updateEmbyProgress(self):
+		if self.is_trailer:
+			return
 		threads.deferToThread(self.updateEmbyProgressInternal, "TimeUpdate", self.current_pos)
 
 	def updateEmbyProgressInternal(self, event, pos=-1):
+		if self.is_trailer:
+			return
 		if pos == -1:
 			pos = self.getPosition()
 		ticks = int(pos) * 10_000_000
@@ -552,7 +585,10 @@ class EmbyPlayer(MoviePlayer):
 			self.curSubsIndex = -1
 		if old_subs_index != self.curSubsIndex:
 			threads.deferToThread(self.updateEmbyProgressInternal, "SubtitleTrackChange")
-		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
+		if self.is_trailer:
+			self["info_line"].updateInfo(self.item, -1, -1)
+		else:
+			self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 
 	def setAudioTrack(self, aIndex):
 		track = aIndex
@@ -587,10 +623,12 @@ class EmbyPlayer(MoviePlayer):
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
 
 	def __evServiceStart(self):
-		self.initSeekProcess()
+		if not self.is_trailer:
+			self.initSeekProcess()
 		if self.progress_timer:
 			self.progress_timer.start(1000)
-		self.emby_progress_timer.start(10000)
+		if not self.is_trailer:
+			self.emby_progress_timer.start(10000)
 
 	def __evServiceEnd(self):
 		self.currentSubPTS = -1
@@ -599,6 +637,8 @@ class EmbyPlayer(MoviePlayer):
 		if self.progress_timer:
 			self.progress_timer.stop()
 		self.checkSubs.stop()
+		if self.is_trailer:
+			return
 		last_play_pos = -1
 		if self.lastPos > 0:
 			last_play_pos = int(self.lastPos) * 10_000_000

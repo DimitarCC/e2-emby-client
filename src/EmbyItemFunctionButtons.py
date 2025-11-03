@@ -14,6 +14,11 @@ from .HelperFunctions import convert_ticks_to_time
 from .Variables import plugin_dir
 from . import _
 
+try:
+    from yt_dlp import YoutubeDL
+except ImportError:
+    YoutubeDL = None
+
 
 def playItem(selected_item, session, callback, startPos=0):
 	infobar = InfoBar.instance
@@ -23,11 +28,10 @@ def playItem(selected_item, session, callback, startPos=0):
 
 
 def playItemTrailer(selected_item, session, callback, startPos=0):
-	return
 	infobar = InfoBar.instance
 	if infobar:
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
-		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
+		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService, is_trailer=True)
 
 
 class EmbyItemFunctionButtons(GUIComponent):
