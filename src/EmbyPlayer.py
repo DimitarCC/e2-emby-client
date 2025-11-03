@@ -26,6 +26,7 @@ from .HelperFunctions import convert_ticks_to_time
 from .subrip import SubRipParser
 from .TolerantDict import TolerantDict
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR
+from .Globals import IsPlayingFile
 
 
 class EmbyPlayer(MoviePlayer):
@@ -45,6 +46,7 @@ class EmbyPlayer(MoviePlayer):
 				</screen>"""]
 
 	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None):
+		IsPlayingFile = True
 		item_id = int(item.get("Id", "0"))
 		item_name = item.get("Name", "Stream")
 		media_sources = item.get("MediaSources")
@@ -624,6 +626,7 @@ class EmbyPlayer(MoviePlayer):
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)
 
 	def leavePlayer(self):
+		IsPlayingFile = False
 		self.__evServiceEnd()
 		self.clearHooks()
 		self.handleLeave("quit")

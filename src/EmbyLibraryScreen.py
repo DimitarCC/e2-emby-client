@@ -162,10 +162,16 @@ class E2EmbyLibrary(NotificationalScreen):
 			self["header"].setItem(self.library)
 			threads.deferToThread(self.loadSuggestedTabItems)
 			threads.deferToThread(self.loadItems)
-			self["list"].hide()
-			self["charbar"].hide()
-			self["charbar"].enableSelection(False)
-			self["list"].toggleSelection(False)
+			if self.type != "boxsets":
+				self["list"].hide()
+				self["charbar"].hide()
+				self["charbar"].enableSelection(False)
+				self["list"].toggleSelection(False)
+			else:
+				self.mode = MODE_LIST
+				self.toggleSuggestionSectionVisibility(False)
+				self.toggleItemsSectionVisibility(True)
+				self.selected_widget = "list"
 
 	def __onLayoutFinished(self):
 		plot = self["plot"]
@@ -203,6 +209,8 @@ class E2EmbyLibrary(NotificationalScreen):
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.nextPage)
 
 	def menu(self):
+		if self.type == "boxsets":
+			return
 		if self.selected_widget == "charbar":
 			self["charbar"].enableSelection(False)
 		else:
@@ -253,10 +261,11 @@ class E2EmbyLibrary(NotificationalScreen):
 
 		current_widget_index = self.available_widgets.index(self.selected_widget) if self.selected_widget in self.available_widgets else -1
 		if (self.selected_widget == "list" and self["list"].getIsAtFirstRow()) or current_widget_index == 0:
-			self[self.selected_widget].toggleSelection(False)
-			self.last_selected_widget = self.selected_widget
-			self.selected_widget = "header"
-			self[self.selected_widget].setFocused(True)
+			if self.type != "boxsets":
+				self[self.selected_widget].toggleSelection(False)
+				self.last_selected_widget = self.selected_widget
+				self.selected_widget = "header"
+				self[self.selected_widget].setFocused(True)
 		else:
 			if self.selected_widget == "list":
 				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveUp)
@@ -404,7 +413,7 @@ class E2EmbyLibrary(NotificationalScreen):
 			threads.deferToThread(self.loadItems)
 
 	def loadItems(self):
-		items = EmbyApiClient.getItemsFromLibrary(self.library_id)
+		items = EmbyApiClient.getItemsFromLibrary(self.library_id, self.type)
 		list = []
 		if items:
 			i = 0

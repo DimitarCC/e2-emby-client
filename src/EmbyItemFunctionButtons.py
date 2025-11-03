@@ -22,6 +22,14 @@ def playItem(selected_item, session, callback, startPos=0):
 		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
 
 
+def playItemTrailer(selected_item, session, callback, startPos=0):
+	return
+	infobar = InfoBar.instance
+	if infobar:
+		LastService = session.nav.getCurrentServiceReferenceOriginal()
+		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
+
+
 class EmbyItemFunctionButtons(GUIComponent):
 	def __init__(self, screen):
 		GUIComponent.__init__(self)
@@ -120,7 +128,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		playItem(self.item, self.screen.session, self.playerExitCallback)
 
 	def playTrailer(self):
-		pass
+		playItemTrailer(self.item, self.screen.session, self.playerExitCallback)
 
 	def toggleWatched(self):
 		played = self.item.get("UserData", {}).get("Played", False)

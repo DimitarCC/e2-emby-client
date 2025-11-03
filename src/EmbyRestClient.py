@@ -412,11 +412,13 @@ class EmbyRestClient():
 			ShowEmbyTimeoutNotification()
 		return items
 
-	def getItemsFromLibrary(self, library_id):
+	def getItemsFromLibrary(self, library_id, library_type=None):
 		shouldShowBoxsets = self.userSettings.get(f"{library_id}-1-videos-groupItemsIntoCollections", "false") == "true"
 		items = []
 		headers = self.constructHeaders()
 		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series&ParentId={library_id}&GroupItemsIntoCollections={'true' if shouldShowBoxsets else 'false'}&Fields=SortName,PremiereDate,DateCreated"
+		if library_type and library_type == "boxsets":
+			url = f"{self.server_root}/emby/Users/{self.user_id}/Items?SortBy=SortName&SortOrder=Ascending&ParentId={library_id}"
 		has_timeout_or_error = True
 		for attempt in range(config.plugins.e2embyclient.conretries.value):
 			try:

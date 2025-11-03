@@ -7,6 +7,7 @@ from Tools.LoadPixmap import LoadPixmap
 
 from . import _
 from .Variables import plugin_dir
+from .Globals import IsPlayingFile
 
 
 notificationPopup = None
@@ -85,6 +86,8 @@ class NotificationalScreen(Screen):
 
 
 def ShowEmbyTimeoutNotification():
+	if IsPlayingFile:
+		return
 	exists = any(t[0] == "EmbyTimeout" for t in notifications)
 	if not exists:
 		notifications.append(("EmbyTimeout", EmbyNotification.EMBY_NOTIFICATION_TYPE_ERROR, _("The connection with server has been lost after %d attempts" % config.plugins.e2embyclient.conretries.value), 5000))
