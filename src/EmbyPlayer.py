@@ -28,11 +28,6 @@ from .TolerantDict import TolerantDict
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR
 from .Globals import IsPlayingFile
 
-try:
-    from yt_dlp import YoutubeDL
-except ImportError:
-    YoutubeDL = None
-
 
 class EmbyPlayer(MoviePlayer):
 	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="#ff000000">
@@ -50,7 +45,7 @@ class EmbyPlayer(MoviePlayer):
 					<widget source="progress" render="Progress" backgroundColor="#02333333" foregroundColor="#32772b" position="340,925" zPosition="2" size="e-260-340,12" transparent="1" cornerRadius="6"/>
 				</screen>"""]
 
-	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False):
+	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False, trailer_url=None):
 		IsPlayingFile = True
 		item_id = int(item.get("Id", "0"))
 		item_name = item.get("Name", "Stream")
@@ -67,21 +62,8 @@ class EmbyPlayer(MoviePlayer):
 			directStreamUrl = f"/videos/{item_id}/original.{container}?DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
 			url = f"{EmbyApiClient.server_root}{directStreamUrl}"
 			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), item_name))
-		if is_trailer and YoutubeDL:
-			trailers = item.get("RemoteTrailers", [])
-			if trailers:
-				trailer = trailers[0]
-				url_trailer = trailer.get("Url", "").strip()
-				if url_trailer and "youtube" in url_trailer:
-					try:
-						ydl = YoutubeDL({"format": "b", "no_color": True, "usenetrc": True})
-						result = ydl.extract_info(url_trailer, download=False)
-						result = ydl.sanitize_info(result)
-						if result and result.get("url"):
-							url = result["url"].strip()
-							ref = eServiceReference("%s:0:1:%x:1010:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), f"Trailer - {item_name}"))
-					except Exception as e:
-						print(f" failed {e}")
+		if is_trailer and trailer_url:
+			ref = eServiceReference("%s:0:1:%x:1010:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, trailer_url.replace(":", "%3a"), f"Trailer - {item_name}"))
 		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
 		self.session = session
 		self.is_trailer = is_trailer
@@ -144,7 +126,7 @@ class EmbyPlayer(MoviePlayer):
 		self.seek_timer.callback.append(self.onSeekRequest)
 		self.onProgressTimer()
 		if is_trailer:
-			self["info_line"].updateInfo(self.item, -1, -1)
+			self["info_line"].updateInfo(self.item, -1, -1, True)
 		else:
 			self["info_line"].updateInfo(self.item, defaultAudioIndex, defaultSubtitleIndex)
 		self["info_panel_line"].updateInfo(self.item)
@@ -404,7 +386,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def onProgressTimer(self):
 		curr_pos = self.getPosition()
-		if not self.skip_progress_update:
+		if not self.skip_progress_update or self.is_trailer:
 			self.setProgress(curr_pos if self.current_pos == -1 else self.current_pos)
 		if self.selected_widget == "list_chapters" and not self.supressChapterSelect:
 			cur_ch_index = self.find_current_chapter_index()
@@ -483,7 +465,10 @@ class EmbyPlayer(MoviePlayer):
 			self.selected_subtitle = (0, 0, 0, 0, "")
 			self.curSubsIndex = -1
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
-			self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
+			if self.is_trailer:
+				self["info_line"].updateInfo(self.item, -1, -1, True)
+			else:
+				self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 			return
 
 		self.enableSubtitle(None)
@@ -497,7 +482,10 @@ class EmbyPlayer(MoviePlayer):
 			self.selected_subtitle = subtitle
 			self.curSubsIndex = subtitle[3]
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
-			self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
+			if self.is_trailer:
+				self["info_line"].updateInfo(self.item, -1, -1, True)
+			else:
+				self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 		else:
 			pass  # TODO: add message, log, etc...
 
@@ -586,7 +574,7 @@ class EmbyPlayer(MoviePlayer):
 		if old_subs_index != self.curSubsIndex:
 			threads.deferToThread(self.updateEmbyProgressInternal, "SubtitleTrackChange")
 		if self.is_trailer:
-			self["info_line"].updateInfo(self.item, -1, -1)
+			self["info_line"].updateInfo(self.item, -1, -1, True)
 		else:
 			self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 
@@ -648,13 +636,15 @@ class EmbyPlayer(MoviePlayer):
 	def __playStateChanged(self, state):
 		playstateString = state[3]
 		if playstateString == '>':
-			threads.deferToThread(self.updateEmbyProgressInternal, "Unpause")
-			self.onAudioSubTrackChanged()
+			if not self.is_trailer:
+				threads.deferToThread(self.updateEmbyProgressInternal, "Unpause")
+				self.onAudioSubTrackChanged()
 			self.showAfterSeek()
 			self.progress_timer.start(1000)
 		elif playstateString == '||':
-			threads.deferToThread(self.updateEmbyProgressInternal, "Pause")
-			self.onAudioSubTrackChanged()
+			if not self.is_trailer:
+				threads.deferToThread(self.updateEmbyProgressInternal, "Pause")
+				self.onAudioSubTrackChanged()
 			self.progress_timer.stop()
 		elif playstateString == 'END':
 			self.__evServiceEnd()

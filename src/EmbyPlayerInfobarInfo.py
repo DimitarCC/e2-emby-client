@@ -18,6 +18,7 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 		self.item = {}
 		self.curAtrackIndex = 0
 		self.curSubsIndex = -1
+		self.is_trailer = False
 		self.font = gFont("Regular", 18)
 		self.fontAdditional = gFont("Regular", 18)
 		self.foreColorAdditional = 0xffffff
@@ -61,9 +62,10 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 		self.l.setOrientation(self.orientation)
 		return GUIComponent.applySkin(self, desktop, parent)
 
-	def updateInfo(self, item, aIndex, sIndex):
+	def updateInfo(self, item, aIndex, sIndex, is_trailer=False):
 		self.curAtrackIndex = aIndex
 		self.curSubsIndex = sIndex
+		self.is_trailer = is_trailer
 		self.item = item
 		l_list = []
 		l_list.append((item,))
@@ -89,6 +91,9 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 			title = f"{self.item.get("SeriesName", "")} • S{self.item.get("ParentIndexNumber", 0)}:E{self.item.get("IndexNumber", 0)} • {" ".join(self.item.get("Name", "").splitlines())}"
 		else:
 			title = " ".join(self.item.get("Name", "").splitlines())
+
+		if self.is_trailer:
+			return f"{title} - Trailer"
 		return title
 
 	def constructLabelBox(self, res, header, text, height, xPos, yPos, spacing=None, borderColor=0x757472, backColor=0x55111111, textColor=0xffffff):
@@ -167,23 +172,24 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 
 		title = self.getTitle()
 
-		mpaa = item.get("OfficialRating", None)
-		resString = self.constructVideoLabel()
-		alabel = self.constructAudioLabel()
-		slabel = self.constructSubtitleLabel()
+		if not self.is_trailer:
+			mpaa = item.get("OfficialRating", None)
+			resString = self.constructVideoLabel()
+			alabel = self.constructAudioLabel()
+			slabel = self.constructSubtitleLabel()
 
-		if resString:
-			xPos -= 20
-			xPos = self.constructLabelBox(res, "VIDEO  ", resString, height, xPos, yPos)
+			if resString:
+				xPos -= 20
+				xPos = self.constructLabelBox(res, "VIDEO  ", resString, height, xPos, yPos)
 
-		if alabel:
-			xPos = self.constructLabelBox(res, "AUDIO  ", alabel, height, xPos, yPos)
+			if alabel:
+				xPos = self.constructLabelBox(res, "AUDIO  ", alabel, height, xPos, yPos)
 
-		if slabel:
-			xPos = self.constructLabelBox(res, "CC  ", slabel, height, xPos, yPos)
+			if slabel:
+				xPos = self.constructLabelBox(res, "CC  ", slabel, height, xPos, yPos)
 
-		if mpaa:
-			xPos = self.constructLabelBox(res, None, mpaa, height, xPos, yPos)
+			if mpaa:
+				xPos = self.constructLabelBox(res, None, mpaa, height, xPos, yPos)
 
 		res.append(MultiContentEntryText(
 			pos=(0, 0), size=(xPos - 35, height),

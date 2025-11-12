@@ -1,12 +1,14 @@
 from twisted.internet import threads
 from enigma import eLabel, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
+from urllib.parse import quote
 
 from Components.GUIComponent import GUIComponent
 from Components.Label import Label
 from Components.MultiContent import MultiContentEntryPixmapAlphaBlend, MultiContentEntryText, MultiContentEntryRectangle
 from Screens.InfoBar import InfoBar
 from Tools.LoadPixmap import LoadPixmap
+from Tools.BoundFunction import boundFunction
 
 from .EmbyPlayer import EmbyPlayer
 from .EmbyRestClient import EmbyApiClient
@@ -28,10 +30,34 @@ def playItem(selected_item, session, callback, startPos=0):
 
 
 def playItemTrailer(selected_item, session, callback, startPos=0):
+	if YoutubeDL:
+		trailers = selected_item.get("RemoteTrailers", [])
+		if trailers:
+			trailer = trailers[0]
+			url_trailer = trailer.get("Url", "").strip()
+			if url_trailer and "youtube" in url_trailer:
+				threads.deferToThread(getYoutubePlaybleUrl, url_trailer).addCallback(boundFunction(openTrailerPlayer, selected_item, session, callback))
+
+
+def getYoutubePlaybleUrl(source_url):
+	url = ""
+	if source_url and "youtube" in source_url:
+		try:
+			ydl = YoutubeDL({"format": "b", "no_color": True, "usenetrc": True})
+			result = ydl.extract_info(source_url, download=False)
+			result = ydl.sanitize_info(result)
+			if result and result.get("url"):
+				url = quote(result["url"])
+		except Exception as e:
+			print(f" failed {e}")
+	return url
+
+
+def openTrailerPlayer(selected_item, session, callback, result):
 	infobar = InfoBar.instance
 	if infobar:
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
-		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService, is_trailer=True)
+		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=0, slist=infobar.servicelist, lastservice=LastService, is_trailer=True, trailer_url=result)
 
 
 class EmbyItemFunctionButtons(GUIComponent):
