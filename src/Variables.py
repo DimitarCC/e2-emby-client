@@ -23,4 +23,6 @@ plugin_dir = dirname(modules[__name__].__file__)
 EMBY_DATA_DIR = "/emby"
 EMBY_THUMB_CACHE_DIR = EMBY_DATA_DIR + "/thumbCache"
 
-SUBTITLE_TUPLE_SIZE = 6 if BoxInfo.getItem("distro") == "openatv" else 5
+DISTRO = BoxInfo.getItem("distro")
+
+SUBTITLE_TUPLE_SIZE = 6 if DISTRO == "openatv" else 5

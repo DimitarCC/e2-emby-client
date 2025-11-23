@@ -191,6 +191,7 @@ class E2EmbyHome(NotificationalScreen):
 		self.last_widget_info_load_success = None
 		if self.selected_widget == "list" and self[self.selected_widget].selectedIndex > 0:
 			self.clearInfoPane()
+		self.last_item_id = None
 		if self[self.selected_widget].selectedIndex > 0:
 			self.backdrop_pix = None
 			self["backdrop"].setPixmap(None)
@@ -200,7 +201,7 @@ class E2EmbyHome(NotificationalScreen):
 		self.last_widget_info_load_success = None
 		if self.selected_widget == "list" and self[self.selected_widget].selectedIndex < len(self[self.selected_widget].data) - 1:
 			self.clearInfoPane()
-
+		self.last_item_id = None
 		if self[self.selected_widget].selectedIndex < len(self[self.selected_widget].data) - 1:
 			self.backdrop_pix = None
 			self["backdrop"].setPixmap(None)
@@ -211,7 +212,7 @@ class E2EmbyHome(NotificationalScreen):
 		if current_widget_index == 0:
 			return
 		y = self.top_slot_y
-
+		self.last_item_id = None
 		prevWidgetName = self.availableWidgets[current_widget_index - 1]
 		prevItem = self.lists[prevWidgetName]
 		prevItem.move(40, y).visible(True).enableSelection(True)
@@ -236,6 +237,7 @@ class E2EmbyHome(NotificationalScreen):
 			self.selected_widget)
 		if current_widget_index == len(self.availableWidgets) - 1:
 			return
+		self.last_item_id = None
 		safe_index = min(current_widget_index + 1, len(self.availableWidgets))
 		for item in self.availableWidgets[:safe_index]:
 			self.lists[item].visible(False).enableSelection(False)
@@ -274,8 +276,10 @@ class E2EmbyHome(NotificationalScreen):
 			return
 		result = result[0]
 		if result == EXIT_RESULT_MOVIE:
+			self.last_item_id = None
 			threads.deferToThread(self.reloadMovieWidgets)
 		elif result in [EXIT_RESULT_SERIES, EXIT_RESULT_EPISODE]:
+			self.last_item_id = None
 			threads.deferToThread(self.reloadSeriesWidgets)
 
 	def reloadMovieWidgets(self):

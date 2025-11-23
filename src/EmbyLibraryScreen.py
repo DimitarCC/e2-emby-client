@@ -225,6 +225,7 @@ class E2EmbyLibrary(NotificationalScreen):
 	def left(self):
 		if self.selected_widget == "charbar" and self.mode == MODE_LIST:
 			return
+		self.last_item_id = None
 		if self.mode == MODE_LIST and self.selected_widget == "list" and self["list"].getIsAtFirstColumn():
 			self.selected_widget = "charbar"
 			self["list"].toggleSelection(False)
@@ -247,6 +248,7 @@ class E2EmbyLibrary(NotificationalScreen):
 			self["charbar"].enableSelection(False)
 			return
 
+		self.last_item_id = None
 		if self.selected_widget == "header":
 			self[self.selected_widget].moveNext()
 		else:
@@ -256,9 +258,10 @@ class E2EmbyLibrary(NotificationalScreen):
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
+
 		if self.selected_widget == "header":
 			return
-
+		self.last_item_id = None
 		current_widget_index = self.available_widgets.index(self.selected_widget) if self.selected_widget in self.available_widgets else -1
 		if (self.selected_widget == "list" and self["list"].getIsAtFirstRow()) or current_widget_index == 0:
 			if self.type != "boxsets":
@@ -291,6 +294,7 @@ class E2EmbyLibrary(NotificationalScreen):
 				self.onSelectedIndexChanged()
 
 	def down(self):
+		self.last_item_id = None
 		current_widget_index = self.available_widgets.index(self.selected_widget) if self.selected_widget in self.available_widgets else -1
 		if self.selected_widget == "header":
 			self[self.selected_widget].setFocused(False)
@@ -409,6 +413,7 @@ class E2EmbyLibrary(NotificationalScreen):
 		result = result[0]
 		self.exitResult = result
 		if result != 0:
+			self.last_item_id = None
 			threads.deferToThread(self.loadSuggestedTabItems)
 			threads.deferToThread(self.loadItems)
 

@@ -25,7 +25,7 @@ from .EmbyRestClient import EmbyApiClient
 from .HelperFunctions import convert_ticks_to_time
 from .subrip import SubRipParser
 from .TolerantDict import TolerantDict
-from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR
+from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
 from .Globals import IsPlayingFile
 
 
@@ -236,7 +236,8 @@ class EmbyPlayer(MoviePlayer):
 			self.doSeek(int(startPos) * 90000)
 			self.showAfterSeek()
 		else:
-			self.toggleShow()
+			if DISTRO != "openatv":
+				self.toggleShow()
 			MoviePlayer.okButton(self)
 
 	def find_current_chapter_index(self):
