@@ -225,7 +225,6 @@ class E2EmbyLibrary(NotificationalScreen):
 	def left(self):
 		if self.selected_widget == "charbar" and self.mode == MODE_LIST:
 			return
-		self.last_item_id = None
 		if self.mode == MODE_LIST and self.selected_widget == "list" and self["list"].getIsAtFirstColumn():
 			self.selected_widget = "charbar"
 			self["list"].toggleSelection(False)
@@ -248,7 +247,6 @@ class E2EmbyLibrary(NotificationalScreen):
 			self["charbar"].enableSelection(False)
 			return
 
-		self.last_item_id = None
 		if self.selected_widget == "header":
 			self[self.selected_widget].moveNext()
 		else:
@@ -261,7 +259,7 @@ class E2EmbyLibrary(NotificationalScreen):
 
 		if self.selected_widget == "header":
 			return
-		self.last_item_id = None
+
 		current_widget_index = self.available_widgets.index(self.selected_widget) if self.selected_widget in self.available_widgets else -1
 		if (self.selected_widget == "list" and self["list"].getIsAtFirstRow()) or current_widget_index == 0:
 			if self.type != "boxsets":
@@ -294,7 +292,6 @@ class E2EmbyLibrary(NotificationalScreen):
 				self.onSelectedIndexChanged()
 
 	def down(self):
-		self.last_item_id = None
 		current_widget_index = self.available_widgets.index(self.selected_widget) if self.selected_widget in self.available_widgets else -1
 		if self.selected_widget == "header":
 			self[self.selected_widget].setFocused(False)
@@ -413,7 +410,6 @@ class E2EmbyLibrary(NotificationalScreen):
 		result = result[0]
 		self.exitResult = result
 		if result != 0:
-			self.last_item_id = None
 			threads.deferToThread(self.loadSuggestedTabItems)
 			threads.deferToThread(self.loadItems)
 
@@ -429,6 +425,7 @@ class E2EmbyLibrary(NotificationalScreen):
 			self["list"].loadData(list)
 		self.list_data = list
 		self["charbar"].setList(list)
+		self.onSelectedIndexChanged()
 
 	def loadSuggestionTabbleItems(self):
 		if self.lists is None:
@@ -535,6 +532,7 @@ class E2EmbyLibrary(NotificationalScreen):
 			x = 40
 			self.lists[widget].move(x, y).visible(self.mode == MODE_RECOMMENDATIONS)
 			y += h + 40
+		self.onSelectedIndexChanged()
 
 	def loadSuggestedTabItems(self):
 		threads.deferToThread(self.loadSuggestionTabbleItems).addCallback(self.setWidgetsPosition)
@@ -634,8 +632,7 @@ class E2EmbyLibrary(NotificationalScreen):
 
 	def downloadCover(self, item_id, icon_img, orig_item_id):
 		try:
-			backdrop_pix = EmbyApiClient.getItemImage(
-				item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
+			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
 			if orig_item_id != self.last_item_id:
 				return
 			if backdrop_pix:
