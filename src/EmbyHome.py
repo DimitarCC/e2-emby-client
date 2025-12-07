@@ -287,7 +287,8 @@ class E2EmbyHome(NotificationalScreen):
 			self.loadEmbyList(self["list_watching"], "Resume")
 		if "list_recent_movies" in self.availableWidgets:
 			self.loadEmbyList(self["list_recent_movies"], "LastMovies", self.movie_libs_ids)
-		self.onSelectedIndexChanged()
+		if not self[self.selected_widget].isLibrary:
+			self.onSelectedIndexChanged()
 
 	def reloadSeriesWidgets(self):
 		self.last_widget_info_load_success = None
@@ -296,7 +297,8 @@ class E2EmbyHome(NotificationalScreen):
 			self.loadEmbyList(self["list_watching"], "Resume")
 		if "list_recent_tvshows" in self.availableWidgets:
 			self.loadEmbyList(self["list_recent_tvshows"], "LastSeries", self.tvshow_libs_ids)
-		self.onSelectedIndexChanged()
+		if not self[self.selected_widget].isLibrary:
+			self.onSelectedIndexChanged()
 
 	def downloadCover(self, item_id, icon_img, orig_item_id):
 		try:
@@ -335,15 +337,10 @@ class E2EmbyHome(NotificationalScreen):
 		if orig_item_id != self.last_item_id:
 			return
 
-		# if not isLib and self.last_item_id and orig_item_id == self.last_item_id:
-		#     return
-
-		# self.last_item_id = orig_item_id
 		item_id = orig_item_id
 
 		if isLib:
 			self.last_widget_info_load_success = widget
-			# self.clearInfoPane()
 
 			item = EmbyApiClient.getRandomItemFromLibrary(item_id, colType)
 			item_id = item.get("Id")

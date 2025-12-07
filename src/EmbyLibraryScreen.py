@@ -273,6 +273,7 @@ class E2EmbyLibrary(NotificationalScreen):
 			elif self.selected_widget == "charbar":
 				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveUp)
 			else:
+				self.last_item_id = None
 				current_widget_index = self.available_widgets.index(self.selected_widget)
 				y = self.top_pos
 
@@ -307,6 +308,7 @@ class E2EmbyLibrary(NotificationalScreen):
 			else:
 				if current_widget_index == len(self.available_widgets) - 1:
 					return
+				self.last_item_id = None
 				safe_index = min(current_widget_index + 1, len(self.available_widgets))
 				for item in self.available_widgets[:safe_index]:
 					self.lists[item].visible(False).enableSelection(False)
@@ -373,14 +375,10 @@ class E2EmbyLibrary(NotificationalScreen):
 				self.mode = MODE_RECOMMENDATIONS
 				self.toggleSuggestionSectionVisibility(True)
 				self.toggleItemsSectionVisibility(False)
-				# self.selected_widget = "list_watching"
-				# self[self.selected_widget].toggleSelection(True)
 			else:
 				self.mode = MODE_LIST
 				self.toggleSuggestionSectionVisibility(False)
 				self.toggleItemsSectionVisibility(True)
-				# self.selected_widget = "list"
-				# self[self.selected_widget].toggleSelection(True)
 		elif self.selected_widget == "charbar":
 			char = self[self.selected_widget].selectedItem
 			index = 0
@@ -446,7 +444,6 @@ class E2EmbyLibrary(NotificationalScreen):
 				if not self.selected_widget:
 					self.selected_widget = self.available_widgets[0]
 					self.lists[self.selected_widget].enableSelection(True)
-					# self.onSelectedIndexChanged()
 			else:
 				self.available_widgets.remove("list_watching")
 			is_visible = is_available and self.mode == MODE_RECOMMENDATIONS and self.selected_widget == "list_watching"
@@ -467,7 +464,6 @@ class E2EmbyLibrary(NotificationalScreen):
 				if not self.selected_widget:
 					self.selected_widget = self.available_widgets[0]
 					self.lists[self.selected_widget].enableSelection(True)
-					# self.onSelectedIndexChanged()
 			else:
 				self.available_widgets.remove("list_recent_added")
 
@@ -506,7 +502,6 @@ class E2EmbyLibrary(NotificationalScreen):
 						if not self.selected_widget:
 							self.selected_widget = self.available_widgets[0]
 							self.lists[self.selected_widget].enableSelection(True)
-							# self.onSelectedIndexChanged()
 					else:
 						self.available_widgets.remove(widget_name)
 
