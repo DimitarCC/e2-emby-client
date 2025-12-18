@@ -46,6 +46,7 @@ class EmbyPlayer(MoviePlayer):
 				</screen>"""]
 
 	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False, trailer_url=None):
+		global IsPlayingFile
 		IsPlayingFile = True
 		item_id = int(item.get("Id", "0"))
 		item_name = item.get("Name", "Stream")
@@ -74,6 +75,7 @@ class EmbyPlayer(MoviePlayer):
 		self.onHide.append(self.__onHide)
 		self.init_seek_to = startPos
 		self.curAudioIndex = -1
+		self.CurIndexEmbeddedSubs = -1
 		self.curSubsIndex = -1
 		self.firstSubIndex = -1
 		self.supressChapterSelect = False
@@ -150,7 +152,8 @@ class EmbyPlayer(MoviePlayer):
 			"ok": self.processItem,
 		}, -10)
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
-			iPlayableService.evStart: self.__evServiceStart, })
+			iPlayableService.evStart: self.__evServiceStart,
+			iPlayableService.evUpdatedInfo: self.__updatedInfoEmby})
 
 	def __onHide(self):
 		self["list_chapters"].hide()
@@ -458,7 +461,10 @@ class EmbyPlayer(MoviePlayer):
 	def checkPTSAndShowSub(self):
 		self.checkPTSAndShowSubBase()
 
-	def runSubtitles(self, subtitle):
+	def runSubtitles(self, subtitle, sindex=-1):
+		if not subtitle and sindex > -1:
+			return
+
 		if not subtitle:
 			self.checkSubs.stop()
 			self.currentSubPTS = -1
@@ -524,6 +530,7 @@ class EmbyPlayer(MoviePlayer):
 	def getSelectedAudioSubStreamFromEmby(self):
 		aIndex = 0
 		curAudioIndex = 0
+		sindex = -1
 		subtitle = None
 		item_id = int(self.item.get("Id", "0"))
 		media_sources = self.item.get("MediaSources")
@@ -549,8 +556,9 @@ class EmbyPlayer(MoviePlayer):
 						subtitle = (2, sindex + 1, 4, sub_index_emby, subtitle_obj.get("Language"), self.runSubtitles, subs_uri)
 					else:
 						subtitle = (2, sindex + 1, 4, sub_index_emby, subtitle_obj.get("Language"), "", self.runSubtitles, subs_uri)
+					sindex = -1
 
-		return aIndex, curAudioIndex, subtitle
+		return aIndex, curAudioIndex, subtitle, sindex
 
 	def onAudioSubTrackChanged(self):
 		service = self.session.nav.getCurrentService()
@@ -584,10 +592,18 @@ class EmbyPlayer(MoviePlayer):
 		if isinstance(track, int) and track > -1:
 			service = self.session.nav.getCurrentService()
 			audioTracks = service and service.audioTracks()
-			ref = self.session.nav.getCurrentServiceReferenceOriginal()
-			ref = ref and eServiceReference(ref)
 			if audioTracks.getNumberOfTracks() > track:
 				audioTracks.selectTrack(track)
+
+	def setSubtitleTrack(self):
+		if self.CurIndexEmbeddedSubs > -1:
+			service = self.session.nav.getCurrentService()
+			subtitle = service and service.subtitle()
+			subtitlelist = subtitle and subtitle.getSubtitleList()
+			subtitleTrack = subtitlelist[self.CurIndexEmbeddedSubs]
+			self.enableSubtitle(subtitleTrack)
+		elif self.curSubsIndex == -1:
+			self.enableSubtitle(None)
 
 	def setPlaySessionParameters(self, aIndex, sIndex, playPos=-1, stopped=False):
 		item_id = self.item.get("Id")
@@ -600,16 +616,21 @@ class EmbyPlayer(MoviePlayer):
 
 	def initSeekProcess(self):
 		init_play_pos = -1
-		audioIndex, curAudioIndex, subtitle = self.getSelectedAudioSubStreamFromEmby()
-		self.setAudioTrack(aIndex=audioIndex)
+		audioIndex, curAudioIndex, subtitle, sindex = self.getSelectedAudioSubStreamFromEmby()
 		self.curAudioIndex = curAudioIndex
-		self.runSubtitles(subtitle=subtitle)
-		self.curSubsIndex = subtitle and subtitle[3] or -1
+		self.setAudioTrack(aIndex=audioIndex)
+		self.runSubtitles(subtitle=subtitle, sindex=sindex)
+		if not subtitle and sindex > -1:
+			self.CurIndexEmbeddedSubs = sindex
+		self.curSubsIndex = subtitle and subtitle[3] or sindex
 		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 		if self.init_seek_to and self.init_seek_to > -1:
 			self.doSeek(int(self.init_seek_to) * 90000)
 			init_play_pos = int(self.init_seek_to) * 10_000_000
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
+
+	def __updatedInfoEmby(self):
+		self.setSubtitleTrack()
 
 	def __evServiceStart(self):
 		if not self.is_trailer:
@@ -657,6 +678,7 @@ class EmbyPlayer(MoviePlayer):
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)
 
 	def leavePlayer(self):
+		global IsPlayingFile
 		IsPlayingFile = False
 		self.__evServiceEnd()
 		self.clearHooks()
