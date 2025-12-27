@@ -18,6 +18,7 @@ from Screens.AudioSelection import AudioSelection
 from Screens.InfoBar import MoviePlayer
 from Tools.LoadPixmap import LoadPixmap
 
+from . import Globals
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyList import EmbyList
 from .EmbyPlayerInfobarInfo import EmbyPlayerInfobarInfo
@@ -26,7 +27,6 @@ from .HelperFunctions import convert_ticks_to_time
 from .subrip import SubRipParser
 from .TolerantDict import TolerantDict
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
-from .Globals import IsPlayingFile
 
 
 class EmbyPlayer(MoviePlayer):
@@ -46,8 +46,7 @@ class EmbyPlayer(MoviePlayer):
 				</screen>"""]
 
 	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False, trailer_url=None):
-		global IsPlayingFile
-		IsPlayingFile = True
+		Globals.IsPlayingFile = True
 		item_id = int(item.get("Id", "0"))
 		item_name = item.get("Name", "Stream")
 		media_sources = item.get("MediaSources")
@@ -143,14 +142,16 @@ class EmbyPlayer(MoviePlayer):
 			"7": self.numberSeek,
 			"9": self.numberSeek,
 		}, -10)
-		self["InfobarMovieActions"] = ActionMap(["InfobarMovieListActions", "MovieSelectionActions", "E2EmbyActions"],
+		self["InfobarMovieActions"] = ActionMap(["E2EmbyActions", "InfobarEPGActions", "ButtonSetupActions", "InfobarMovieListActions" ],
 		{
 			"up": self.showChapters,
 			"down": self.showNextPlaylist,
 			"movieList": self.showChapters,
-			"showEventInfo": self.showInfo,
+			"InfoPressed": self.showInfo,
+			"EPGPressed": self.showInfo,
+			"epg": self.showInfo,
 			"ok": self.processItem,
-		}, -10)
+		}, -15)
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
 			iPlayableService.evStart: self.__evServiceStart,
 			iPlayableService.evUpdatedInfo: self.__updatedInfoEmby})
@@ -678,8 +679,7 @@ class EmbyPlayer(MoviePlayer):
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)
 
 	def leavePlayer(self):
-		global IsPlayingFile
-		IsPlayingFile = False
+		Globals.IsPlayingFile = False
 		self.__evServiceEnd()
 		self.clearHooks()
 		self.handleLeave("quit")

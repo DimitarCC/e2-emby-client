@@ -5,9 +5,8 @@ from Components.Pixmap import Pixmap
 from Screens.Screen import Screen
 from Tools.LoadPixmap import LoadPixmap
 
-from . import _
+from . import _, Globals
 from .Variables import plugin_dir
-from .Globals import IsPlayingFile
 
 
 notificationPopup = None
@@ -86,7 +85,7 @@ class NotificationalScreen(Screen):
 
 
 def ShowEmbyTimeoutNotification():
-	if IsPlayingFile:
+	if Globals.IsPlayingFile:
 		return
 	exists = any(t[0] == "EmbyTimeout" for t in notifications)
 	if not exists:

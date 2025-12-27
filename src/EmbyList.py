@@ -91,7 +91,7 @@ class EmbyList(GUIComponent):
 		delete_thumb_cache_dir(self.widget_id)
 
 	def selectionChanged(self):
-		if isinstance(self.selectedItem, tuple):
+		if isinstance(self.selectedItem, tuple) or not hasattr(self, "l"):
 			return
 		curIndex = self.l.getCurrentSelectionIndex()
 		if self.selectedIndex == curIndex:
