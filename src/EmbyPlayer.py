@@ -142,7 +142,7 @@ class EmbyPlayer(MoviePlayer):
 			"7": self.numberSeek,
 			"9": self.numberSeek,
 		}, -10)
-		self["InfobarMovieActions"] = ActionMap(["E2EmbyActions", "InfobarEPGActions", "ButtonSetupActions", "InfobarMovieListActions" ],
+		self["InfobarMovieActions"] = ActionMap(["E2EmbyActions", "InfobarEPGActions", "ButtonSetupActions", "InfobarMovieListActions"],
 		{
 			"up": self.showChapters,
 			"down": self.showNextPlaylist,
