@@ -601,8 +601,11 @@ class EmbyPlayer(MoviePlayer):
 			service = self.session.nav.getCurrentService()
 			subtitle = service and service.subtitle()
 			subtitlelist = subtitle and subtitle.getSubtitleList()
-			subtitleTrack = subtitlelist[self.CurIndexEmbeddedSubs]
-			self.enableSubtitle(subtitleTrack)
+			if subtitlelist:
+				subtitleTrack = subtitlelist[self.CurIndexEmbeddedSubs]
+				self.enableSubtitle(subtitleTrack)
+			else:
+				self.CurIndexEmbeddedSubs = -1
 		elif self.curSubsIndex == -1:
 			self.enableSubtitle(None)
 

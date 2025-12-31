@@ -223,6 +223,9 @@ class E2EmbyLibrary(NotificationalScreen):
 		self[self.selected_widget].setFocused(True)
 
 	def left(self):
+		if self.selected_widget is None:
+			return
+
 		if self.selected_widget == "charbar" and self.mode == MODE_LIST:
 			return
 		if self.mode == MODE_LIST and self.selected_widget == "list" and self["list"].getIsAtFirstColumn():
@@ -240,6 +243,9 @@ class E2EmbyLibrary(NotificationalScreen):
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
+		if self.selected_widget is None:
+			return
+
 		if self.selected_widget == "charbar":
 			self.selected_widget = "list"
 			self["list"].toggleSelection(True)
@@ -256,7 +262,6 @@ class E2EmbyLibrary(NotificationalScreen):
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
-
 		if self.selected_widget == "header":
 			return
 
