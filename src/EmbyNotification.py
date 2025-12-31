@@ -19,7 +19,7 @@ class EmbyNotification(Screen):
 		 			<widget name="icon" position="10,9" size="32,32" alphatest="blend" zPosition="10"/>
 					<widget name="text" position="60,0" size="e-60-10-32-10,50" alphatest="blend" font="Bold;40" halign="center" valign="center" transparent="1"/>
 		 			<widget name="icon2" position="e-10-32,9" size="32,32" alphatest="blend" zPosition="10"/>
-				</screen>"""]  # noqa: E124
+				</screen>"""]  # noqa: E101
 
 	EMBY_NOTIFICATION_TYPE_INFO = 0
 	EMBY_NOTIFICATION_TYPE_WARNING = 1

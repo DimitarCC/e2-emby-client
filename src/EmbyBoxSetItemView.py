@@ -20,7 +20,7 @@ class EmbyBoxSetItemView(EmbyItemViewBase):
 					<widget name="plot" position="60,230" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="f_buttons" position="60,440" size="924,65" font="Regular;26" transparent="1"/>
 					<widget name="boxset_items" position="40,600" size="e-80,426" iconWidth="232" iconHeight="330" font="Regular;20" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
-			</screen>"""]  # noqa: E124
+			</screen>"""]  # noqa: E101
 
 	def __init__(self, session, item, backdrop=None, logo=None):
 		EmbyItemViewBase.__init__(self, session, item, backdrop)

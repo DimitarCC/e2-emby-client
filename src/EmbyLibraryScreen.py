@@ -63,7 +63,7 @@ class E2EmbyLibrary(NotificationalScreen):
 					<widget name="list_recommend_4" position="40,2768" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 					<widget name="list_recommend_header_5" position="55,3076" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_5" position="40,3126" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
-				</screen>"""]  # noqa: E124
+				</screen>"""]  # noqa: E101
 
 	def __init__(self, session, library):
 		NotificationalScreen.__init__(self, session)
