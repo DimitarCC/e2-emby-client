@@ -215,6 +215,8 @@ class EmbyGridList(GUIComponent):
 				if f_name in DIRECTORY_PARSER.THUMBS:
 					self.thumbs[item_id] = f_name
 		self.l.setList(items)
+		for x in self.onSelectionChanged:
+			x()
 
 	def get_page_item_ids(self, page_index):
 		start = page_index * self.items_per_page

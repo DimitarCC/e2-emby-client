@@ -214,6 +214,9 @@ class EmbyList(GUIComponent):
 		self.l.setList(items)
 		if new_index > -1:
 			self.instance.moveSelectionTo(new_index)
+		else:
+			for x in self.onSelectionChanged:
+				x(self, self.selectedItem and self.selectedItem.get("Id"))
 
 	def get_page_item_ids(self, page_index):
 		start = page_index * self.items_per_page

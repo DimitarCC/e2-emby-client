@@ -112,6 +112,8 @@ class EmbyLibraryHeaderButtons(GUIComponent):
 		elif type == "boxsets":
 			self.hide()
 
+		self.buttons.append((len(self.buttons), _("Favorites"), "favlist"))
+
 		self.updateInfo()
 
 	def updateInfo(self):

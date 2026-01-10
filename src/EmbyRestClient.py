@@ -441,6 +441,35 @@ class EmbyRestClient():
 			ShowEmbyTimeoutNotification()
 		return items  # sorted_items
 
+	def getFavItemsFromLibrary(self, library_id, library_type=None):
+		shouldShowBoxsets = self.userSettings.get(f"{library_id}-1-videos-groupItemsIntoCollections", "false") == "true"
+		items = []
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&SortBy=SortName&SortOrder=Ascending&IncludeItemTypes=Movie,Series&ParentId={library_id}&GroupItemsIntoCollections={'true' if shouldShowBoxsets else 'false'}&Fields=SortName,PremiereDate,DateCreated&Filters=IsFavorite"
+		if library_type and library_type == "boxsets":
+			url = f"{self.server_root}/emby/Users/{self.user_id}/Items?SortBy=SortName&SortOrder=Ascending&ParentId={library_id}&Filters=IsFavorite"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				if response.status_code != 404:
+					response_obj = response.content
+					res_json_obj = loads(response_obj)
+					items.extend(res_json_obj.get('Items'))
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+
+		# sorted_items = sorted(items, key=lambda x: x.get("SortName"))
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return items  # sorted_items
+
 	def getRandomItemFromLibrary(self, parent_id, type, limit=2000):
 		includeItems = "Movie"
 		if type == "movies":
@@ -510,6 +539,8 @@ class EmbyRestClient():
 
 					if config.plugins.e2embyclient.thumbcache_loc.value == "/tmp":
 						im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{widget_id}/{orig_item_id or item_id}_{file_addon}_{filename}_{orig_item_id}.{format}"
+					elif config.plugins.e2embyclient.thumbcache_loc.value == "off":
+						im_tmp_path = f"/tmp{EMBY_THUMB_CACHE_DIR}/{widget_id}/{orig_item_id or item_id}_{file_addon}_{filename}_{orig_item_id}.{format}"
 					else:
 						im_tmp_path = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{orig_item_id or item_id}_{file_addon}_{filename}_{filename_suffix}.{format}"
 					if req_width > 0 and req_height > 0:

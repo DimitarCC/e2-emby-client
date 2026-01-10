@@ -28,6 +28,7 @@ from . import _
 
 MODE_RECOMMENDATIONS = 0
 MODE_LIST = 1
+MODE_FAVORITES = 2
 
 
 class E2EmbyLibrary(NotificationalScreen):
@@ -161,7 +162,6 @@ class E2EmbyLibrary(NotificationalScreen):
 			self.is_init = True
 			self["header"].setItem(self.library)
 			threads.deferToThread(self.loadSuggestedTabItems)
-			threads.deferToThread(self.loadItems)
 			if self.type != "boxsets":
 				self["list"].hide()
 				self["charbar"].hide()
@@ -169,6 +169,7 @@ class E2EmbyLibrary(NotificationalScreen):
 				self["list"].toggleSelection(False)
 			else:
 				self.mode = MODE_LIST
+				threads.deferToThread(self.loadItems)
 				self.toggleSuggestionSectionVisibility(False)
 				self.toggleItemsSectionVisibility(True)
 				self.selected_widget = "list"
@@ -226,9 +227,9 @@ class E2EmbyLibrary(NotificationalScreen):
 		if self.selected_widget is None:
 			return
 
-		if self.selected_widget == "charbar" and self.mode == MODE_LIST:
+		if self.selected_widget == "charbar" and self.mode in [MODE_LIST, MODE_FAVORITES]:
 			return
-		if self.mode == MODE_LIST and self.selected_widget == "list" and self["list"].getIsAtFirstColumn():
+		if self.mode in [MODE_LIST, MODE_FAVORITES] and self.selected_widget == "list" and self["list"].getIsAtFirstColumn():
 			self.selected_widget = "charbar"
 			self["list"].toggleSelection(False)
 			self["charbar"].enableSelection(True)
@@ -380,8 +381,14 @@ class E2EmbyLibrary(NotificationalScreen):
 				self.mode = MODE_RECOMMENDATIONS
 				self.toggleSuggestionSectionVisibility(True)
 				self.toggleItemsSectionVisibility(False)
-			else:
+			elif command == "list":
 				self.mode = MODE_LIST
+				threads.deferToThread(self.loadItems)
+				self.toggleSuggestionSectionVisibility(False)
+				self.toggleItemsSectionVisibility(True)
+			elif command == "favlist":
+				self.mode = MODE_FAVORITES
+				threads.deferToThread(self.loadFavItems)
 				self.toggleSuggestionSectionVisibility(False)
 				self.toggleItemsSectionVisibility(True)
 		elif self.selected_widget == "charbar":
@@ -414,10 +421,37 @@ class E2EmbyLibrary(NotificationalScreen):
 		self.exitResult = result
 		if result != 0:
 			threads.deferToThread(self.loadSuggestedTabItems)
-			threads.deferToThread(self.loadItems)
+			if self.mode == MODE_LIST:
+				threads.deferToThread(self.loadItems)
+			elif self.mode == MODE_FAVORITES:
+				threads.deferToThread(self.loadFavItems)
 
 	def loadItems(self):
+		if self.list_data:
+			self["list"].loadData([])
+			self.list_data = []
+			self["charbar"].setList([])
+			self.onSelectedIndexChanged()
 		items = EmbyApiClient.getItemsFromLibrary(self.library_id, self.type)
+		list = []
+		if items:
+			i = 0
+			for item in items:
+				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+				list.append((i, item, item.get('Name'), None, played_perc, True))
+				i += 1
+			self["list"].loadData(list)
+		self.list_data = list
+		self["charbar"].setList(list)
+		self.onSelectedIndexChanged()
+
+	def loadFavItems(self):
+		if self.list_data:
+			self["list"].loadData([])
+			self.list_data = []
+			self["charbar"].setList([])
+			self.onSelectedIndexChanged()
+		items = EmbyApiClient.getFavItemsFromLibrary(self.library_id, self.type)
 		list = []
 		if items:
 			i = 0

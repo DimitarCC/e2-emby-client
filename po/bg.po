@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-13 17:59+0300\n"
+"POT-Creation-Date: 2026-01-10 16:56+0200\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -11,7 +11,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 3.7\n"
+"X-Generator: Poedit 3.8\n"
 
 #: ../src/EmbyInfoLine.py:167
 #, python-format
@@ -52,11 +52,11 @@ msgstr "Добавяне в меню разширения"
 msgid "Add to Main Menu"
 msgstr "Добавяне в главно меню"
 
-#: ../src/EmbyLibraryScreen.py:476
+#: ../src/EmbyLibraryScreen.py:522
 msgid "Because you liked"
 msgstr "Защото харесахте"
 
-#: ../src/EmbyLibraryScreen.py:474
+#: ../src/EmbyLibraryScreen.py:520
 msgid "Because you recently watched"
 msgstr "Защото гледахте наскоро"
 
@@ -68,7 +68,7 @@ msgstr "Актьори и Екип"
 msgid "Chapters"
 msgstr "Глави"
 
-#: ../src/EmbyHome.py:108
+#: ../src/EmbyHome.py:109
 msgid "Close"
 msgstr "Затваряне"
 
@@ -88,11 +88,11 @@ msgstr "Таймаут на връзката"
 msgid "Connections"
 msgstr "Връзки"
 
-#: ../src/EmbyHome.py:102 ../src/EmbyLibraryScreen.py:103
+#: ../src/EmbyHome.py:103 ../src/EmbyLibraryScreen.py:104
 msgid "Continue watching"
 msgstr "Продължаване на гледането"
 
-#: ../src/plugin.py:15 ../src/plugin.py:68
+#: ../src/plugin.py:15 ../src/plugin.py:67
 msgid "E2Emby"
 msgstr "E2Emby"
 
@@ -104,7 +104,7 @@ msgstr "E2EmbyClient връзка"
 msgid "E2EmbyClient Setup"
 msgstr "E2EmbyClient настройки"
 
-#: ../src/plugin.py:57
+#: ../src/plugin.py:56
 msgid "E2EmbyClient works only with FHD (1920x1080) skins. Please load FHD skin."
 msgstr "E2EmbyClient е придназначен за работа с FHD (1920x1080) скин. Моля изберете FHD скин."
 
@@ -112,12 +112,12 @@ msgstr "E2EmbyClient е придназначен за работа с FHD (1920x
 msgid "Edit"
 msgstr "Редакция"
 
-#: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:57
+#: ../src/EmbyEpisodeItemView.py:29 ../src/EmbyHome.py:58
 #: ../src/EmbyItemViewBase.py:27 ../src/EmbyMovieItemView.py:40
 msgid "Emby"
 msgstr "Emby"
 
-#: ../src/EmbyLibraryScreen.py:85
+#: ../src/EmbyLibraryScreen.py:86
 msgid "Emby Library"
 msgstr "Emby библиотека"
 
@@ -133,15 +133,19 @@ msgstr "Край в"
 msgid "Extras"
 msgstr "Екстри"
 
-#: ../src/EmbyItemFunctionButtons.py:186
+#: ../src/EmbyItemFunctionButtons.py:224
 msgid "Favorite"
 msgstr "Любими"
 
-#: ../src/EmbyLibraryScreen.py:478
+#: ../src/EmbyLibraryHeaderButtons.py:115
+msgid "Favorites"
+msgstr "Любими"
+
+#: ../src/EmbyLibraryScreen.py:524
 msgid "From director"
 msgstr "От режисьор"
 
-#: ../src/EmbyItemFunctionButtons.py:188
+#: ../src/EmbyItemFunctionButtons.py:226
 msgid "Go to series"
 msgstr "Отиди на сериал"
 
@@ -153,7 +157,7 @@ msgstr "Включен в поредици"
 msgid "Movies"
 msgstr "Филми"
 
-#: ../src/EmbyHome.py:100
+#: ../src/EmbyHome.py:101
 msgid "My Media"
 msgstr "Моята медия"
 
@@ -177,15 +181,15 @@ msgstr "Парола за връзката."
 msgid "Persistent thumbnail cache in"
 msgstr "Постоянен кеш за постерите в"
 
-#: ../src/EmbyItemFunctionButtons.py:178
+#: ../src/EmbyItemFunctionButtons.py:216
 msgid "Play"
 msgstr "Възпроизвеждане"
 
-#: ../src/EmbyItemFunctionButtons.py:175
+#: ../src/EmbyItemFunctionButtons.py:213
 msgid "Play from start"
 msgstr "Пусни от началото"
 
-#: ../src/EmbyItemFunctionButtons.py:182
+#: ../src/EmbyItemFunctionButtons.py:220
 msgid "Play trailer"
 msgstr "Трейлър възпр."
 
@@ -210,15 +214,15 @@ msgstr "Порт за връзката."
 msgid "Present"
 msgstr "Настояще"
 
-#: ../src/EmbyLibraryScreen.py:105
+#: ../src/EmbyLibraryScreen.py:106
 msgid "Recently added"
 msgstr "Последно добавени филми"
 
-#: ../src/EmbyHome.py:104
+#: ../src/EmbyHome.py:105
 msgid "Recently added movies"
 msgstr "Последно добавени филми"
 
-#: ../src/EmbyHome.py:106
+#: ../src/EmbyHome.py:107
 msgid "Recently added tvshows"
 msgstr "Последно добавени сериали"
 
@@ -235,7 +239,7 @@ msgstr "Изтриване"
 msgid "Remove Connection"
 msgstr "Изтриване на връзка"
 
-#: ../src/EmbyItemFunctionButtons.py:174
+#: ../src/EmbyItemFunctionButtons.py:212
 msgid "Resume"
 msgstr "Продължаване"
 
@@ -299,7 +303,7 @@ msgstr "Задава местоположението на кеша на пос�
 msgid "Temporary thumbnail cache"
 msgstr "Временен кеш за постерите"
 
-#: ../src/EmbyNotification.py:90
+#: ../src/EmbyNotification.py:92
 #, python-format
 msgid "The connection with server has been lost after %d attempts"
 msgstr "Връзката със сървера беше изгубена след %d опита"
@@ -332,14 +336,10 @@ msgstr "Потребител"
 msgid "User for the Connection."
 msgstr "Потребител за логване в сървера."
 
-#: ../src/EmbyItemFunctionButtons.py:184
+#: ../src/EmbyItemFunctionButtons.py:222
 msgid "Watched"
 msgstr "Гледан"
 
-#: ../src/EmbyLibraryScreen.py:480
+#: ../src/EmbyLibraryScreen.py:526
 msgid "With actor"
 msgstr "С участието на"
-
-#: ../src/plugin.py:35
-msgid "off"
-msgstr "Изкл."

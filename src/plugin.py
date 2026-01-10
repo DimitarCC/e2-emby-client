@@ -32,7 +32,6 @@ class MountChoices:
 					choices.append((d, "%s %s" % (_('Persistent thumbnail cache in'), p.mountpoint)))
 		choices.sort()
 		choices.insert(0, ("/tmp", _("Temporary thumbnail cache")))
-		choices.insert(0, ("off", _("off")))
 		return choices
 
 	@staticmethod
