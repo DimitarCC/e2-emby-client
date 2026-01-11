@@ -189,6 +189,8 @@ class E2EmbyLibrary(NotificationalScreen):
 		sel_widget = self.selected_widget if self.selected_widget != "header" else self.available_widgets[0]
 		if not sel_widget or isinstance(self[sel_widget].selectedItem, tuple):
 			return
+		if not self[sel_widget].selectedItem and self.mode != MODE_RECOMMENDATIONS:
+			return
 		if self.last_item_id and self.last_item_id == self[sel_widget].selectedItem.get("Id"):
 			return
 		self.last_item_id = self[sel_widget].selectedItem.get("Id")
@@ -373,6 +375,13 @@ class E2EmbyLibrary(NotificationalScreen):
 			self.lists["list_recommend_4"].visible(False)
 			self.lists["list_recommend_5"].visible(False)
 
+	def clearListWidget(self, target_mode):
+		if self.list_data and self.mode != target_mode:
+			self["list"].loadData([])
+			self.list_data = []
+			self["charbar"].setList([])
+			self.onSelectedIndexChanged()
+
 	def processItem(self):
 		if self.selected_widget == "header":
 			selected_item = self[self.selected_widget].getSelectedButton()
@@ -382,11 +391,13 @@ class E2EmbyLibrary(NotificationalScreen):
 				self.toggleSuggestionSectionVisibility(True)
 				self.toggleItemsSectionVisibility(False)
 			elif command == "list":
+				self.clearListWidget(MODE_LIST)
 				self.mode = MODE_LIST
 				threads.deferToThread(self.loadItems)
 				self.toggleSuggestionSectionVisibility(False)
 				self.toggleItemsSectionVisibility(True)
 			elif command == "favlist":
+				self.clearListWidget(MODE_FAVORITES)
 				self.mode = MODE_FAVORITES
 				threads.deferToThread(self.loadFavItems)
 				self.toggleSuggestionSectionVisibility(False)
@@ -427,11 +438,6 @@ class E2EmbyLibrary(NotificationalScreen):
 				threads.deferToThread(self.loadFavItems)
 
 	def loadItems(self):
-		if self.list_data:
-			self["list"].loadData([])
-			self.list_data = []
-			self["charbar"].setList([])
-			self.onSelectedIndexChanged()
 		items = EmbyApiClient.getItemsFromLibrary(self.library_id, self.type)
 		list = []
 		if items:
@@ -446,11 +452,6 @@ class E2EmbyLibrary(NotificationalScreen):
 		self.onSelectedIndexChanged()
 
 	def loadFavItems(self):
-		if self.list_data:
-			self["list"].loadData([])
-			self.list_data = []
-			self["charbar"].setList([])
-			self.onSelectedIndexChanged()
 		items = EmbyApiClient.getFavItemsFromLibrary(self.library_id, self.type)
 		list = []
 		if items:
