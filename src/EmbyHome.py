@@ -432,15 +432,16 @@ class E2EmbyHome(NotificationalScreen):
 		libs_list = []
 		i = 0
 		if libs:
+			skippedInLatest = EmbyApiClient.userData.get("Configuration", {}).get("LatestItemsExcludes", [])
 			for lib in libs:
 				colType = lib.get("CollectionType")
-				if colType and colType == "movies":
+				if colType and colType == "movies" and lib.get("DisplayPreferencesId", "") not in skippedInLatest:
 					self.movie_libs_ids.append(int(lib.get("Id")))
 
-				if colType and colType == "tvshows":
+				if colType and colType == "tvshows" and lib.get("DisplayPreferencesId", "") not in skippedInLatest:
 					self.tvshow_libs_ids.append(int(lib.get("Id")))
 
-				if colType and colType == "music":
+				if colType and colType == "music" and lib.get("DisplayPreferencesId", "") not in skippedInLatest:
 					self.music_libs_ids.append(int(lib.get("Id")))
 
 				libs_list.append((i, lib, lib.get('Name'), None, "0", True))

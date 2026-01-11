@@ -49,6 +49,7 @@ class EmbyRestClient():
 		self.device_name = device_name
 		self.device_id = device_id
 		self.userSettings = {}
+		self.userData = {}
 
 	def constructHeaders(self):
 		headers = {'User-Agent': REQUEST_USER_AGENT}
@@ -86,6 +87,14 @@ class EmbyRestClient():
 					if status_code == 200 or status_code == 204:
 						response_str = response.content
 						self.userSettings = loads(response_str)
+					elif status_code >= 400:
+						print("[E2EmbyClient][EmbyRestClient][authorizeUser] Authentication failed! invalid token")
+					url = f"{self.server_root}/emby/Users/{self.user_id}"
+					response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+					status_code = response.status_code
+					if status_code == 200 or status_code == 204:
+						response_str = response.content
+						self.userData = loads(response_str)
 					elif status_code >= 400:
 						print("[E2EmbyClient][EmbyRestClient][authorizeUser] Authentication failed! invalid token")
 				except Exception as ex:
