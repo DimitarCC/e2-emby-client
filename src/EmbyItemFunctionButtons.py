@@ -43,7 +43,7 @@ def getYoutubePlaybleUrl(source_url):
 	url = ""
 	if source_url and "youtube" in source_url:
 		try:
-			ydl = YoutubeDL({"format": "b", "no_color": True, "usenetrc": True})
+			ydl = YoutubeDL({"format": "b", "no_color": True, "usenetrc": True, "js_runtimes": {"node": {}}, "remote_components": ["ejs:github"]})
 			result = ydl.extract_info(source_url, download=False)
 			result = ydl.sanitize_info(result)
 			if result and result.get("url"):
