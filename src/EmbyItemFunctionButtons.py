@@ -18,8 +18,10 @@ from . import _
 
 try:
     from yt_dlp import YoutubeDL
+    ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True, "youtube_skip_dash_manifest": True, "format": "b", "no_color": True, "usenetrc": True, "js_runtimes": {"node": {}}, "remote_components": ["ejs:github"]}
+    YDL = YoutubeDL(ydl_opts)
 except ImportError:
-    YoutubeDL = None
+    YDL = None
 
 
 def playItem(selected_item, session, callback, startPos=0):
@@ -30,7 +32,7 @@ def playItem(selected_item, session, callback, startPos=0):
 
 
 def playItemTrailer(selected_item, session, callback, startPos=0):
-	if YoutubeDL:
+	if YDL:
 		trailers = selected_item.get("RemoteTrailers", [])
 		if trailers:
 			trailer = trailers[0]
@@ -43,9 +45,8 @@ def getYoutubePlaybleUrl(source_url):
 	url = ""
 	if source_url and "youtube" in source_url:
 		try:
-			ydl = YoutubeDL({"format": "b", "no_color": True, "usenetrc": True, "js_runtimes": {"node": {}}, "remote_components": ["ejs:github"]})
-			result = ydl.extract_info(source_url, download=False)
-			result = ydl.sanitize_info(result)
+			result = YDL.extract_info(source_url, download=False)
+			result = YDL.sanitize_info(result)
 			if result and result.get("url"):
 				url = quote(result["url"])
 		except Exception as e:
