@@ -64,6 +64,11 @@ class EmbyPlayer(MoviePlayer):
 			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), item_name))
 		if is_trailer and trailer_url:
 			ref = eServiceReference("%s:0:1:%x:1010:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, trailer_url.replace(":", "%3a"), f"Trailer - {item_name}"))
+		if ref is None:
+			print(f"[EmbyPlayer] ERROR ref is None for item '{item}'")
+			print(f" is_trailer -> {is_trailer}")
+			print(f" media_sources -> {media_sources}")
+			print(f" trailer_url -> {trailer_url}")
 		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
 		self.session = session
 		self.is_trailer = is_trailer
