@@ -17,6 +17,8 @@ from Components.Sources.StaticText import StaticText
 from Screens.AudioSelection import AudioSelection
 from Screens.InfoBar import MoviePlayer
 from Tools.LoadPixmap import LoadPixmap
+from Tools.SubRip import SubRipParser
+from Tools.TolerantDict import TolerantDict
 
 from . import Globals
 from .EmbyInfoLine import EmbyInfoLine
@@ -24,8 +26,6 @@ from .EmbyList import EmbyList
 from .EmbyPlayerInfobarInfo import EmbyPlayerInfobarInfo
 from .EmbyRestClient import EmbyApiClient
 from .HelperFunctions import convert_ticks_to_time
-from .subrip import SubRipParser
-from .TolerantDict import TolerantDict
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
 
 

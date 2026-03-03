@@ -55,6 +55,7 @@ class EmbySeriesItemView(EmbyItemView):
 		if index > -1 and self["seasons_list"].selectedIndex != index:
 			self["seasons_list"].instance.moveSelectionTo(index)
 			self["seasons_list"].updateInfo()
+			self["seasons_list"].selectedSeason = index
 
 	def getEpisodes(self):
 		self.seasons = EmbyApiClient.getSeasonsForSeries(self.series_id)
@@ -141,6 +142,7 @@ class EmbySeriesItemView(EmbyItemView):
 			self.session.openWithCallback(self.exitCallback, SeriesView, selected_item)
 		elif self.selected_widget == "seasons_list":
 			selected_item = self["seasons_list"].selectedItem
+			self["seasons_list"].selectedSeason = self["seasons_list"].selectedIndex
 			index = next((i for i, ep in enumerate(self.episodes) if ep.get("ParentIndexNumber", 0) == selected_item[1].get("IndexNumber", 0)), -1)
 			if index > -1:
 				self["episodes_list"].instance.moveSelectionTo(index)
