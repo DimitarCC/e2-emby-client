@@ -12,7 +12,7 @@ from . import _
 
 initConfig()
 
-PROGRAM_NAME = _("E2Emby")
+PROGRAM_NAME = _("Emby Player")
 PROGRAM_DESCRIPTION = _("A client for Emby server")
 
 
@@ -64,7 +64,7 @@ def main(session, **kwargs):
 def startFromMainMenu(menuid):
 	if menuid != "mainmenu":
 		return []
-	return [(_("E2Emby"), main, "e2_emby_menu", 100)]
+	return [(_("Emby Player"), main, "e2_emby_menu", 100)]
 
 
 def sessionstart(reason, session, **kwargs):

@@ -117,7 +117,7 @@ class EmbySeasonsBar(GUIComponent):
 			font=0, flags=RT_HALIGN_CENTER | RT_BLEND | RT_VALIGN_CENTER,
 			text=text,
 			cornerRadius=6,
-			textBWidth=1 if selected and self.selectionEnabled else 0, textBColor=0x222222,
+			textBWidth=1, textBColor=0x222222,
 			backcolor=0x32772b if selectedSeason else 0x222222,
 			border_width=2, border_color=0x32772b if (selected and self.selectionEnabled) else 0x404040,
 			color=self.foreColor, color_sel=self.foreColor))

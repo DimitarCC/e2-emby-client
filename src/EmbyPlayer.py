@@ -17,8 +17,7 @@ from Components.Sources.StaticText import StaticText
 from Screens.AudioSelection import AudioSelection
 from Screens.InfoBar import MoviePlayer
 from Tools.LoadPixmap import LoadPixmap
-from Tools.SubRip import SubRipParser
-from Tools.TolerantDict import TolerantDict
+from Tools.SubtitleRenderer import SubtitleRenderer
 
 from . import Globals
 from .EmbyInfoLine import EmbyInfoLine
@@ -91,10 +90,6 @@ class EmbyPlayer(MoviePlayer):
 		self.current_pos = -1
 		self.lastPos = -1
 		self.selectedSubtitleTrack = (0, 0, 0, 0, "und")
-		self.subs_parser = SubRipParser()
-		self.currentSubsList = TolerantDict({})
-		self.currentSubPTS = -1
-		self.currentSubEndPTS = -1
 		self.selected_widget = None
 		self["poster"] = Pixmap()
 		self["poster"].hide()
@@ -122,10 +117,6 @@ class EmbyPlayer(MoviePlayer):
 		self["time_remaining_summary"] = StaticText("")
 		self.progress_timer = eTimer()
 		self.progress_timer.callback.append(self.onProgressTimer)
-		self.checkSubs = eTimer()
-		self.checkSubs.callback.append(self.checkPTSAndShowSub)
-		self.hideSubs = eTimer()
-		self.hideSubs.callback.append(self.onhideSubs)
 		self.emby_progress_timer = eTimer()
 		self.emby_progress_timer.callback.append(self.updateEmbyProgress)
 		self.seek_timer = eTimer()
@@ -157,6 +148,7 @@ class EmbyPlayer(MoviePlayer):
 			"epg": self.showInfo,
 			"ok": self.processItem,
 		}, -15)
+		self.subtitle_renderer = SubtitleRenderer(self)
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
 			iPlayableService.evStart: self.__evServiceStart,
 			iPlayableService.evUpdatedInfo: self.__updatedInfoEmby})
@@ -432,49 +424,18 @@ class EmbyPlayer(MoviePlayer):
 					subs_file = intermediate_bytes.decode(config.plugins.e2embyclient.encodding_nonutf_subs.value)
 				except:
 					subs_file = intermediate_text
-				self.currentSubsList = TolerantDict(self.subs_parser.parse(subs_file))
+				self.subtitle_renderer.loadSubtitles(subs_file, "SRT")
 				return True
 		except:
 			pass
 		return False
-
-	def checkPTSAndShowSubBase(self):
-		seek = self.getSeek()
-		if seek is None:
-			return
-		pos = seek.getPlayPosition()
-		currentPTS = int(pos[1])
-
-		if self.currentSubEndPTS > -1 and currentPTS >= self.currentSubEndPTS:
-			self.onhideSubs()
-
-		currentLine = None
-		window_matches = self.currentSubsList.get_all_in_window(currentPTS, 150 * 90)
-		if window_matches and len(window_matches) > 0:
-			currentLine = window_matches[0][1]
-
-		if currentLine and (self.currentSubPTS < 0 or self.currentSubPTS != currentLine["start"]) and currentPTS >= currentLine["start"]:
-			self.currentSubPTS = currentLine["start"]
-			self.currentSubEndPTS = currentLine["end"]
-			subtitleText = currentLine["text"]
-			self.subtitle_window.showSubtitles(subtitleText)
-
-	def onhideSubs(self):
-		self.currentSubEndPTS = -1
-		self.subtitle_window.showSubtitles("")
-		self.subtitle_window.hideSubtitles()
-
-	def checkPTSAndShowSub(self):
-		self.checkPTSAndShowSubBase()
 
 	def runSubtitles(self, subtitle, sindex=-1):
 		if not subtitle and sindex > -1:
 			return
 
 		if not subtitle:
-			self.checkSubs.stop()
-			self.currentSubPTS = -1
-			self.currentSubsList = TolerantDict({})
+			self.subtitle_renderer.stopSubtitles()
 			self.selected_subtitle = (0, 0, 0, 0, "")
 			self.curSubsIndex = -1
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
@@ -491,7 +452,7 @@ class EmbyPlayer(MoviePlayer):
 	def downloadAndRunSubs(self, subs_uri, subtitle):
 		result = self.loadAndParseSubs(subs_uri)
 		if result:
-			self.checkSubs.start(10)
+			self.subtitle_renderer.startSubtitle()
 			self.selected_subtitle = subtitle
 			self.curSubsIndex = subtitle[3]
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
@@ -650,12 +611,10 @@ class EmbyPlayer(MoviePlayer):
 			self.emby_progress_timer.start(10000)
 
 	def __evServiceEnd(self):
-		self.currentSubPTS = -1
-		self.currentSubsList = TolerantDict({})
 		self.selected_subtitle = (0, 0, 0, 0, "")
 		if self.progress_timer:
 			self.progress_timer.stop()
-		self.checkSubs.stop()
+		self.subtitle_renderer.stopSubtitles()
 		if self.is_trailer:
 			return
 		last_play_pos = -1
