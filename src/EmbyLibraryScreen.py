@@ -468,6 +468,7 @@ class E2EmbyLibrary(NotificationalScreen):
 	def loadSuggestionTabbleItems(self):
 		if self.lists is None:
 			return
+
 		self.available_widgets = []
 		items = EmbyApiClient.getResumableItemsForLibrary(self.library_id, self.type)
 		list = []
@@ -483,10 +484,14 @@ class E2EmbyLibrary(NotificationalScreen):
 				self.available_widgets.append("list_watching")
 				if not self.selected_widget:
 					self.selected_widget = self.available_widgets[0]
+					if self.lists is None:
+						return
 					self.lists[self.selected_widget].enableSelection(True)
 			else:
 				self.available_widgets.remove("list_watching")
 			is_visible = is_available and self.mode == MODE_RECOMMENDATIONS and self.selected_widget == "list_watching"
+			if self.lists is None:
+				return
 			self.lists["list_watching"].visible(is_visible).enableSelection(is_visible)
 
 		items = EmbyApiClient.getRecentlyAddedItemsForLibrary(self.library_id)
@@ -503,11 +508,15 @@ class E2EmbyLibrary(NotificationalScreen):
 				self.available_widgets.append("list_recent_added")
 				if not self.selected_widget:
 					self.selected_widget = self.available_widgets[0]
+					if self.lists is None:
+						return
 					self.lists[self.selected_widget].enableSelection(True)
 			else:
 				self.available_widgets.remove("list_recent_added")
 
 			is_visible = is_available and self.mode == MODE_RECOMMENDATIONS
+			if self.lists is None:
+				return
 			self.lists["list_recent_added"].visible(is_visible and (self.selected_widget in ["list_recent_added", "list_watching"])).enableSelection(is_visible and (self.selected_widget == "list_recent_added"))
 		if self.type == "movies":
 			categories = EmbyApiClient.getRecommendedMoviesForLibrary(self.library_id)
@@ -525,6 +534,8 @@ class E2EmbyLibrary(NotificationalScreen):
 					h_text = "%s %s" % (_('From director'), base_item)
 				elif recomm_type == "HasActorFromRecentlyPlayed":
 					h_text = "%s %s" % (_('With actor'), base_item)
+				if self.lists is None:
+					return
 				self.lists[widget_name].setHeaderText(h_text)
 				ki += 1
 				items = category.get("Items")
@@ -535,17 +546,23 @@ class E2EmbyLibrary(NotificationalScreen):
 						played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
 						list.append((i, item, item.get('Name'), None, played_perc, True))
 						i += 1
+					if self.lists is None:
+						return
 					self[widget_name].loadData(list)
 					is_available = len(list) > 0
 					if is_available:
 						self.available_widgets.append(widget_name)
 						if not self.selected_widget:
 							self.selected_widget = self.available_widgets[0]
+							if self.lists is None:
+								return
 							self.lists[self.selected_widget].enableSelection(True)
 					else:
 						self.available_widgets.remove(widget_name)
 
 					is_visible = is_available and self.mode == MODE_RECOMMENDATIONS and self.selected_widget == widget_name
+					if self.lists is None:
+						return
 					self.lists[widget_name].visible(is_visible).enableSelection(is_visible)
 		self.onSelectedIndexChanged()
 

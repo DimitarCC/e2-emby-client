@@ -593,12 +593,13 @@ class EmbyRestClient():
 				else:
 					has_timeout_or_error = False
 					return None
-			except TimeoutError:
-				pass
-			except ReadTimeout:
-				pass
+			except TimeoutError as te:
+				print(f"[E2EmbyClient][EmbyRestClient][getItemImage] Timeout error: {te}")
+			except ReadTimeout as rte:
+				print(f"[E2EmbyClient][EmbyRestClient][getItemImage] Read timeout error: {rte}")
 			except Exception as ex:
 				print(f"[E2EmbyClient][EmbyRestClient][getItemImage] Unknown error: {ex}")
+				has_timeout_or_error = False
 		if has_timeout_or_error:
 			ShowEmbyTimeoutNotification()
 		return None
@@ -645,12 +646,13 @@ class EmbyRestClient():
 					return pix
 				has_timeout_or_error = False
 				break
-			except TimeoutError:
-				pass
-			except ReadTimeout:
-				pass
-			except:
-				pass
+			except TimeoutError as te:
+				print(f"[E2EmbyClient][EmbyRestClient][getPersonImage] Timeout error: {te}")
+			except ReadTimeout as rte:
+				print(f"[E2EmbyClient][EmbyRestClient][getPersonImage] Read timeout error: {rte}")
+			except Exception as ex:
+				print(f"[E2EmbyClient][EmbyRestClient][getPersonImage] Unknown error: {ex}")
+				has_timeout_or_error = False
 		if has_timeout_or_error:
 			ShowEmbyTimeoutNotification()
 		return None
