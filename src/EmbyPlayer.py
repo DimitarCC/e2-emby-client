@@ -115,6 +115,12 @@ class EmbyPlayer(MoviePlayer):
 		self["time_elapsed_summary"] = StaticText("")
 		self["time_duration_summary"] = StaticText("")
 		self["time_remaining_summary"] = StaticText("")
+		self.init_timer = eTimer()
+		self.init_timer.callback.append(self.__onPlayerInit)
+		if config.plugins.e2embyclient.play_system.value == "5002":
+			self.init_timer.start(50)
+		self.init_seek_timer = eTimer()
+		self.init_seek_timer.callback.append(self.__onPlayerInitSeek)
 		self.progress_timer = eTimer()
 		self.progress_timer.callback.append(self.onProgressTimer)
 		self.emby_progress_timer = eTimer()
@@ -150,7 +156,7 @@ class EmbyPlayer(MoviePlayer):
 		}, -15)
 		self.subtitle_renderer = SubtitleRenderer(self)
 		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
-			iPlayableService.evStart: self.__evServiceStart,
+			iPlayableService.evStart: self.__evServiceStartInit,
 			iPlayableService.evUpdatedInfo: self.__updatedInfoEmby})
 
 	def __onHide(self):
@@ -388,6 +394,8 @@ class EmbyPlayer(MoviePlayer):
 
 	def onProgressTimer(self):
 		curr_pos = self.getPosition()
+		if not curr_pos:
+			curr_pos = 0
 		if not self.skip_progress_update or self.is_trailer:
 			self.setProgress(curr_pos if self.current_pos == -1 else self.current_pos)
 		if self.selected_widget == "list_chapters" and not self.supressChapterSelect:
@@ -403,6 +411,8 @@ class EmbyPlayer(MoviePlayer):
 	def updateEmbyProgressInternal(self, event, pos=-1):
 		if self.is_trailer:
 			return
+		if pos is None:
+			pos = 0
 		if pos == -1:
 			pos = self.getPosition()
 		ticks = int(pos) * 10_000_000
@@ -554,7 +564,7 @@ class EmbyPlayer(MoviePlayer):
 		else:
 			self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 
-	def setAudioTrack(self, aIndex):
+	def __setAudioTrack(self, aIndex):
 		track = aIndex
 		if isinstance(track, int) and track > -1:
 			service = self.session.nav.getCurrentService()
@@ -562,7 +572,7 @@ class EmbyPlayer(MoviePlayer):
 			if audioTracks.getNumberOfTracks() > track:
 				audioTracks.selectTrack(track)
 
-	def setSubtitleTrack(self):
+	def __setSubtitleTrack(self):
 		if self.CurIndexEmbeddedSubs > -1:
 			service = self.session.nav.getCurrentService()
 			subtitle = service and service.subtitle()
@@ -584,27 +594,60 @@ class EmbyPlayer(MoviePlayer):
 		media_source_id = media_source.get("Id")
 		EmbyApiClient.setPlaySessionParameters(self.play_session_id, item_id, media_source_id, aIndex, sIndex, playPos, stopped)
 
-	def initSeekProcess(self):
+	def __initTrackProcess(self):
 		init_play_pos = -1
+		if self.init_seek_to and self.init_seek_to > -1:
+			init_play_pos = int(self.init_seek_to) * 10_000_000
 		audioIndex, curAudioIndex, subtitle, sindex = self.getSelectedAudioSubStreamFromEmby()
 		self.curAudioIndex = curAudioIndex
-		self.setAudioTrack(aIndex=audioIndex)
+		self.__setAudioTrack(aIndex=audioIndex)
 		self.runSubtitles(subtitle=subtitle, sindex=sindex)
 		if not subtitle and sindex > -1:
 			self.CurIndexEmbeddedSubs = sindex
 		self.curSubsIndex = subtitle and subtitle[3] or sindex
 		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
-		if self.init_seek_to and self.init_seek_to > -1:
-			self.doSeek(int(self.init_seek_to) * 90000)
-			init_play_pos = int(self.init_seek_to) * 10_000_000
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
 
+	def __initSeekProcess(self):
+		init_play_pos = -1
+		res = 0
+		if self.init_seek_to and self.init_seek_to > -1:
+			pts = int(self.init_seek_to) * 90000
+			seekable = self.getSeek()
+			if seekable is None:
+				return -1
+			res = seekable.seekTo(pts)
+			len = seekable.getLength() if config.plugins.e2embyclient.play_system.value == "5002" else [0, 1]
+			if res == -1 or len[1] <= 0:
+				return -1
+			init_play_pos = int(self.init_seek_to) * 10_000_000
+		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
+		return res
+
+	def __onPlayerInit(self):
+		pos = self.getPosition()
+		if pos is not None:
+			self.init_timer.stop()
+			self.__evServiceStart()
+			self.init_seek_timer.start(100 if config.plugins.e2embyclient.play_system.value == "5002" else 10)
+
+	def __onPlayerInitSeek(self):
+		if self.is_trailer:
+			self.init_seek_timer.stop()
+			return
+		res = self.__initSeekProcess()
+		if res > -1:
+			self.init_seek_timer.stop()
+
 	def __updatedInfoEmby(self):
-		self.setSubtitleTrack()
+		self.__setSubtitleTrack()
+
+	def __evServiceStartInit(self):
+		self.init_timer.start(50)
 
 	def __evServiceStart(self):
 		if not self.is_trailer:
-			self.initSeekProcess()
+			self.__initTrackProcess()
 		if self.progress_timer:
 			self.progress_timer.start(1000)
 		if not self.is_trailer:
