@@ -90,7 +90,23 @@ class EmbyItemViewBase(NotificationalScreen):
 			load_res = self.loadItemInfoFromServer(self.item_id)
 			self.preLayoutFinished()
 			self.loadItemInUI(load_res)
+			self.onLayoutFinishedInject()
 			self.init_loaded = True
+
+	def onLayoutFinishedInject(self):
+		self.onLayoutFinishedLast()
+
+	def onLayoutFinishedLast(self, result=None):
+		y = self.top_widget_pos_y
+		for widget in self.lists:
+			if widget in self.availableWidgets:
+				self.lists[widget].move(40, y).visible(True)
+				y += self.lists[widget].getHeight() + 40
+			else:
+				self.lists[widget].visible(False)
+			self.lists[widget].enableSelection(False)
+			if widget == self.selected_widget:
+				self.lists[widget].enableSelection(True)
 
 	def loadItemInUI(self, result):
 		self["f_buttons"].setItem(self.item)

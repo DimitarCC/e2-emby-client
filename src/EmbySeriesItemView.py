@@ -24,7 +24,7 @@ class EmbySeriesItemView(EmbyItemView):
 					<widget name="infoline" position="60,160" size="e-120,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 					<widget name="plot" position="60,230" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="f_buttons" position="60,440" size="924,65" font="Regular;32" transparent="1"/>
-					<widget name="seasons_list" position="50,560" size="5*200,60" itemWidth="200" font="Regular;28" transparent="1"/>
+					<widget name="seasons_list" position="55,560" size="5*200,60" itemWidth="200" font="Regular;28" transparent="1"/>
 					<widget name="episodes_list" position="40,630" size="e-80,438" iconWidth="407" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 					<widget name="cast_header" position="40,1078" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 					<widget name="list_cast" position="40,1128" size="e-80,426" iconWidth="205" iconHeight="310" font="Regular;19" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
@@ -91,7 +91,10 @@ class EmbySeriesItemView(EmbyItemView):
 			self.lists["episodes_list"].visible(True).enableSelection(self.selected_widget == "episodes_list")
 
 	def infoRetrieveInject(self, item):
-		threads.deferToThread(self.getEpisodes)
+		threads.deferToThread(self.getEpisodes).addCallback(self.onLayoutFinishedLast)
+
+	def onLayoutFinishedInject(self):
+		pass
 
 	def loadExtraItems(self, itemObj):
 		item_id = itemObj.get("Id")
@@ -126,7 +129,7 @@ class EmbySeriesItemView(EmbyItemView):
 
 	def injectAfterLoad(self, item):
 		EmbyItemView.injectAfterLoad(self, item)
-		threads.deferToThread(self.loadExtraItems, item)
+		threads.deferToThread(self.loadExtraItems, item).addCallback(self.onLayoutFinishedLast)
 
 	def onPlayerClosedResult(self):
 		self.exitResult = EXIT_RESULT_SERIES

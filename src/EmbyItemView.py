@@ -29,7 +29,6 @@ class EmbyItemView(EmbyItemViewBase):
 		self.lists["list_chapters"].visible(False)
 		cast_header_y = self["cast_header"].instance.position().y()
 		self.cast_controller.move(40, cast_header_y).visible(True).enableSelection(False)
-		self.availableWidgets.append("list_cast")
 
 	def processItem(self):
 		EmbyItemViewBase.processItem(self)
@@ -48,10 +47,19 @@ class EmbyItemView(EmbyItemViewBase):
 		if cast_crew_list:
 			i = 0
 			for cr in cast_crew_list:
-				list.append((i, cr, f"{cr.get('Name')}\n({cr.get("Role", cr.get("Type"))})", None, "0", True))
+				list.append((i, cr, f"{cr.get('Name')}\n({cr.get('Role', cr.get('Type'))})", None, "0", True))
 				i += 1
-			self["list_cast"].loadData(list)
-			self.availableWidgets.append("list_cast")
+			if list:
+				self["list_cast"].loadData(list)
+				self.availableWidgets.append("list_cast")
+				self.lists["list_cast"].visible(True)
+				self.lists["list_cast"].enableSelection(True)
+			else:
+				self.lists["list_cast"].visible(False)
+				self.lists["list_cast"].enableSelection(False)
+		else:
+			self.lists["list_cast"].visible(False)
+			self.lists["list_cast"].enableSelection(False)
 		media_sources = item.get("MediaSources", [])
 		default_media_source = next((ms for ms in media_sources if ms.get("Type") == "Default"), None)
 		if default_media_source:
@@ -61,11 +69,18 @@ class EmbyItemView(EmbyItemViewBase):
 				i = 0
 				for ch in chapters:
 					pos_ticks = int(ch.get("StartPositionTicks"))
-					ch["Id"] = f"{item.get('Id')}_{ch.get("ChapterIndex")}"
+					ch["Id"] = f"{item.get('Id')}_{ch.get('ChapterIndex')}"
 					list.append((i, ch, f"{ch.get('Name')}\n{convert_ticks_to_time(pos_ticks, True)}", None, "0", True))
 					i += 1
-				self["list_chapters"].loadData(list)
-				self.availableWidgets.append("list_chapters")
-				self.lists["list_chapters"].visible(True)
+				if list:
+					self["list_chapters"].loadData(list)
+					self.availableWidgets.append("list_chapters")
+					self.lists["list_chapters"].visible(True)
+					self.lists["list_chapters"].enableSelection(True)
+
+				else:
+					self.lists["list_chapters"].visible(False)
+					self.lists["list_chapters"].enableSelection(False)
 			else:
 				self.lists["list_chapters"].visible(False)
+				self.lists["list_chapters"].enableSelection(False)

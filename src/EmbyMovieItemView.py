@@ -119,7 +119,7 @@ class EmbyMovieItemView(EmbyItemView):
 
 	def injectAfterLoad(self, item):
 		EmbyItemView.injectAfterLoad(self, item)
-		threads.deferToThread(self.loadExtraItems, item)
+		threads.deferToThread(self.loadExtraItems, item).addCallback(self.onLayoutFinishedLast)
 
 	def onPlayerClosedResult(self):
 		self.exitResult = EXIT_RESULT_MOVIE
