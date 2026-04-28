@@ -103,8 +103,13 @@ class E2EmbyLibrary(NotificationalScreen):
 		# self["backdrop_full"] = Pixmap()
 		self["list_watching_header"] = Label(_("Continue watching"))
 		self["list_watching"] = EmbyList(type="item_fit")
-		self["list_recent_added_header"] = Label(_("Recently added"))
+
+		recently_added_header_text = _("Recently added")
+		if self.type == "tvshows":
+			recently_added_header_text = _("Recently added series")
+		self["list_recent_added_header"] = Label(recently_added_header_text)
 		self["list_recent_added"] = EmbyList()
+
 		self["list_recommend_header_0"] = Label("")
 		self["list_recommend_0"] = EmbyList()
 		self["list_recommend_header_1"] = Label("")

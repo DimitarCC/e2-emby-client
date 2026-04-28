@@ -40,6 +40,9 @@ class EmbyItemView(EmbyItemViewBase):
 	def playerExitCallback(self, *result):
 		self.onPlayerClosedResult()
 		self.loadItemInUI(self.loadItemInfoFromServer(self.item_id))
+		self.onLayoutFinishedLast()
+		self.selected_widget = "f_buttons"
+		self["f_buttons"].enableSelection(True)
 
 	def injectAfterLoad(self, item):
 		cast_crew_list = item.get("People", [])
