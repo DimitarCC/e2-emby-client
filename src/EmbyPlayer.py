@@ -688,6 +688,14 @@ class EmbyPlayer(MoviePlayer):
 		if self.onAudioSubTrackChanged in AudioSelection.hooks:
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)
 
+	def handleLeave(self, what):
+		self.selected_subtitle = None
+		real_lastservice = self.lastservice
+		self.lastservice = None
+		self.servicelist = None
+		MoviePlayer.handleLeave(self, what)
+		self.session.nav.playService(real_lastservice)
+
 	def leavePlayer(self):
 		Globals.IsPlayingFile = False
 		self.__evServiceEnd()
