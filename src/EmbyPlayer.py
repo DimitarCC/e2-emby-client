@@ -690,11 +690,9 @@ class EmbyPlayer(MoviePlayer):
 
 	def handleLeave(self, what):
 		self.selected_subtitle = None
-		real_lastservice = self.lastservice
-		self.lastservice = None
-		self.servicelist = None
-		MoviePlayer.handleLeave(self, what)
-		self.session.nav.playService(real_lastservice)
+		self.is_closing = True
+		self.close()
+		self.session.nav.playService(self.lastservice)
 
 	def leavePlayer(self):
 		Globals.IsPlayingFile = False
