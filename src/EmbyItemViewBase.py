@@ -12,6 +12,7 @@ from .EmbyInfoLine import EmbyInfoLine
 from .EmbyItemFunctionButtons import EmbyItemFunctionButtons
 from .EmbyListController import EmbyListController
 from .EmbyNotification import NotificationalScreen
+from .EmbyThemeMusic import playThemeMusicForItem, stopThemeMusicIfOwner
 from .EmbyVersionPanel import EmbyVersionPanel
 from .Variables import plugin_dir
 from . import _
@@ -25,6 +26,8 @@ EXIT_RESULT_SEASON = 5
 
 
 class EmbyItemViewBase(NotificationalScreen):
+	supportsThemeMusic = False
+
 	def __init__(self, session, item, backdrop=None, logo=None):
 		NotificationalScreen.__init__(self, session)
 		self.setTitle(_("Emby") + item.get("Name"))
@@ -36,6 +39,7 @@ class EmbyItemViewBase(NotificationalScreen):
 		self.item = item
 		self.onShown.append(self.__onShown)
 		self.onLayoutFinish.append(self.__onLayoutFinished)
+		self.onClose.append(self.__onThemeMusicClose)
 		self.top_widget_pos_y = 0
 
 		self.mask_alpha = Image.open(
@@ -78,6 +82,10 @@ class EmbyItemViewBase(NotificationalScreen):
 			return
 		self.close(self.exitResult)
 
+	def __onThemeMusicClose(self):
+		if self.supportsThemeMusic:
+			stopThemeMusicIfOwner(self)
+
 	def onPlayerClosedResult(self):
 		pass
 
@@ -103,6 +111,8 @@ class EmbyItemViewBase(NotificationalScreen):
 			self.preLayoutFinished()
 			self.loadItemInUI(load_res)
 			self.onLayoutFinishedInject()
+			if self.supportsThemeMusic:
+				playThemeMusicForItem(self.item_id, self)
 			self.init_loaded = True
 
 	def onLayoutFinishedInject(self):

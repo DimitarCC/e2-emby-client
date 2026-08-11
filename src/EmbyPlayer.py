@@ -691,8 +691,19 @@ class EmbyPlayer(MoviePlayer):
 	def handleLeave(self, what):
 		self.selected_subtitle = None
 		self.is_closing = True
+		if config.plugins.e2embyclient.stop_playing_service_on_load.value:
+			# MoviePlayer.__onClose (base class, always runs via self.close()
+			# below and can't be overridden) unconditionally calls
+			# session.nav.playService(self.lastservice). Left alone, that
+			# resolves/starts the original service (e.g. via the m3uiptv
+			# extension hook) right here - even though it should stay stopped
+			# until the whole plugin closes - and disturbs the extension's
+			# state so Home's later restore of the same service no longer
+			# resolves. Null it out first so the base class just stops.
+			self.lastservice = None
 		self.close()
-		self.session.nav.playService(self.lastservice)
+		if not config.plugins.e2embyclient.stop_playing_service_on_load.value:
+			self.session.nav.playService(self.lastservice)
 
 	def leavePlayer(self):
 		Globals.IsPlayingFile = False

@@ -12,6 +12,7 @@ from Tools.BoundFunction import boundFunction
 
 from .EmbyPlayer import EmbyPlayer
 from .EmbyRestClient import EmbyApiClient
+from .EmbyThemeMusic import stopThemeMusic
 from .HelperFunctions import convert_ticks_to_time
 from .Variables import plugin_dir
 from . import _
@@ -27,6 +28,7 @@ except ImportError:
 def playItem(selected_item, session, callback, startPos=0, media_source_id=None):
 	infobar = InfoBar.instance
 	if infobar:
+		stopThemeMusic()
 		play_item = selected_item
 		if media_source_id:
 			media_sources = selected_item.get("MediaSources", [])
@@ -65,6 +67,7 @@ def getYoutubePlaybleUrl(source_url):
 def openTrailerPlayer(selected_item, session, callback, result):
 	infobar = InfoBar.instance
 	if infobar:
+		stopThemeMusic()
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
 		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=0, slist=infobar.servicelist, lastservice=LastService, is_trailer=True, trailer_url=result)
 

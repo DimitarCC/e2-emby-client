@@ -12,6 +12,8 @@
 		<item level="0" text="UI scroll delay" description="Specify the delay between selection changed events.">config.plugins.e2embyclient.changedelay</item>
 		<item level="0" text="Add to Main Menu" description="Add E2EmbyClient to the Main Menu list of options.">config.plugins.e2embyclient.add_to_mainmenu</item>
 		<item level="0" text="Add to Extensions Menu" description="Add E2EmbyClient to the Extensions Menu list of options.">config.plugins.e2embyclient.add_to_extensionmenu</item>
+		<item level="0" text="Stop playing service on home load" description="Stop the currently playing service when the Emby home screen loads, and restore it when the plugin is closed.">config.plugins.e2embyclient.stop_playing_service_on_load</item>
+		<item level="0" text="Play theme music" description="Play the theme music of a movie or series while browsing its details screen.">config.plugins.e2embyclient.play_theme_music</item>
 		<item level="0" text="---"></item>
 		<item level="0" text="Player Settings"></item>
 		<item level="0" text="---"></item>

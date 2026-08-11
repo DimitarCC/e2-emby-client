@@ -38,6 +38,8 @@ def initConfig():
 	config.plugins.e2embyclient.play_system = ConfigSelection(default="4097", choices=play_system_choices)
 	subs_encoddings_choices = [("latin1", "Latin"), ("windows-1251", "Cyrillic"), ("Shift_JIS", "Japanese/日本語"), ("Big5", "Chinese (Traditional)/繁體中文"), ("GB2312", "Chinese (Simplified)/简体中文"), ("Windows-1256", "Arabic/العربية")]
 	config.plugins.e2embyclient.encodding_nonutf_subs = ConfigSelection(default="latin1", choices=subs_encoddings_choices)
+	config.plugins.e2embyclient.stop_playing_service_on_load = ConfigYesNo(default=False)
+	config.plugins.e2embyclient.play_theme_music = ConfigYesNo(default=False)
 	for idx in range(config.plugins.e2embyclient.connectioncount.value):
 		initConnection(idx)
 
@@ -89,6 +91,8 @@ class EmbySetup(Setup):
 
 	def createSetup(self):  # NOSONAR silence S2638
 		Setup.createSetup(self)
+		if not config.plugins.e2embyclient.stop_playing_service_on_load.value:
+			self.list = [item for item in self.list if not (len(item) > 1 and item[1] is config.plugins.e2embyclient.play_theme_music)]
 		self.list = self.list + self.connectionItems
 		currentItem = self["config"].getCurrent()
 		self["config"].setList(self.list)
@@ -111,6 +115,8 @@ class EmbySetup(Setup):
 			self.calculateActive(current[3], current[1].value)
 			return
 		Setup.changedEntry(self)
+		if current and len(current) > 1 and current[1] is config.plugins.e2embyclient.stop_playing_service_on_load:
+			self.createSetup()
 
 	def keyBlue(self):
 		current = self["config"].getCurrent()

@@ -1,9 +1,10 @@
-from enigma import getDesktop
+from enigma import getDesktop, eTimer
 from os import makedirs
 from os.path import exists, normpath
 from Components.config import config, ConfigSelection
 from Components.Harddisk import harddiskmanager
 from Plugins.Plugin import PluginDescriptor
+from Tools.BoundFunction import boundFunction
 
 from .EmbySetup import EmbySetup, initConfig
 from .EmbyHome import E2EmbyHome
@@ -49,6 +50,38 @@ class MountChoices:
 MountChoices()
 
 
+class _ServiceRestorer:
+	# Navigation's own "tuner still releasing from a just-stopped stream" retry
+	# only arms when the previous service reference still has "://" in it at
+	# the moment playService() is called - which isn't the case here, since the
+	# service has been sitting stopped for as long as the plugin was open. So
+	# retry the restore ourselves a few times, mirroring Navigation's own
+	# cadence/window, in case the tuner hasn't fully released yet.
+	MAX_ATTEMPTS = 14
+	RETRY_DELAY = 700  # ms
+
+	def __init__(self, session, ref):
+		self.session = session
+		self.ref = ref
+		self.attempts = 0
+		self.timer = eTimer()
+		self.timer.callback.append(self.__attempt)
+		self.timer.start(300, True)
+
+	def __attempt(self):
+		if self.session.nav.getCurrentlyPlayingServiceReference() is not None:
+			return
+		self.attempts += 1
+		self.session.nav.playService(self.ref)
+		if self.attempts < self.MAX_ATTEMPTS:
+			self.timer.start(self.RETRY_DELAY, True)
+
+
+def restoreStoppedService(session, stopped_service_ref, *result):
+	if stopped_service_ref is not None:
+		_ServiceRestorer(session, stopped_service_ref)
+
+
 def main(session, **kwargs):
 	screenwidth = getDesktop(0).size().width()
 	if screenwidth < 1920:
@@ -58,7 +91,12 @@ def main(session, **kwargs):
 	if not config.plugins.e2embyclient.connectioncount.value:
 		session.open(EmbySetup)
 		return
-	session.open(E2EmbyHome)
+	stopped_service_ref = None
+	if config.plugins.e2embyclient.stop_playing_service_on_load.value:
+		stopped_service_ref = session.nav.getCurrentServiceReferenceOriginal()
+		if stopped_service_ref is not None:
+			session.nav.stopService()
+	session.openWithCallback(boundFunction(restoreStoppedService, session, stopped_service_ref), E2EmbyHome)
 
 
 def startFromMainMenu(menuid):

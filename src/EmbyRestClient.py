@@ -258,6 +258,29 @@ class EmbyRestClient():
 			ShowEmbyTimeoutNotification()
 		return item
 
+	def getThemeSongs(self, item_id):
+		songs = []
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Items/{item_id}/ThemeMedia?UserId={self.user_id}&InheritFromParent=true"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				if response.status_code != 404:
+					res_json_obj = loads(response.content)
+					songs = res_json_obj.get("ThemeSongsResult", {}).get("Items", [])
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return songs
+
 	def getEpisodesForSeries(self, item_id):
 		items = []
 		headers = self.constructHeaders()

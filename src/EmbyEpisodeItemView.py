@@ -6,6 +6,8 @@ from . import _
 
 
 class EmbyEpisodeItemView(EmbyItemView):
+	supportsThemeMusic = True
+
 	skin = ["""<screen name="EmbyEpisodeItemView" position="fill">
 					<!--<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>-->
 					<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
