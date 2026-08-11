@@ -18,6 +18,9 @@ class EmbyEpisodeItemView(EmbyItemView):
 					<widget name="infoline" position="60,230" size="e-120,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 					<widget name="plot" position="60,310" size="924,105" alphatest="blend" font="Regular;30" transparent="1"/>
 					<widget name="f_buttons" position="60,480" size="924,70" font="Regular;32" transparent="1"/>
+					<widget name="version_panel_bg" position="35,585" size="e-70,400" zPosition="-1" backgroundColor="#ff141414" cornerRadius="10" widgetBorderWidth="1" widgetBorderColor="#444444" transparent="0"/>
+					<widget name="version_panel_title" position="40,590" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" zPosition="2"/>
+					<widget name="version_panel" position="40,660" size="e-80,320" font="Regular;24" rowHeight="72" scrollbarMode="showNever" transparent="1" zPosition="1"/>
 					<widget name="cast_header" position="40,590" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 					<widget name="list_cast" position="40,660" size="e-80,426" iconWidth="205" iconHeight="310" font="Regular;19" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 					<widget name="chapters_header" position="40,1126" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>

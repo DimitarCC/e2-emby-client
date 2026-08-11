@@ -23,6 +23,9 @@ class EmbyMovieItemView(EmbyItemView):
 					<widget name="tagline" position="60,230" size="1400,50" alphatest="blend" font="Bold;42" foregroundColor="#00ccac68" transparent="1" shadowColor="black" shadowOffset="-1,-1"/>
 					<widget name="plot" position="60,230" size="924,105" alphatest="blend" font="Regular;30" transparent="1" shadowColor="black" shadowOffset="-1,-1"/>
 					<widget name="f_buttons" position="60,480" size="924,65" font="Regular;26" transparent="1"/>
+					<widget name="version_panel_bg" position="35,585" size="e-70,400" zPosition="-1" backgroundColor="#02141414" cornerRadius="10" widgetBorderWidth="1" widgetBorderColor="#444444" alphatest="blend" alphaBlend="1"/>
+					<widget name="version_panel_title" position="40,590" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" zPosition="2"/>
+					<widget name="version_panel" position="40,660" size="e-80,320" font="Regular;24" rowHeight="72" scrollbarMode="showNever" transparent="1" zPosition="1"/>
 					<widget name="cast_header" position="40,590" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 					<widget name="list_cast" position="40,660" size="e-80,426" iconWidth="205" iconHeight="310" font="Regular;19" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 					<widget name="chapters_header" position="40,1126" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>

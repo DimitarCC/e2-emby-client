@@ -35,7 +35,7 @@ class EmbyItemView(EmbyItemViewBase):
 		if self.selected_widget == "list_chapters":
 			chapter = self["list_chapters"].selectedItem
 			startPos = int(chapter.get("StartPositionTicks", "0")) / 10_000_000
-			playItem(self.item, self.session, callback=self.playerExitCallback, startPos=startPos)
+			playItem(self.item, self.session, callback=self.playerExitCallback, startPos=startPos, media_source_id=self["f_buttons"].selectedMediaSourceId)
 
 	def playerExitCallback(self, *result):
 		self.onPlayerClosedResult()
@@ -65,25 +65,30 @@ class EmbyItemView(EmbyItemViewBase):
 			self.lists["list_cast"].enableSelection(False)
 		media_sources = item.get("MediaSources", [])
 		default_media_source = next((ms for ms in media_sources if ms.get("Type") == "Default"), None)
-		if default_media_source:
-			chapters = default_media_source.get("Chapters", [])
-			list = []
-			if chapters:
-				i = 0
-				for ch in chapters:
-					pos_ticks = int(ch.get("StartPositionTicks"))
-					ch["Id"] = f"{item.get('Id')}_{ch.get('ChapterIndex')}"
-					list.append((i, ch, f"{ch.get('Name')}\n{convert_ticks_to_time(pos_ticks, True)}", None, "0", True))
-					i += 1
-				if list:
-					self["list_chapters"].loadData(list)
-					self.availableWidgets.append("list_chapters")
-					self.lists["list_chapters"].visible(True)
-					self.lists["list_chapters"].enableSelection(True)
+		self.loadChaptersFromMediaSource(default_media_source)
 
-				else:
-					self.lists["list_chapters"].visible(False)
-					self.lists["list_chapters"].enableSelection(False)
-			else:
-				self.lists["list_chapters"].visible(False)
-				self.lists["list_chapters"].enableSelection(False)
+	def loadChaptersFromMediaSource(self, media_source):
+		chapters = media_source.get("Chapters", []) if media_source else []
+		list = []
+		if chapters:
+			i = 0
+			for ch in chapters:
+				pos_ticks = int(ch.get("StartPositionTicks"))
+				ch["Id"] = f"{self.item.get('Id')}_{ch.get('ChapterIndex')}"
+				list.append((i, ch, f"{ch.get('Name')}\n{convert_ticks_to_time(pos_ticks, True)}", None, "0", True))
+				i += 1
+		if list:
+			self["list_chapters"].loadData(list)
+			if "list_chapters" not in self.availableWidgets:
+				self.availableWidgets.append("list_chapters")
+			self.lists["list_chapters"].visible(True)
+			self.lists["list_chapters"].enableSelection(True)
+		else:
+			if "list_chapters" in self.availableWidgets:
+				self.availableWidgets.remove("list_chapters")
+			self.lists["list_chapters"].visible(False)
+			self.lists["list_chapters"].enableSelection(False)
+
+	def updateChaptersForMediaSource(self, media_source):
+		self.loadChaptersFromMediaSource(media_source)
+		self.onLayoutFinishedLast()

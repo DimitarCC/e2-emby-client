@@ -1,6 +1,7 @@
 from os.path import join
 from PIL import Image
 from twisted.internet import threads
+from enigma import eSize, ePoint
 from Components.ActionMap import ActionMap
 from Components.Label import Label
 from Components.Pixmap import Pixmap
@@ -9,7 +10,9 @@ from Screens.Screen import Screen, ScreenSummary
 from .EmbyRestClient import EmbyApiClient
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyItemFunctionButtons import EmbyItemFunctionButtons
+from .EmbyListController import EmbyListController
 from .EmbyNotification import NotificationalScreen
+from .EmbyVersionPanel import EmbyVersionPanel
 from .Variables import plugin_dir
 from . import _
 
@@ -50,6 +53,12 @@ class EmbyItemViewBase(NotificationalScreen):
 		self["f_buttons"] = EmbyItemFunctionButtons(self)
 		self["f_buttons"].onPlayerExit.append(self.__onPlayerClosed)
 		self.lists = {}
+		self["version_panel_bg"] = Label("")
+		self["version_panel_bg"].hide()
+		self["version_panel_title"] = Label(_("Select Version"))
+		self["version_panel"] = EmbyVersionPanel(self)
+		self.lists["version_panel"] = EmbyListController(self["version_panel"], self["version_panel_title"])
+		self.versionPanelOpen = False
 		self["actions"] = ActionMap(["E2EmbyActions",],
 									{
 			"cancel": self.__closeScreen,  # KEY_RED / KEY_EXIT
@@ -64,6 +73,9 @@ class EmbyItemViewBase(NotificationalScreen):
 		}, -2)
 
 	def __closeScreen(self):
+		if self.versionPanelOpen:
+			self.closeVersionPanel()
+			return
 		self.close(self.exitResult)
 
 	def onPlayerClosedResult(self):
@@ -116,10 +128,64 @@ class EmbyItemViewBase(NotificationalScreen):
 		pass
 
 	def processItem(self):
+		if self.versionPanelOpen:
+			self.confirmVersionSelection()
+			return
 		if self.selected_widget == "f_buttons":
 			self["f_buttons"].getSelectedButton()[3]()
 
+	def openVersionPanel(self):
+		if self.versionPanelOpen:
+			self.closeVersionPanel()
+			return
+		media_sources = self.item.get("MediaSources", [])
+		if len(media_sources) < 2:
+			return
+		self["version_panel"].loadVersions(media_sources, self["f_buttons"].selectedMediaSourceId)
+		self.versionPanelOpen = True
+		if "version_panel" not in self.availableWidgets:
+			self.availableWidgets.append("version_panel")
+		self.onLayoutFinishedLast()
+		self.fitVersionPanelBackground()
+		self["version_panel_bg"].show()
+
+	def fitVersionPanelBackground(self):
+		pad = 5
+		title_pos = self["version_panel_title"].instance.position()
+		title_size = self["version_panel_title"].instance.size()
+		list_pos = self["version_panel"].instance.position()
+		list_size = self["version_panel"].instance.size()
+		bg_x = min(title_pos.x(), list_pos.x()) - pad
+		bg_y = title_pos.y() - pad
+		bg_right = max(title_pos.x() + title_size.width(), list_pos.x() + list_size.width())
+		bg_bottom = list_pos.y() + list_size.height()
+		self["version_panel_bg"].instance.move(ePoint(bg_x, bg_y))
+		self["version_panel_bg"].instance.resize(eSize(bg_right - bg_x + pad, bg_bottom - bg_y + pad))
+
+	def confirmVersionSelection(self):
+		chosen_source = self["version_panel"].getSelectedMediaSource()
+		self.closeVersionPanel()
+		if chosen_source:
+			self["f_buttons"].selectedMediaSourceId = chosen_source.get("Id")
+			self.updateChaptersForMediaSource(chosen_source)
+
+	def closeVersionPanel(self):
+		self.versionPanelOpen = False
+		if "version_panel" in self.availableWidgets:
+			self.availableWidgets.remove("version_panel")
+		self.onLayoutFinishedLast()
+		self["version_panel_bg"].hide()
+		self.selected_widget = "f_buttons"
+		self["f_buttons"].enableSelection(True)
+		self["f_buttons"].focusButton(self["f_buttons"].playButtonIndex)
+
+	def updateChaptersForMediaSource(self, media_source):
+		pass
+
 	def up(self):
+		if self.versionPanelOpen:
+			self["version_panel"].moveUp()
+			return
 		keys = list(self.lists.keys())
 		keys = [key for key in keys if key in self.availableWidgets]
 		if self.selected_widget == "episodes_list":
@@ -151,6 +217,9 @@ class EmbyItemViewBase(NotificationalScreen):
 				y += self.lists[item].getHeight() + 40
 
 	def down(self):
+		if self.versionPanelOpen:
+			self["version_panel"].moveDown()
+			return
 		keys = list(self.lists.keys())
 		keys = [key for key in keys if key in self.availableWidgets]
 		if self.selected_widget == "f_buttons":
@@ -184,12 +253,16 @@ class EmbyItemViewBase(NotificationalScreen):
 				selEnabled = False
 
 	def left(self):
+		if self.versionPanelOpen:
+			return
 		if self.selected_widget == "f_buttons":
 			self["f_buttons"].movePrevious()
 		else:
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
+		if self.versionPanelOpen:
+			return
 		if self.selected_widget == "f_buttons":
 			self["f_buttons"].moveNext()
 		else:

@@ -1,5 +1,5 @@
 from twisted.internet import threads
-from enigma import eLabel, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, getDesktop, eSize, RT_BLEND
+from enigma import eLabel, eListbox, eListboxPythonMultiContent, BT_SCALE, BT_KEEP_ASPECT_RATIO, gFont, RT_VALIGN_CENTER, RT_HALIGN_LEFT, RT_HALIGN_CENTER, getDesktop, eSize, RT_BLEND
 from skin import parseColor, parseFont
 from urllib.parse import quote
 
@@ -24,11 +24,19 @@ except ImportError:
     YDL = None
 
 
-def playItem(selected_item, session, callback, startPos=0):
+def playItem(selected_item, session, callback, startPos=0, media_source_id=None):
 	infobar = InfoBar.instance
 	if infobar:
+		play_item = selected_item
+		if media_source_id:
+			media_sources = selected_item.get("MediaSources", [])
+			chosen_source = next((ms for ms in media_sources if ms.get("Id") == media_source_id), None)
+			if chosen_source:
+				# EmbyPlayer always plays MediaSources[0], so move the chosen version to the front
+				play_item = dict(selected_item)
+				play_item["MediaSources"] = [chosen_source] + [ms for ms in media_sources if ms is not chosen_source]
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
-		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
+		session.openWithCallback(callback, EmbyPlayer, item=play_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
 
 
 def playItemTrailer(selected_item, session, callback, startPos=0):
@@ -81,6 +89,9 @@ class EmbyItemFunctionButtons(GUIComponent):
 		self.favoriteIcon = LoadPixmap("%s/favorite.png" % plugin_dir)
 		self.notFavoriteIcon = LoadPixmap("%s/notfavorite.png" % plugin_dir)
 		self.tvIcon = LoadPixmap("%s/tv.png" % plugin_dir)
+		self.versionsIcon = LoadPixmap("%s/videoversions.png" % plugin_dir)
+		self.selectedMediaSourceId = None
+		self.playButtonIndex = 0
 		self.font = gFont("Regular", 22)
 		self.fontAdditional = gFont("Regular", 22)
 		self.foreColorAdditional = 0xffffff
@@ -138,6 +149,13 @@ class EmbyItemFunctionButtons(GUIComponent):
 	def movePrevious(self):
 		self.moveSelection(-1)
 
+	def focusButton(self, index):
+		if not self.buttons:
+			return
+		self.selectedIndex = max(0, min(index, len(self.buttons) - 1))
+		self.isMoveLeftRight = True
+		self.updateInfo()
+
 	def isAtHome(self):
 		return self.selectedIndex == 0
 
@@ -153,13 +171,16 @@ class EmbyItemFunctionButtons(GUIComponent):
 
 	def resumePlay(self):
 		startPos = int(self.item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
-		playItem(self.item, self.screen.session, self.playerExitCallback, startPos=startPos)
+		playItem(self.item, self.screen.session, self.playerExitCallback, startPos=startPos, media_source_id=self.selectedMediaSourceId)
 
 	def playFromBeguinning(self):
-		playItem(self.item, self.screen.session, self.playerExitCallback)
+		playItem(self.item, self.screen.session, self.playerExitCallback, media_source_id=self.selectedMediaSourceId)
 
 	def playTrailer(self):
 		playItemTrailer(self.item, self.screen.session, self.playerExitCallback)
+
+	def openVersionsPanel(self):
+		self.screen.openVersionPanel()
 
 	def toggleWatched(self):
 		played = self.item.get("UserData", {}).get("Played", False)
@@ -200,6 +221,9 @@ class EmbyItemFunctionButtons(GUIComponent):
 			self.setItem(self.item)
 
 	def setItem(self, item):
+		is_new_item = not getattr(self, "item", None) or self.item.get("Id") != item.get("Id")
+		if is_new_item:
+			self.selectedMediaSourceId = None
 		self.buttons = []
 		self.item = item
 		type = item.get("Type", None)
@@ -208,7 +232,12 @@ class EmbyItemFunctionButtons(GUIComponent):
 		trailers = item.get("RemoteTrailers", [])
 		played = item.get("UserData", {}).get("Played", False)
 		isFavorite = item.get("UserData", {}).get("IsFavorite", False)
+		hasMultipleVersions = len(item.get("MediaSources", [])) > 1
+		self.playButtonIndex = 0
 		if type != "Series" and type != "BoxSet":
+			if hasMultipleVersions:
+				self.buttons.append((len(self.buttons), self.versionsIcon, _("Versions"), self.openVersionsPanel))
+			self.playButtonIndex = len(self.buttons)
 			if position_ticks:
 				self.buttons.append((len(self.buttons), self.resumeIcon, _("Resume") + " (" + convert_ticks_to_time(position_ticks, is_chapters=True) + ")", self.resumePlay))
 				self.buttons.append((len(self.buttons), self.playStartIcon, _("Play from start"), self.playFromBeguinning))
@@ -225,7 +254,10 @@ class EmbyItemFunctionButtons(GUIComponent):
 		self.buttons.append((len(self.buttons), self.favoriteIcon if isFavorite else self.notFavoriteIcon, _("Favorite"), self.toggleFavorite))
 		if type == "Episode":
 			self.buttons.append((len(self.buttons), self.tvIcon, _("Go to series"), self.gotoSeries))
-		self.updateInfo()
+		if is_new_item:
+			self.focusButton(self.playButtonIndex)
+		else:
+			self.updateInfo()
 
 	def updateInfo(self):
 		l_list = []
@@ -270,11 +302,13 @@ class EmbyItemFunctionButtons(GUIComponent):
 			pixd_height = pixd_size.height()
 
 		back_color = backColorSelected if selected else backColor
+		border_color = 0x404040 if not selected else backColorSelected
 		offset = 0
+
 		res.append(MultiContentEntryRectangle(
 			pos=(xPos, yPos), size=(textWidth + pixd_width + (55 if text else 40), rec_height),
 			cornerRadius=8,
-			borderWidth=2, borderColor=0x404040 if not selected else backColorSelected,
+			borderWidth=2, borderColor=border_color,
 			backgroundColor=back_color, backgroundColorSelected=back_color))
 		offset = xPos + textWidth + pixd_width + (55 if text else 40)
 

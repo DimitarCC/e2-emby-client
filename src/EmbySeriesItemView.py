@@ -26,6 +26,9 @@ class EmbySeriesItemView(EmbyItemView):
 					<widget name="f_buttons" position="60,440" size="924,65" font="Regular;32" transparent="1"/>
 					<widget name="seasons_list" position="55,560" size="5*200,60" itemWidth="200" font="Regular;28" transparent="1"/>
 					<widget name="episodes_list" position="40,630" size="e-80,438" iconWidth="407" iconHeight="220" font="Regular;22" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
+					<widget name="version_panel_bg" position="35,1073" size="e-70,400" zPosition="-1" backgroundColor="#ff141414" cornerRadius="10" widgetBorderWidth="1" widgetBorderColor="#444444" transparent="0"/>
+					<widget name="version_panel_title" position="40,1078" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" zPosition="2"/>
+					<widget name="version_panel" position="40,1148" size="e-80,320" font="Regular;24" rowHeight="72" scrollbarMode="showNever" transparent="1" zPosition="1"/>
 					<widget name="cast_header" position="40,1078" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 					<widget name="list_cast" position="40,1128" size="e-80,426" iconWidth="205" iconHeight="310" font="Regular;19" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 					<widget name="chapters_header" position="40,1584" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
