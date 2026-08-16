@@ -67,7 +67,7 @@ def _startThemeMusic(songs, owner):
 		if not any(owner is o for o in _playing_owners):
 			_playing_owners.append(owner)
 		return
-	#stopThemeMusic()
+	# stopThemeMusic()
 	ref = _buildThemeSongRef(song)
 	if NavigationInstance.instance is not None:
 		NavigationInstance.instance.playService(ref)
