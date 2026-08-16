@@ -585,7 +585,7 @@ class EmbyRestClient():
 							f.write(response.content)
 
 					if "Backdrop" in image_type:
-						copyfile(im_tmp_path, f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_orig.png")
+						copyfile(im_tmp_path, f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_orig.jpg")
 						poster_url = f"{self.server_root}/emby/Items/{item_id}/Images/Primary?tag={logo_tag}&quality=60&format=jpg"
 						response_poster = get(poster_url, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 						if response_poster.status_code != 404:

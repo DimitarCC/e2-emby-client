@@ -480,7 +480,7 @@ class E2EmbyHome(NotificationalScreen):
 
 	def __onClose(self):
 		Path.unlink(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png", missing_ok=True)
-		Path.unlink(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_orig.png", missing_ok=True)
+		Path.unlink(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_orig.jpg", missing_ok=True)
 		Path.unlink(f"/tmp{EMBY_THUMB_CACHE_DIR}/poster.jpg", missing_ok=True)
 
 	def loadEmbyList(self, widget, type, parent_ids=[]):

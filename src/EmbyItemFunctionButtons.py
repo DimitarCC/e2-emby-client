@@ -10,6 +10,7 @@ from Screens.InfoBar import InfoBar
 from Tools.LoadPixmap import LoadPixmap
 from Tools.BoundFunction import boundFunction
 
+from .EmbyLoadingScreen import showLoadingScreen, hideLoadingScreen
 from .EmbyPlayer import EmbyPlayer
 from .EmbyRestClient import EmbyApiClient
 from .EmbyThemeMusic import stopThemeMusicThenPlay
@@ -38,16 +39,18 @@ def playItem(selected_item, session, callback, startPos=0, media_source_id=None)
 				play_item["MediaSources"] = [chosen_source] + [ms for ms in media_sources if ms is not chosen_source]
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
 		stopThemeMusicThenPlay(session, lambda: session.openWithCallback(callback, EmbyPlayer, item=play_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService))
+	else:
+		hideLoadingScreen()
 
 
 def playItemTrailer(selected_item, session, callback, startPos=0):
-	if YDL:
-		trailers = selected_item.get("RemoteTrailers", [])
-		if trailers:
-			trailer = trailers[0]
-			url_trailer = trailer.get("Url", "").strip()
-			if url_trailer and "youtube" in url_trailer:
-				threads.deferToThread(getYoutubePlaybleUrl, url_trailer).addCallback(boundFunction(openTrailerPlayer, selected_item, session, callback))
+	trailers = selected_item.get("RemoteTrailers", []) if YDL else []
+	trailer = trailers[0] if trailers else None
+	url_trailer = trailer.get("Url", "").strip() if trailer else ""
+	if url_trailer and "youtube" in url_trailer:
+		threads.deferToThread(getYoutubePlaybleUrl, url_trailer).addCallback(boundFunction(openTrailerPlayer, selected_item, session, callback))
+	else:
+		hideLoadingScreen()
 
 
 def getYoutubePlaybleUrl(source_url):
@@ -65,9 +68,11 @@ def getYoutubePlaybleUrl(source_url):
 
 def openTrailerPlayer(selected_item, session, callback, result):
 	infobar = InfoBar.instance
-	if infobar:
+	if infobar and result:
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
 		stopThemeMusicThenPlay(session, lambda: session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=0, slist=infobar.servicelist, lastservice=LastService, is_trailer=True, trailer_url=result))
+	else:
+		hideLoadingScreen()
 
 
 class EmbyItemFunctionButtons(GUIComponent):
@@ -171,13 +176,16 @@ class EmbyItemFunctionButtons(GUIComponent):
 			x()
 
 	def resumePlay(self):
+		showLoadingScreen(self.screen.session)
 		startPos = int(self.item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
 		playItem(self.item, self.screen.session, self.playerExitCallback, startPos=startPos, media_source_id=self.selectedMediaSourceId)
 
 	def playFromBeguinning(self):
+		showLoadingScreen(self.screen.session)
 		playItem(self.item, self.screen.session, self.playerExitCallback, media_source_id=self.selectedMediaSourceId)
 
 	def playTrailer(self):
+		showLoadingScreen(self.screen.session)
 		playItemTrailer(self.item, self.screen.session, self.playerExitCallback)
 
 	def openVersionsPanel(self):

@@ -22,6 +22,7 @@ from Tools.SubtitleRenderer import SubtitleRenderer
 from . import Globals
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyList import EmbyList
+from .EmbyLoadingScreen import hideLoadingScreen
 from .EmbyPlayerInfobarInfo import EmbyPlayerInfobarInfo
 from .EmbyRestClient import EmbyApiClient
 from .HelperFunctions import convert_ticks_to_time
@@ -629,6 +630,7 @@ class EmbyPlayer(MoviePlayer):
 		if pos is not None:
 			self.init_timer.stop()
 			self.__evServiceStart()
+			hideLoadingScreen()
 			self.init_seek_timer.start(config.plugins.e2embyclient.init_seek_delay_exteplayer3.value if config.plugins.e2embyclient.play_system.value == "5002" else config.plugins.e2embyclient.init_seek_delay_default.value)
 
 	def __onPlayerInitSeek(self):
@@ -689,6 +691,7 @@ class EmbyPlayer(MoviePlayer):
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)
 
 	def handleLeave(self, what):
+		hideLoadingScreen()
 		self.selected_subtitle = None
 		self.is_closing = True
 		if config.plugins.e2embyclient.stop_playing_service_on_load.value:

@@ -1,8 +1,7 @@
 from twisted.internet import threads
 
-from enigma import eServiceReference, eTimer
+from enigma import eServiceReference, eTimer, eServiceCenter
 from Components.config import config
-from Navigation import NavigationInstance
 
 from .EmbyRestClient import EmbyApiClient
 
@@ -51,7 +50,7 @@ def _buildThemeSongRef(song):
 	container = media_sources[0].get("Container") if media_sources else "mp3"
 	url = f"{EmbyApiClient.server_root}/audio/{song_id}/stream.{container}?static=true&api_key={EmbyApiClient.access_token}&DeviceId={EmbyApiClient.device_id}"
 	name = song.get("Name", "Theme")
-	return eServiceReference("%s:0:1:%x:1011:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, song_id, url.replace(":", "%3a"), name))
+	return eServiceReference("%s:0:2:%x:1011:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, song_id, url.replace(":", "%3a"), name))
 
 
 def _startThemeMusic(songs, owner):
@@ -69,9 +68,9 @@ def _startThemeMusic(songs, owner):
 		return
 	# stopThemeMusic()
 	ref = _buildThemeSongRef(song)
-	if NavigationInstance.instance is not None:
-		NavigationInstance.instance.playService(ref)
-		_playing_service = ref
+	service = eServiceCenter.getInstance().play(ref)
+	if service and service.start() == 0:
+		_playing_service = service
 		_playing_song_id = song_id
 		_playing_owners.append(owner)
 
@@ -84,8 +83,8 @@ def playThemeMusicForItem(item_id, owner):
 
 def stopThemeMusic():
 	global _playing_service, _playing_song_id
-	if NavigationInstance.instance is not None and _playing_service is not None:
-		NavigationInstance.instance.stopService()
+	if _playing_service is not None:
+		_playing_service.stop()
 	_playing_service = None
 	_playing_song_id = None
 	_playing_owners.clear()
