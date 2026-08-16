@@ -12,7 +12,7 @@ from Tools.BoundFunction import boundFunction
 
 from .EmbyPlayer import EmbyPlayer
 from .EmbyRestClient import EmbyApiClient
-from .EmbyThemeMusic import stopThemeMusic
+from .EmbyThemeMusic import stopThemeMusicThenPlay
 from .HelperFunctions import convert_ticks_to_time
 from .Variables import plugin_dir
 from . import _
@@ -28,7 +28,6 @@ except ImportError:
 def playItem(selected_item, session, callback, startPos=0, media_source_id=None):
 	infobar = InfoBar.instance
 	if infobar:
-		stopThemeMusic()
 		play_item = selected_item
 		if media_source_id:
 			media_sources = selected_item.get("MediaSources", [])
@@ -38,7 +37,7 @@ def playItem(selected_item, session, callback, startPos=0, media_source_id=None)
 				play_item = dict(selected_item)
 				play_item["MediaSources"] = [chosen_source] + [ms for ms in media_sources if ms is not chosen_source]
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
-		session.openWithCallback(callback, EmbyPlayer, item=play_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService)
+		stopThemeMusicThenPlay(session, lambda: session.openWithCallback(callback, EmbyPlayer, item=play_item, startPos=startPos, slist=infobar.servicelist, lastservice=LastService))
 
 
 def playItemTrailer(selected_item, session, callback, startPos=0):
@@ -67,9 +66,8 @@ def getYoutubePlaybleUrl(source_url):
 def openTrailerPlayer(selected_item, session, callback, result):
 	infobar = InfoBar.instance
 	if infobar:
-		stopThemeMusic()
 		LastService = session.nav.getCurrentServiceReferenceOriginal()
-		session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=0, slist=infobar.servicelist, lastservice=LastService, is_trailer=True, trailer_url=result)
+		stopThemeMusicThenPlay(session, lambda: session.openWithCallback(callback, EmbyPlayer, item=selected_item, startPos=0, slist=infobar.servicelist, lastservice=LastService, is_trailer=True, trailer_url=result))
 
 
 class EmbyItemFunctionButtons(GUIComponent):

@@ -40,6 +40,9 @@ def initConfig():
 	config.plugins.e2embyclient.encodding_nonutf_subs = ConfigSelection(default="latin1", choices=subs_encoddings_choices)
 	config.plugins.e2embyclient.stop_playing_service_on_load = ConfigYesNo(default=False)
 	config.plugins.e2embyclient.play_theme_music = ConfigYesNo(default=False)
+	config.plugins.e2embyclient.theme_music_settle_delay = ConfigInteger(default=300, limits=(0, 5000))
+	config.plugins.e2embyclient.init_seek_delay_default = ConfigInteger(default=10, limits=(0, 2000))
+	config.plugins.e2embyclient.init_seek_delay_exteplayer3 = ConfigInteger(default=300, limits=(0, 2000))
 	for idx in range(config.plugins.e2embyclient.connectioncount.value):
 		initConnection(idx)
 

@@ -629,7 +629,7 @@ class EmbyPlayer(MoviePlayer):
 		if pos is not None:
 			self.init_timer.stop()
 			self.__evServiceStart()
-			self.init_seek_timer.start(100 if config.plugins.e2embyclient.play_system.value == "5002" else 10)
+			self.init_seek_timer.start(config.plugins.e2embyclient.init_seek_delay_exteplayer3.value if config.plugins.e2embyclient.play_system.value == "5002" else config.plugins.e2embyclient.init_seek_delay_default.value)
 
 	def __onPlayerInitSeek(self):
 		if self.is_trailer:
