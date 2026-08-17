@@ -22,10 +22,11 @@ from Tools.SubtitleRenderer import SubtitleRenderer
 from . import Globals
 from .EmbyInfoLine import EmbyInfoLine
 from .EmbyList import EmbyList
-from .EmbyLoadingScreen import hideLoadingScreen
+from .EmbyLoadingScreen import showLoadingScreen, hideLoadingScreen
 from .EmbyPlayerInfobarInfo import EmbyPlayerInfobarInfo
 from .EmbyRestClient import EmbyApiClient
 from .EmbySkipIntroScreen import showSkipIntroScreen, hideSkipIntroScreen
+from .EmbyUpNextScreen import showUpNextScreen, hideUpNextScreen, updateUpNextCountdown, moveUpNextSelectionLeft, moveUpNextSelectionRight, activateUpNextSelectedButton, UP_NEXT_COUNTDOWN_SECONDS
 from .HelperFunctions import convert_ticks_to_time
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
 
@@ -48,55 +49,16 @@ class EmbyPlayer(MoviePlayer):
 
 	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False, trailer_url=None):
 		Globals.IsPlayingFile = True
-		item_id = int(item.get("Id", "0"))
-		item_name = item.get("Name", "Stream")
-		media_sources = item.get("MediaSources")
-		ref = None
-		play_session_id = ""
-		if media_sources and not is_trailer:
-			media_source = media_sources[0]
-			defaultAudioIndex = media_source.get("DefaultAudioStreamIndex", -1)
-			defaultSubtitleIndex = media_source.get("DefaultSubtitleStreamIndex", -1)
-			container = media_source.get("Container")
-			media_source_id = media_source.get("Id")
-			play_session_id = str(uuid4())
-			directStreamUrl = f"/videos/{item_id}/original.{container}?DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
-			url = f"{EmbyApiClient.server_root}{directStreamUrl}"
-			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), item_name))
-		if is_trailer and trailer_url:
-			ref = eServiceReference("%s:0:1:%x:1010:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, trailer_url.replace(":", "%3a"), f"Trailer - {item_name}"))
-		if ref is None:
-			print(f"[EmbyPlayer] ERROR ref is None for item '{item}'")
-			print(f" is_trailer -> {is_trailer}")
-			print(f" media_sources -> {media_sources}")
-			print(f" trailer_url -> {trailer_url}")
+		item = item or {}
+		ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex = self.buildServiceRef(item, is_trailer, trailer_url)
 		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
 		self.session = session
-		self.is_trailer = is_trailer
 		AudioSelection.fillSubtitleExt = self.subtitleListIject
 		if self.onAudioSubTrackChanged not in AudioSelection.hooks:
 			AudioSelection.hooks.append(self.onAudioSubTrackChanged)
 		self.onPlayStateChanged.append(self.__playStateChanged)
 		self.onHide.append(self.__onHide)
-		self.init_seek_to = startPos
-		self.curAudioIndex = -1
-		self.CurIndexEmbeddedSubs = -1
-		self.curSubsIndex = -1
-		self.firstSubIndex = -1
-		self.supressChapterSelect = False
-		self.item = item or {}
-		self.chapters = []
-		self.introStartPos = None
-		self.introEndPos = None
-		self.skipIntroShown = False
-		self.skipIntroDismissed = False
-		self.play_session_id = play_session_id
-		self.skip_progress_update = False
-		self.current_seek_step = 0
-		self.current_pos = -1
-		self.lastPos = -1
 		self.selectedSubtitleTrack = (0, 0, 0, 0, "und")
-		self.selected_widget = None
 		self["poster"] = Pixmap()
 		self["poster"].hide()
 		self["info_panel_line"] = EmbyInfoLine(self)
@@ -133,14 +95,10 @@ class EmbyPlayer(MoviePlayer):
 		self.emby_progress_timer.callback.append(self.updateEmbyProgress)
 		self.seek_timer = eTimer()
 		self.seek_timer.callback.append(self.onSeekRequest)
+		self.up_next_countdown_timer = eTimer()
+		self.up_next_countdown_timer.callback.append(self.onUpNextCountdownTick)
+		self.setPlayingItem(item, startPos, is_trailer, play_session_id, defaultAudioIndex, defaultSubtitleIndex)
 		self.onProgressTimer()
-		if is_trailer:
-			self["info_line"].updateInfo(self.item, -1, -1, True)
-		else:
-			self["info_line"].updateInfo(self.item, defaultAudioIndex, defaultSubtitleIndex)
-		self["info_panel_line"].updateInfo(self.item)
-		self.loadChapters()
-		self.info_shown = False
 		self["NumberSeekActions"] = NumberActionMap(["NumberActions"],
 		{
 			"1": self.numberSeek,
@@ -165,6 +123,68 @@ class EmbyPlayer(MoviePlayer):
 			iPlayableService.evStart: self.__evServiceStartInit,
 			iPlayableService.evUpdatedInfo: self.__updatedInfoEmby})
 
+	def buildServiceRef(self, item, is_trailer, trailer_url):
+		item_id = int(item.get("Id", "0"))
+		item_name = item.get("Name", "Stream")
+		media_sources = item.get("MediaSources")
+		ref = None
+		play_session_id = ""
+		defaultAudioIndex = -1
+		defaultSubtitleIndex = -1
+		if media_sources and not is_trailer:
+			media_source = media_sources[0]
+			defaultAudioIndex = media_source.get("DefaultAudioStreamIndex", -1)
+			defaultSubtitleIndex = media_source.get("DefaultSubtitleStreamIndex", -1)
+			container = media_source.get("Container")
+			media_source_id = media_source.get("Id")
+			play_session_id = str(uuid4())
+			directStreamUrl = f"/videos/{item_id}/original.{container}?DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
+			url = f"{EmbyApiClient.server_root}{directStreamUrl}"
+			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), item_name))
+		if is_trailer and trailer_url:
+			ref = eServiceReference("%s:0:1:%x:1010:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, trailer_url.replace(":", "%3a"), f"Trailer - {item_name}"))
+		if ref is None:
+			print(f"[EmbyPlayer] ERROR ref is None for item '{item}'")
+			print(f" is_trailer -> {is_trailer}")
+			print(f" media_sources -> {media_sources}")
+			print(f" trailer_url -> {trailer_url}")
+		return ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex
+
+	def setPlayingItem(self, item, startPos, is_trailer, play_session_id, defaultAudioIndex, defaultSubtitleIndex):
+		self.is_trailer = is_trailer
+		self.init_seek_to = startPos
+		self.curAudioIndex = -1
+		self.CurIndexEmbeddedSubs = -1
+		self.curSubsIndex = -1
+		self.firstSubIndex = -1
+		self.supressChapterSelect = False
+		self.item = item or {}
+		self.chapters = []
+		self.introStartPos = None
+		self.introEndPos = None
+		self.skipIntroShown = False
+		self.skipIntroDismissed = False
+		self.upNextEligible = self.item.get("Type") == "Episode" and not is_trailer
+		self.upNextItem = None
+		self.upNextShown = False
+		self.upNextDismissed = False
+		self.upNextSecondsLeft = UP_NEXT_COUNTDOWN_SECONDS
+		self.play_session_id = play_session_id
+		self.skip_progress_update = False
+		self.current_seek_step = 0
+		self.current_pos = -1
+		self.lastPos = -1
+		self.selected_widget = None
+		if is_trailer:
+			self["info_line"].updateInfo(self.item, -1, -1, True)
+		else:
+			self["info_line"].updateInfo(self.item, defaultAudioIndex, defaultSubtitleIndex)
+		self["info_panel_line"].updateInfo(self.item)
+		self.loadChapters()
+		if self.upNextEligible:
+			threads.deferToThread(self.fetchUpNextItem)
+		self.info_shown = False
+
 	def __onHide(self):
 		self["list_chapters"].hide()
 		self["info_bkg"].hide()
@@ -172,6 +192,7 @@ class EmbyPlayer(MoviePlayer):
 		self["info_panel_line"].hide()
 		self["plot"].hide()
 		self.hideSkipIntroButton()
+		self.hideUpNextOverlay(dismiss=True)
 		self.selected_widget = None
 		self.info_shown = False
 		self.supressChapterSelect = False
@@ -199,7 +220,77 @@ class EmbyPlayer(MoviePlayer):
 		if intro_end:
 			self.introEndPos = int(intro_end.get("StartPositionTicks", "0")) / 10_000_000
 
+	def fetchUpNextItem(self):
+		series_id = self.item.get("SeriesId")
+		if not series_id:
+			return
+		episodes = EmbyApiClient.getEpisodesForSeries(series_id)
+		if not episodes:
+			return
+		sorted_episodes = sorted(episodes, key=lambda ep: (ep.get("ParentIndexNumber", 0), ep.get("IndexNumber", 0)))
+		current_id = self.item.get("Id")
+		current_index = next((i for i, ep in enumerate(sorted_episodes) if ep.get("Id") == current_id), -1)
+		if current_index == -1 or current_index + 1 >= len(sorted_episodes):
+			return
+		next_item_id = sorted_episodes[current_index + 1].get("Id")
+		next_item = EmbyApiClient.getSingleItem(next_item_id)
+		if next_item and next_item.get("Id"):
+			self.upNextItem = next_item
+
+	def showUpNextOverlay(self):
+		self.upNextShown = True
+		self.upNextSecondsLeft = UP_NEXT_COUNTDOWN_SECONDS
+		showUpNextScreen(self.session, self.upNextItem, self.playUpNextItem, self.hideUpNextOverlay)
+		self.up_next_countdown_timer.start(1000)
+
+	def hideUpNextOverlay(self, dismiss=True):
+		if self.upNextShown:
+			self.up_next_countdown_timer.stop()
+			hideUpNextScreen()
+			self.upNextShown = False
+		self.upNextDismissed = dismiss
+
+	def onUpNextCountdownTick(self):
+		self.upNextSecondsLeft -= 1
+		if self.upNextSecondsLeft <= 0:
+			self.up_next_countdown_timer.stop()
+			self.playUpNextItem()
+			return
+		updateUpNextCountdown(self.upNextSecondsLeft)
+
+	def playUpNextItem(self):
+		next_item = self.upNextItem
+		if not next_item:
+			return
+		ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex = self.buildServiceRef(next_item, False, None)
+		if ref is None:
+			self.hideUpNextOverlay(dismiss=True)
+			return
+		self.__evServiceEnd()
+		self.__onHide()
+		showLoadingScreen(self.session)
+		self.setPlayingItem(next_item, 0, False, play_session_id, defaultAudioIndex, defaultSubtitleIndex)
+		self.session.nav.playService(ref)
+
+	def updateUpNextScreen(self, pos):
+		if not config.plugins.e2embyclient.show_up_next_screen.value:
+			return
+		if self.skipIntroShown or not self.upNextEligible or not self.upNextItem:
+			return
+		length = self.getLength()
+		if not length:
+			return
+		remaining = length - pos
+		if remaining <= UP_NEXT_COUNTDOWN_SECONDS:
+			if not self.upNextShown and not self.upNextDismissed:
+				self.showUpNextOverlay()
+		else:
+			self.upNextDismissed = False
+
 	def seekBack(self):
+		if self.upNextShown:
+			moveUpNextSelectionLeft()
+			return
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -209,6 +300,9 @@ class EmbyPlayer(MoviePlayer):
 		self.showAfterSeek()
 
 	def left(self):
+		if self.upNextShown:
+			moveUpNextSelectionLeft()
+			return
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -216,6 +310,9 @@ class EmbyPlayer(MoviePlayer):
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def seekFwd(self):
+		if self.upNextShown:
+			moveUpNextSelectionRight()
+			return
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -226,6 +323,8 @@ class EmbyPlayer(MoviePlayer):
 		self.hideTimer.stop()
 
 	def seekFwdManual(self, fwd=True):
+		if self.upNextShown:
+			self.hideUpNextOverlay(dismiss=True)
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -236,6 +335,8 @@ class EmbyPlayer(MoviePlayer):
 		self.hideTimer.stop()
 
 	def seekBackManual(self, fwd=False):
+		if self.upNextShown:
+			self.hideUpNextOverlay(dismiss=True)
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -246,6 +347,8 @@ class EmbyPlayer(MoviePlayer):
 		self.hideTimer.stop()
 
 	def seekBackSeekbar(self, fwd=False):
+		if self.upNextShown:
+			self.hideUpNextOverlay(dismiss=True)
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -254,6 +357,8 @@ class EmbyPlayer(MoviePlayer):
 		MoviePlayer.seekBackSeekbar(self, fwd)
 
 	def seekFwdSeekbar(self, fwd=True):
+		if self.upNextShown:
+			self.hideUpNextOverlay(dismiss=True)
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -262,6 +367,8 @@ class EmbyPlayer(MoviePlayer):
 		MoviePlayer.seekFwdSeekbar(self, fwd)
 
 	def seekFwdVod(self, fwd=True):
+		if self.upNextShown:
+			self.hideUpNextOverlay(dismiss=True)
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -270,6 +377,9 @@ class EmbyPlayer(MoviePlayer):
 		MoviePlayer.seekFwdVod(self, fwd)
 
 	def right(self):
+		if self.upNextShown:
+			moveUpNextSelectionRight()
+			return
 		if self.skipIntroShown:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -277,6 +387,9 @@ class EmbyPlayer(MoviePlayer):
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def processItem(self):
+		if self.upNextShown:
+			activateUpNextSelectedButton()
+			return
 		if self.skipIntroShown:
 			self.skipIntro()
 			return
@@ -300,7 +413,7 @@ class EmbyPlayer(MoviePlayer):
 		return len(self.chapters) - 1  # Last chapter
 
 	def showChapters(self):
-		if self.skipIntroShown:
+		if self.upNextShown or self.skipIntroShown:
 			return
 		if self.chapters and not self.is_trailer:
 			list = []
@@ -321,7 +434,7 @@ class EmbyPlayer(MoviePlayer):
 			self["list_chapters"].hide()
 
 	def showInfo(self):
-		if self.skipIntroShown:
+		if self.upNextShown or self.skipIntroShown:
 			return
 		if self.is_trailer:
 			return
@@ -374,6 +487,8 @@ class EmbyPlayer(MoviePlayer):
 		return pos[1] / 90000
 
 	def numberSeek(self, key):
+		if self.upNextShown:
+			self.hideUpNextOverlay(dismiss=True)
 		if self.skipIntroShown:
 			return
 
@@ -453,6 +568,7 @@ class EmbyPlayer(MoviePlayer):
 			if cur_ch_index != self["list_chapters"].getCurrentIndex():
 				self["list_chapters"].instance.moveSelectionTo(cur_ch_index)
 		self.updateSkipIntroButton(curr_pos)
+		self.updateUpNextScreen(curr_pos)
 
 	def updateSkipIntroButton(self, pos):
 		if not config.plugins.e2embyclient.show_skip_intro_button.value:
@@ -734,13 +850,22 @@ class EmbyPlayer(MoviePlayer):
 		if self.progress_timer:
 			self.progress_timer.stop()
 		self.subtitle_renderer.stopSubtitles()
+		self.emby_progress_timer.stop()
 		if self.is_trailer:
 			return
 		last_play_pos = -1
 		if self.lastPos > 0:
 			last_play_pos = int(self.lastPos) * 10_000_000
-		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, last_play_pos, True)
-		self.emby_progress_timer.stop()
+		# Capture the outgoing item's identifiers synchronously - self.item and
+		# self.play_session_id may already point at the next item (up-next
+		# autoplay reuses this instance and switches self.item right after
+		# this call), so a lazy self.xxx read inside the deferred thread would
+		# race and report the wrong episode's stop event.
+		item_id = self.item.get("Id")
+		media_sources = self.item.get("MediaSources")
+		media_source_id = media_sources[0].get("Id") if media_sources else None
+		if media_source_id:
+			threads.deferToThread(EmbyApiClient.setPlaySessionParameters, self.play_session_id, item_id, media_source_id, self.curAudioIndex, self.curSubsIndex, last_play_pos, True)
 
 	def __playStateChanged(self, state):
 		playstateString = state[3]
@@ -767,6 +892,7 @@ class EmbyPlayer(MoviePlayer):
 	def handleLeave(self, what):
 		hideLoadingScreen()
 		self.hideSkipIntroButton()
+		self.hideUpNextOverlay(dismiss=True)
 		self.selected_subtitle = None
 		self.is_closing = True
 		if config.plugins.e2embyclient.stop_playing_service_on_load.value:
@@ -790,6 +916,9 @@ class EmbyPlayer(MoviePlayer):
 		self.handleLeave("quit")
 
 	def leavePlayerOnExit(self):
+		if self.upNextShown:
+			self.hideUpNextOverlay(dismiss=True)
+			return
 		if self.skipIntroShown:
 			self.skipIntroDismissed = True
 			self.hideSkipIntroButton()
@@ -807,7 +936,14 @@ class EmbyPlayer(MoviePlayer):
 			return
 		if not playing:
 			return
-
+		# The stream can reach its actual end slightly before our estimated
+		# "30s remaining" trigger fires (e.g. imprecise reported duration), so
+		# fall back to autoplaying the next episode here too rather than only
+		# relying on the up-next countdown - otherwise the player would just
+		# quit out from under an unfinished/never-shown up-next screen.
+		if config.plugins.e2embyclient.show_up_next_screen.value and self.upNextItem and not self.upNextDismissed:
+			self.playUpNextItem()
+			return
 		self.clearHooks()
 		self.handleLeave("quit")
 

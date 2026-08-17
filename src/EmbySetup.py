@@ -39,6 +39,7 @@ def initConfig():
 	subs_encoddings_choices = [("latin1", "Latin"), ("windows-1251", "Cyrillic"), ("Shift_JIS", "Japanese/日本語"), ("Big5", "Chinese (Traditional)/繁體中文"), ("GB2312", "Chinese (Simplified)/简体中文"), ("Windows-1256", "Arabic/العربية")]
 	config.plugins.e2embyclient.encodding_nonutf_subs = ConfigSelection(default="latin1", choices=subs_encoddings_choices)
 	config.plugins.e2embyclient.show_skip_intro_button = ConfigYesNo(default=True)
+	config.plugins.e2embyclient.show_up_next_screen = ConfigYesNo(default=True)
 	config.plugins.e2embyclient.stop_playing_service_on_load = ConfigYesNo(default=False)
 	config.plugins.e2embyclient.play_theme_music = ConfigYesNo(default=False)
 	config.plugins.e2embyclient.theme_music_settle_delay = ConfigInteger(default=300, limits=(0, 5000))

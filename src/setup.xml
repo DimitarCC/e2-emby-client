@@ -23,6 +23,7 @@
 		<item level="0" text="Playback system" description="Specify what will be the playback system. Possible choices is GStreamer/ExtePlayer3/HiPlayer.">config.plugins.e2embyclient.play_system</item>
 		<item level="0" text="Encodding for non UTF-8 subtitles" description="Specify encodding that will be used to decode subtiles that are not UTF-8.">config.plugins.e2embyclient.encodding_nonutf_subs</item>
 		<item level="0" text="Show Skip Intro button" description="Show a Skip Intro button while playing content with intro markers.">config.plugins.e2embyclient.show_skip_intro_button</item>
+		<item level="0" text="Show Up Next screen" description="Show an Up Next screen with an autoplay countdown before the next episode of a series.">config.plugins.e2embyclient.show_up_next_screen</item>
 		<item level="0" text="---"></item>
 		<item level="0" text="Connections"></item>
 		<item level="0" text="---"></item>
