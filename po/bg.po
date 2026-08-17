@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 11:48+0300\n"
+"POT-Creation-Date: 2026-08-17 14:10+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -28,11 +28,11 @@ msgstr "---"
 msgid "A client for Emby server"
 msgstr "Клиент за Emby сървер"
 
-#: ../src/EmbySetup.py:69 ../src/EmbySetup.py:84
+#: ../src/EmbySetup.py:70 ../src/EmbySetup.py:85
 msgid "Add"
 msgstr "Добавяне"
 
-#: ../src/EmbySetup.py:73
+#: ../src/EmbySetup.py:74
 msgid "Add Connection"
 msgstr "Добавяне на сървер/потребител"
 
@@ -59,6 +59,10 @@ msgstr "Защото харесахте"
 #: ../src/EmbyLibraryScreen.py:535
 msgid "Because you recently watched"
 msgstr "Защото гледахте наскоро"
+
+#: ../src/EmbyUpNextScreen.py:65
+msgid "Cancel"
+msgstr "Изход"
 
 #: ../src/EmbyItemView.py:15
 msgid "Cast and Crew"
@@ -104,7 +108,7 @@ msgstr "E2EmbyClient настройки"
 msgid "E2EmbyClient works only with FHD (1920x1080) skins. Please load FHD skin."
 msgstr "E2EmbyClient е придназначен за работа с FHD (1920x1080) скин. Моля изберете FHD скин."
 
-#: ../src/EmbySetup.py:81
+#: ../src/EmbySetup.py:82
 msgid "Edit"
 msgstr "Редакция"
 
@@ -133,7 +137,7 @@ msgstr "Край в"
 msgid "Extras"
 msgstr "Екстри"
 
-#: ../src/EmbyItemFunctionButtons.py:263
+#: ../src/EmbyItemFunctionButtons.py:264
 msgid "Favorite"
 msgstr "Любими"
 
@@ -145,7 +149,7 @@ msgstr "Любими"
 msgid "From director"
 msgstr "От режисьор"
 
-#: ../src/EmbyItemFunctionButtons.py:265
+#: ../src/EmbyItemFunctionButtons.py:266
 msgid "Go to series"
 msgstr "Отиди на сериал"
 
@@ -181,23 +185,27 @@ msgstr "Парола за връзката."
 msgid "Persistent thumbnail cache in"
 msgstr "Постоянен кеш за постерите в"
 
-#: ../src/EmbyItemFunctionButtons.py:255
+#: ../src/EmbyItemFunctionButtons.py:256
 msgid "Play"
 msgstr "Възпроизвеждане"
 
-#: ../src/EmbyItemFunctionButtons.py:252
+#: ../src/EmbyUpNextScreen.py:64
+msgid "Play Now"
+msgstr "Възпроизвеждане"
+
+#: ../src/EmbyItemFunctionButtons.py:253
 msgid "Play from start"
 msgstr "Пусни от началото"
 
 #: ../src/setup.xml
 msgid "Play the theme music of a movie or series while browsing its details screen."
-msgstr "възпроизвеждане на музикалната тема на детайлния екран за Филми или Сериали"
+msgstr "Bъзпроизвеждане на музикалната тема на детайлния екран за Филми или Сериали"
 
 #: ../src/setup.xml
 msgid "Play theme music"
 msgstr "Възпроизвеждане на музикална тема"
 
-#: ../src/EmbyItemFunctionButtons.py:259
+#: ../src/EmbyItemFunctionButtons.py:260
 msgid "Play trailer"
 msgstr "Трейлър възпр."
 
@@ -216,6 +224,11 @@ msgstr "Закъснение на началното превъртане"
 #: ../src/setup.xml
 msgid "Player initial seek delay (Exteplayer3)"
 msgstr "Закъснение на началното превъртане (Exteplayer3)"
+
+#: ../src/EmbyUpNextScreen.py:58
+#, python-format
+msgid "Playing next in %d s"
+msgstr "Възпроизвеждане след %d s"
 
 #: ../src/setup.xml
 msgid "Port"
@@ -251,15 +264,15 @@ msgstr "Последно добавени сериали"
 msgid "Recommendations"
 msgstr "Препоръчани"
 
-#: ../src/EmbySetup.py:70 ../src/EmbySetup.py:82
+#: ../src/EmbySetup.py:71 ../src/EmbySetup.py:83
 msgid "Remove"
 msgstr "Изтриване"
 
-#: ../src/EmbySetup.py:74
+#: ../src/EmbySetup.py:75
 msgid "Remove Connection"
 msgstr "Изтриване на връзка"
 
-#: ../src/EmbyItemFunctionButtons.py:251
+#: ../src/EmbyItemFunctionButtons.py:252
 msgid "Resume"
 msgstr "Продължаване"
 
@@ -283,7 +296,7 @@ msgstr "Избери версия на видеото"
 msgid "Series"
 msgstr "Сериали"
 
-#: ../src/EmbySetup.py:75
+#: ../src/EmbySetup.py:76
 msgid "Setup Actions"
 msgstr "Setup Actions"
 
@@ -292,8 +305,16 @@ msgid "Show Skip Intro button"
 msgstr "Покажи бутона за пропускане на интро"
 
 #: ../src/setup.xml
+msgid "Show Up Next screen"
+msgstr "Покажи Up Next екран"
+
+#: ../src/setup.xml
 msgid "Show a Skip Intro button while playing content with intro markers."
-msgstr "Показва бутона за пропускане на интро когато такива маркери съществуват за текущото видео"
+msgstr "Показва бутона за пропускане на интро когато такива маркери съществуват за текущото видео."
+
+#: ../src/setup.xml
+msgid "Show an Up Next screen with an autoplay countdown before the next episode of a series."
+msgstr "Show an Up Next screen with an autoplay countdown before the next episode of a series."
 
 #: ../src/EmbyMovieItemView.py:51 ../src/EmbySeriesItemView.py:52
 msgid "Similar"
@@ -400,11 +421,11 @@ msgstr "Потребител за логване в сървера."
 msgid "Version"
 msgstr "Версия"
 
-#: ../src/EmbyItemFunctionButtons.py:248
+#: ../src/EmbyItemFunctionButtons.py:249
 msgid "Versions"
 msgstr "Версии"
 
-#: ../src/EmbyItemFunctionButtons.py:261
+#: ../src/EmbyItemFunctionButtons.py:262
 msgid "Watched"
 msgstr "Гледан"
 

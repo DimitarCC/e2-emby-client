@@ -78,6 +78,7 @@ class EmbySeriesItemView(EmbyItemView):
 				i += 1
 			self["seasons_list"].setList(list)
 		self.episodes = EmbyApiClient.getEpisodesForSeries(self.series_id)
+		resume_episode = EmbyApiClient.getResumeEpisodeForSeries(self.series_id)
 		list = []
 		if self.episodes:
 			i = 0
@@ -91,9 +92,13 @@ class EmbySeriesItemView(EmbyItemView):
 					title = f"{" ".join(ep.get("Name", "").splitlines())}"
 				list.append((i, ep, title, None, played_perc, True))
 				i += 1
+			self["f_buttons"].enableSelection(False)
+			if resume_episode:
+				self["episodes_list"].lastSelectedItemId = resume_episode[0].get("Id")
+			self.selected_widget = "episodes_list"
 			self["episodes_list"].loadData(list)
 			self.availableWidgets.insert(1, "episodes_list")
-			self.lists["episodes_list"].visible(True).enableSelection(self.selected_widget == "episodes_list")
+			self.lists["episodes_list"].visible(True).enableSelection(True)
 
 	def infoRetrieveInject(self, item):
 		threads.deferToThread(self.getEpisodes).addCallback(self.onLayoutFinishedLast)

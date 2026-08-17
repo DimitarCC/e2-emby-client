@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 11:48+0300\n"
+"POT-Creation-Date: 2026-08-17 14:10+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -32,11 +32,11 @@ msgstr ""
 msgid "A client for Emby server"
 msgstr ""
 
-#: ../src/EmbySetup.py:69 ../src/EmbySetup.py:84
+#: ../src/EmbySetup.py:70 ../src/EmbySetup.py:85
 msgid "Add"
 msgstr ""
 
-#: ../src/EmbySetup.py:73
+#: ../src/EmbySetup.py:74
 msgid "Add Connection"
 msgstr ""
 
@@ -62,6 +62,10 @@ msgstr ""
 
 #: ../src/EmbyLibraryScreen.py:535
 msgid "Because you recently watched"
+msgstr ""
+
+#: ../src/EmbyUpNextScreen.py:65
+msgid "Cancel"
 msgstr ""
 
 #: ../src/EmbyItemView.py:15
@@ -108,7 +112,7 @@ msgstr ""
 msgid "E2EmbyClient works only with FHD (1920x1080) skins. Please load FHD skin."
 msgstr ""
 
-#: ../src/EmbySetup.py:81
+#: ../src/EmbySetup.py:82
 msgid "Edit"
 msgstr ""
 
@@ -137,7 +141,7 @@ msgstr ""
 msgid "Extras"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:263
+#: ../src/EmbyItemFunctionButtons.py:264
 msgid "Favorite"
 msgstr ""
 
@@ -149,7 +153,7 @@ msgstr ""
 msgid "From director"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:265
+#: ../src/EmbyItemFunctionButtons.py:266
 msgid "Go to series"
 msgstr ""
 
@@ -185,11 +189,15 @@ msgstr ""
 msgid "Persistent thumbnail cache in"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:255
+#: ../src/EmbyItemFunctionButtons.py:256
 msgid "Play"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:252
+#: ../src/EmbyUpNextScreen.py:64
+msgid "Play Now"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:253
 msgid "Play from start"
 msgstr ""
 
@@ -201,7 +209,7 @@ msgstr ""
 msgid "Play theme music"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:259
+#: ../src/EmbyItemFunctionButtons.py:260
 msgid "Play trailer"
 msgstr ""
 
@@ -219,6 +227,11 @@ msgstr ""
 
 #: ../src/setup.xml
 msgid "Player initial seek delay (Exteplayer3)"
+msgstr ""
+
+#: ../src/EmbyUpNextScreen.py:58
+#, python-format
+msgid "Playing next in %d s"
 msgstr ""
 
 #: ../src/setup.xml
@@ -255,15 +268,15 @@ msgstr ""
 msgid "Recommendations"
 msgstr ""
 
-#: ../src/EmbySetup.py:70 ../src/EmbySetup.py:82
+#: ../src/EmbySetup.py:71 ../src/EmbySetup.py:83
 msgid "Remove"
 msgstr ""
 
-#: ../src/EmbySetup.py:74
+#: ../src/EmbySetup.py:75
 msgid "Remove Connection"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:251
+#: ../src/EmbyItemFunctionButtons.py:252
 msgid "Resume"
 msgstr ""
 
@@ -287,7 +300,7 @@ msgstr ""
 msgid "Series"
 msgstr ""
 
-#: ../src/EmbySetup.py:75
+#: ../src/EmbySetup.py:76
 msgid "Setup Actions"
 msgstr ""
 
@@ -296,7 +309,15 @@ msgid "Show Skip Intro button"
 msgstr ""
 
 #: ../src/setup.xml
+msgid "Show Up Next screen"
+msgstr ""
+
+#: ../src/setup.xml
 msgid "Show a Skip Intro button while playing content with intro markers."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Show an Up Next screen with an autoplay countdown before the next episode of a series."
 msgstr ""
 
 #: ../src/EmbyMovieItemView.py:51 ../src/EmbySeriesItemView.py:52
@@ -404,11 +425,11 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:248
+#: ../src/EmbyItemFunctionButtons.py:249
 msgid "Versions"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:261
+#: ../src/EmbyItemFunctionButtons.py:262
 msgid "Watched"
 msgstr ""
 

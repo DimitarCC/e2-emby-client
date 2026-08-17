@@ -304,6 +304,29 @@ class EmbyRestClient():
 			ShowEmbyTimeoutNotification()
 		return items
 
+	def getResumeEpisodeForSeries(self, item_id):
+		items = []
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/Items/Resume?IncludeItemTypes=Episode&ParentId={item_id}&Limit=1&EnableTotalRecordCount=false&EnableImages=false"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response_obj = response.content
+				res_json_obj = loads(response_obj)
+				items = res_json_obj.get('Items', [])
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return items
+
 	def getSeasonsForSeries(self, item_id):
 		items = []
 		headers = self.constructHeaders()

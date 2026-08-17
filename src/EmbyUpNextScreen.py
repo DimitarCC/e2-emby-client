@@ -24,7 +24,7 @@ class EmbyUpNextScreen(Screen):
 					<widget name="plot" position="600,205" size="e-660,140" font="Regular;26" transparent="1"/>
 					<widget name="countdown_label" position="600,355" size="400,35" font="Regular;26" transparent="1" foregroundColor="#ffffff"/>
 					<widget source="countdown_progress" render="Progress" position="600,395" size="e-660,10" backgroundColor="#02333333" foregroundColor="#32772b" cornerRadius="4" transparent="1"/>
-					<widget name="function_buttons" position="600,425" size="e-660,80" font="Regular;28" transparent="1"/>
+					<widget name="function_buttons" position="90,380" size="480,80" font="Regular;28" transparent="1"/>
 				</screen>"""]  # noqa: E101
 
 	def __init__(self, session):

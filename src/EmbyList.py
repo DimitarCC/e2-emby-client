@@ -211,10 +211,16 @@ class EmbyList(GUIComponent):
 						if f_name in DIRECTORY_PARSER.THUMBS:
 							self.thumbs[item_id] = f_name
 
-		self.l.setList(items)
 		if new_index > -1:
+			was_visible = self.instance.isVisible()
+			if was_visible:
+				self.instance.hide()
+			self.l.setList(items)
 			self.instance.moveSelectionTo(new_index)
+			if was_visible:
+				self.instance.show()
 		else:
+			self.l.setList(items)
 			for x in self.onSelectionChanged:
 				x(self, self.selectedItem and self.selectedItem.get("Id"))
 
