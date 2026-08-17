@@ -25,6 +25,7 @@ from .EmbyList import EmbyList
 from .EmbyLoadingScreen import hideLoadingScreen
 from .EmbyPlayerInfobarInfo import EmbyPlayerInfobarInfo
 from .EmbyRestClient import EmbyApiClient
+from .EmbySkipIntroScreen import showSkipIntroScreen, hideSkipIntroScreen
 from .HelperFunctions import convert_ticks_to_time
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
 
@@ -85,6 +86,10 @@ class EmbyPlayer(MoviePlayer):
 		self.supressChapterSelect = False
 		self.item = item or {}
 		self.chapters = []
+		self.introStartPos = None
+		self.introEndPos = None
+		self.skipIntroShown = False
+		self.skipIntroDismissed = False
 		self.play_session_id = play_session_id
 		self.skip_progress_update = False
 		self.current_seek_step = 0
@@ -166,6 +171,7 @@ class EmbyPlayer(MoviePlayer):
 		self["poster"].hide()
 		self["info_panel_line"].hide()
 		self["plot"].hide()
+		self.hideSkipIntroButton()
 		self.selected_widget = None
 		self.info_shown = False
 		self.supressChapterSelect = False
@@ -174,11 +180,28 @@ class EmbyPlayer(MoviePlayer):
 		if self.is_trailer:
 			return
 		media_sources = self.item.get("MediaSources", [])
-		default_media_source = next((ms for ms in media_sources if ms.get("Type") == "Default"), None)
-		if default_media_source:
-			self.chapters = default_media_source.get("Chapters", [])
+		if not media_sources:
+			return
+		# MediaSources[0] is always the version being played (playItem() moves
+		# the user-selected version to the front), so chapters must come from
+		# it too rather than from whichever source happens to have Type=="Default".
+		playing_media_source = media_sources[0]
+		all_chapters = playing_media_source.get("Chapters", [])
+		# Ordinary chapters may carry MarkerType too (e.g. "Chapter"), so only
+		# the intro markers themselves must be excluded from the chapter list -
+		# filtering on plain truthiness would drop every chapter whenever the
+		# server tags regular chapters with a non-empty MarkerType.
+		self.chapters = [ch for ch in all_chapters if ch.get("MarkerType") not in ("IntroStart", "IntroEnd")]
+		intro_start = next((ch for ch in all_chapters if ch.get("MarkerType") == "IntroStart"), None)
+		intro_end = next((ch for ch in all_chapters if ch.get("MarkerType") == "IntroEnd"), None)
+		if intro_start:
+			self.introStartPos = int(intro_start.get("StartPositionTicks", "0")) / 10_000_000
+		if intro_end:
+			self.introEndPos = int(intro_end.get("StartPositionTicks", "0")) / 10_000_000
 
 	def seekBack(self):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
@@ -186,11 +209,15 @@ class EmbyPlayer(MoviePlayer):
 		self.showAfterSeek()
 
 	def left(self):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def seekFwd(self):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
@@ -199,6 +226,8 @@ class EmbyPlayer(MoviePlayer):
 		self.hideTimer.stop()
 
 	def seekFwdManual(self, fwd=True):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
@@ -207,6 +236,8 @@ class EmbyPlayer(MoviePlayer):
 		self.hideTimer.stop()
 
 	def seekBackManual(self, fwd=False):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
@@ -215,29 +246,40 @@ class EmbyPlayer(MoviePlayer):
 		self.hideTimer.stop()
 
 	def seekBackSeekbar(self, fwd=False):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekBackSeekbar(self, fwd)
 
 	def seekFwdSeekbar(self, fwd=True):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekFwdSeekbar(self, fwd)
 
 	def seekFwdVod(self, fwd=True):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
 		MoviePlayer.seekFwdVod(self, fwd)
 
 	def right(self):
+		if self.skipIntroShown:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def processItem(self):
+		if self.skipIntroShown:
+			self.skipIntro()
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			chapter = self["list_chapters"].selectedItem
 			startPos = int(chapter.get("StartPositionTicks", "0")) / 10_000_000
@@ -258,6 +300,8 @@ class EmbyPlayer(MoviePlayer):
 		return len(self.chapters) - 1  # Last chapter
 
 	def showChapters(self):
+		if self.skipIntroShown:
+			return
 		if self.chapters and not self.is_trailer:
 			list = []
 			i = 0
@@ -277,6 +321,8 @@ class EmbyPlayer(MoviePlayer):
 			self["list_chapters"].hide()
 
 	def showInfo(self):
+		if self.skipIntroShown:
+			return
 		if self.is_trailer:
 			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
@@ -328,6 +374,9 @@ class EmbyPlayer(MoviePlayer):
 		return pos[1] / 90000
 
 	def numberSeek(self, key):
+		if self.skipIntroShown:
+			return
+
 		if self.getSeek() is None:  # not currently seekable, so skip this key press
 			return
 		self.seek_timer.stop()
@@ -403,6 +452,31 @@ class EmbyPlayer(MoviePlayer):
 			cur_ch_index = self.find_current_chapter_index()
 			if cur_ch_index != self["list_chapters"].getCurrentIndex():
 				self["list_chapters"].instance.moveSelectionTo(cur_ch_index)
+		self.updateSkipIntroButton(curr_pos)
+
+	def updateSkipIntroButton(self, pos):
+		if not config.plugins.e2embyclient.show_skip_intro_button.value:
+			return
+		if self.introStartPos is None or self.introEndPos is None or self.is_trailer:
+			return
+		if self.introStartPos <= pos < self.introEndPos:
+			if not self.skipIntroShown and not self.skipIntroDismissed:
+				showSkipIntroScreen(self.session)
+				self.skipIntroShown = True
+		else:
+			self.hideSkipIntroButton()
+			if pos < self.introStartPos:
+				self.skipIntroDismissed = False
+
+	def hideSkipIntroButton(self):
+		if self.skipIntroShown:
+			hideSkipIntroScreen()
+			self.skipIntroShown = False
+
+	def skipIntro(self):
+		self.doSeek(int(self.introEndPos) * 90000)
+		self.skipIntroDismissed = True
+		self.hideSkipIntroButton()
 
 	def updateEmbyProgress(self):
 		if self.is_trailer:
@@ -692,6 +766,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def handleLeave(self, what):
 		hideLoadingScreen()
+		self.hideSkipIntroButton()
 		self.selected_subtitle = None
 		self.is_closing = True
 		if config.plugins.e2embyclient.stop_playing_service_on_load.value:
@@ -715,6 +790,10 @@ class EmbyPlayer(MoviePlayer):
 		self.handleLeave("quit")
 
 	def leavePlayerOnExit(self):
+		if self.skipIntroShown:
+			self.skipIntroDismissed = True
+			self.hideSkipIntroButton()
+			return
 		if self.shown:
 			self.hide()
 		else:
