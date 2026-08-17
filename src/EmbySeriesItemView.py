@@ -49,6 +49,7 @@ class EmbySeriesItemView(EmbyItemView):
 		self["episodes_list"] = EmbyList(type="episodes")
 		self.episodes_controller = EmbyListController(self["episodes_list"], self["seasons_list"])
 		self.lists = insert_at_position(self.lists, "episodes_list", self.episodes_controller, 0)
+		self.availableWidgets.insert(1, "episodes_list")
 		self["header_similar"] = Label(_("Similar"))
 		self["list_similar"] = EmbyList()
 		self.lists["list_similar"] = EmbyListController(self["list_similar"], self["header_similar"])
@@ -97,7 +98,6 @@ class EmbySeriesItemView(EmbyItemView):
 				self["episodes_list"].lastSelectedItemId = resume_episode[0].get("Id")
 			self.selected_widget = "episodes_list"
 			self["episodes_list"].loadData(list)
-			self.availableWidgets.insert(1, "episodes_list")
 			self.lists["episodes_list"].visible(True).enableSelection(True)
 
 	def infoRetrieveInject(self, item):
