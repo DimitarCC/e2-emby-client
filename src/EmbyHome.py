@@ -31,6 +31,37 @@ from . import _
 current_thread = None
 
 
+class _ServiceRestorer:
+	# Navigation's own "tuner still releasing from a just-stopped stream" retry
+	# only arms when the previous service reference still has "://" in it at
+	# the moment playService() is called - which isn't the case here, since the
+	# service has been sitting stopped for as long as the plugin was open. So
+	# retry the restore ourselves a few times, mirroring Navigation's own
+	# cadence/window, in case the tuner hasn't fully released yet.
+	MAX_ATTEMPTS = 14
+	RETRY_DELAY = 700  # ms
+
+	def __init__(self, session, ref, on_done):
+		self.session = session
+		self.ref = ref
+		self.on_done = on_done
+		self.attempts = 0
+		self.timer = eTimer()
+		self.timer.callback.append(self.__attempt)
+		self.timer.start(300, True)
+
+	def __attempt(self):
+		if self.session.nav.getCurrentlyPlayingServiceReference() is not None:
+			self.on_done()
+			return
+		self.attempts += 1
+		self.session.nav.playService(self.ref)
+		if self.attempts < self.MAX_ATTEMPTS:
+			self.timer.start(self.RETRY_DELAY, True)
+		else:
+			self.on_done()
+
+
 class E2EmbyHome(NotificationalScreen):
 	skin = ["""<screen name="E2EmbyHome" position="fill">
 				<ePixmap position="60,30" size="198,60" pixmap="/usr/lib/enigma2/python/Plugins/Extensions/E2EmbyClient/emby-verysmall.png" alphatest="blend"/>
@@ -53,10 +84,11 @@ class E2EmbyHome(NotificationalScreen):
 				<widget name="list_recent_tvshows" position="35,1600" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1"/>
 			</screen>"""]
 
-	def __init__(self, session):
+	def __init__(self, session, stopped_service_ref=None):
 		NotificationalScreen.__init__(self, session)
 		self.setTitle(_("Emby"))
 
+		self.stopped_service_ref = stopped_service_ref
 		self.access_token = None
 		self.home_loaded = False
 		self.last_item_id = None
@@ -131,7 +163,7 @@ class E2EmbyHome(NotificationalScreen):
 
 		self["actions"] = ActionMap(["E2EmbyActions",],
 									{
-			"cancel": self.close,  # KEY_RED / KEY_EXIT
+			"cancel": self.cancel,  # KEY_RED / KEY_EXIT
 			# "save": self.addProvider,  # KEY_GREEN
 			"ok": self.processItem,
 			"menu": self.menu  # KEY_MENU
@@ -254,6 +286,12 @@ class E2EmbyHome(NotificationalScreen):
 		self.backdrop_pix = None
 		self["backdrop"].setPixmap(None)
 		self.onSelectedIndexChanged()
+
+	def cancel(self):
+		if self.stopped_service_ref is not None:
+			_ServiceRestorer(self.session, self.stopped_service_ref, self.close)
+		else:
+			self.close()
 
 	def processItem(self):
 		widget = self[self.selected_widget]

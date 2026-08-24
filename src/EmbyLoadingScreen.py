@@ -1,4 +1,8 @@
 from math import cos, radians, sin
+from pathlib import Path
+
+from PIL import Image, ImageEnhance
+from twisted.internet import threads
 
 from enigma import eTimer
 
@@ -11,12 +15,13 @@ from . import _
 from .Variables import EMBY_THUMB_CACHE_DIR
 
 SPINNER_DOT_COUNT = 8
-SPINNER_DOT_SIZE = 22
-SPINNER_RADIUS = 70
+SPINNER_DOT_SIZE = 36
+SPINNER_RADIUS = 90
 SPINNER_CENTER = (960, 540)
 SPINNER_DIM_COLOR = "#444444"
 SPINNER_BRIGHT_COLOR = "#32772b"
 SPINNER_INTERVAL_MS = 100
+BACKDROP_DIM_FACTOR = 0.20
 
 loadingScreenPopup = None
 
@@ -46,10 +51,9 @@ def _buildSpinnerSkin():
 
 class EmbyLoadingScreen(Screen):
 	skin = ["""<screen name="EmbyLoadingScreen" position="fill" flags="wfNoBorder" zPosition="1000" backgroundColor="#ff000000">
-					<widget name="backdrop" position="fill" zPosition="1" scale="1"/>
-					<eLabel backgroundColor="#80000000" position="fill" zPosition="1"/>
+					<widget name="backdrop" position="fill" zPosition="-5" scale="1"/>
 					""" + _buildSpinnerSkin() + """
-					<widget name="loading_label" position="810,635" size="300,40" font="Regular;28" halign="center" transparent="1" foregroundColor="#ffffff" zPosition="3"/>
+					<widget name="loading_label" position="810,665" size="300,60" font="Regular;35" halign="center" transparent="1" foregroundColor="#ffffff" zPosition="3"/>
 				</screen>"""]  # noqa: E101
 
 	def __init__(self, session):
@@ -66,7 +70,14 @@ class EmbyLoadingScreen(Screen):
 		self.onHide.append(self.__stopSpinner)
 
 	def updateBackdrop(self):
-		self["backdrop"].setPixmap(LoadPixmap(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_orig.jpg"))
+		source_path = f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_orig.jpg"
+		dimmed_path = f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_dimmed.jpg"
+		try:
+			with Image.open(source_path) as backdrop:
+				ImageEnhance.Brightness(backdrop.convert("RGB")).enhance(BACKDROP_DIM_FACTOR).save(dimmed_path, format="JPEG")
+			self["backdrop"].setPixmap(LoadPixmap(dimmed_path))
+		except (FileNotFoundError, OSError):
+			self["backdrop"].setPixmap(LoadPixmap(source_path))
 
 	def __startSpinner(self):
 		self.spinnerIndex = 0
@@ -104,3 +115,4 @@ def hideLoadingScreen():
 	global loadingScreenPopup
 	if loadingScreenPopup:
 		loadingScreenPopup.hide()
+	threads.deferToThread(Path.unlink, f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop_dimmed.jpg", missing_ok=True)
