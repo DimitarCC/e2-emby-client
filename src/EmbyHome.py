@@ -3,7 +3,7 @@ from pathlib import Path
 from twisted.internet import threads
 from PIL import Image
 
-from enigma import eTimer
+from enigma import eTimer, iPlayableService
 
 from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
 from Components.config import config
@@ -38,28 +38,53 @@ class _ServiceRestorer:
 	# service has been sitting stopped for as long as the plugin was open. So
 	# retry the restore ourselves a few times, mirroring Navigation's own
 	# cadence/window, in case the tuner hasn't fully released yet.
+	#
+	# getCurrentlyPlayingServiceReference() flips to non-None as soon as
+	# playService() is issued, regardless of whether the tune actually took -
+	# while the tuner is still releasing, Navigation can silently fail to
+	# start the service while still recording it as "current". So it can't be
+	# used to decide when to stop retrying; keep reissuing playService() on
+	# the same cadence (it's a cheap no-op once the service is genuinely
+	# already playing) until evStart arrives or attempts run out, then give
+	# evStart one last window before giving up and closing anyway.
 	MAX_ATTEMPTS = 14
 	RETRY_DELAY = 700  # ms
+	START_TIMEOUT = 3000  # ms
 
 	def __init__(self, session, ref, on_done):
 		self.session = session
 		self.ref = ref
 		self.on_done = on_done
 		self.attempts = 0
+		self.finished = False
 		self.timer = eTimer()
 		self.timer.callback.append(self.__attempt)
+		self.session.nav.event.append(self.__onServiceEvent)
 		self.timer.start(300, True)
 
 	def __attempt(self):
-		if self.session.nav.getCurrentlyPlayingServiceReference() is not None:
-			self.on_done()
-			return
 		self.attempts += 1
 		self.session.nav.playService(self.ref)
 		if self.attempts < self.MAX_ATTEMPTS:
 			self.timer.start(self.RETRY_DELAY, True)
 		else:
-			self.on_done()
+			self.timer.start(self.START_TIMEOUT, True)
+
+	def __onServiceEvent(self, ev):
+		# evVideoSizeChanged only fires when the decoded resolution actually
+		# changes, so it can't be relied on alone - a restored service with
+		# the same resolution as whatever was last on screen would never
+		# trigger it, leaving evUpdatedInfo as the only reliable signal.
+		if ev in (iPlayableService.evUpdatedInfo, iPlayableService.evVideoSizeChanged):
+			self.__finish()
+
+	def __finish(self):
+		if self.finished:
+			return
+		self.finished = True
+		self.timer.stop()
+		self.session.nav.event.remove(self.__onServiceEvent)
+		self.on_done()
 
 
 class E2EmbyHome(NotificationalScreen):
@@ -89,6 +114,7 @@ class E2EmbyHome(NotificationalScreen):
 		self.setTitle(_("Emby"))
 
 		self.stopped_service_ref = stopped_service_ref
+		self.restoring_service = False
 		self.access_token = None
 		self.home_loaded = False
 		self.last_item_id = None
@@ -288,7 +314,14 @@ class E2EmbyHome(NotificationalScreen):
 		self.onSelectedIndexChanged()
 
 	def cancel(self):
+		if self.restoring_service:
+			# Restoration is already in flight from an earlier press - it'll
+			# close us once the service comes up, so ignore repeat presses
+			# instead of racing multiple restorers/close() calls against
+			# each other.
+			return
 		if self.stopped_service_ref is not None:
+			self.restoring_service = True
 			_ServiceRestorer(self.session, self.stopped_service_ref, self.close)
 		else:
 			self.close()
