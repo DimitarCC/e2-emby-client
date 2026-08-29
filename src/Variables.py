@@ -26,3 +26,7 @@ EMBY_THUMB_CACHE_DIR = EMBY_DATA_DIR + "/thumbCache"
 DISTRO = BoxInfo.getItem("distro")
 
 SUBTITLE_TUPLE_SIZE = 6 if DISTRO == "openatv" else 5
+
+# accent green used throughout the plugin's skin (progress bars, selection, spinner, buttons)
+EMBY_ACCENT_GREEN = "#32772b"
+EMBY_ACCENT_GREEN_RGB = (0x32, 0x77, 0x2b)

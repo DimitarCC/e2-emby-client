@@ -1,5 +1,5 @@
 from json import loads
-from os import remove, scandir
+from os import makedirs, remove, scandir
 from requests import get, post, delete
 from requests.exceptions import ReadTimeout
 from secrets import choice
@@ -14,8 +14,8 @@ from Tools.LoadPixmap import LoadPixmap
 
 from . import _
 from .EmbyNotification import ShowEmbyTimeoutNotification
-from .Variables import REQUEST_USER_AGENT, EMBY_THUMB_CACHE_DIR
-from .HelperFunctions import crop_image_from_bytes, resize_and_center_image, resize_fit_width_crop_height
+from .Variables import REQUEST_USER_AGENT, EMBY_THUMB_CACHE_DIR, EMBY_ACCENT_GREEN_RGB
+from .HelperFunctions import crop_image_from_bytes, crop_to_circle, resize_and_center_image, resize_fit_width_crop_height
 
 
 class DirectoryParser:
@@ -50,6 +50,7 @@ class EmbyRestClient():
 		self.device_id = device_id
 		self.userSettings = {}
 		self.userData = {}
+		self.authorized_connection = None
 
 	def constructHeaders(self):
 		headers = {'User-Agent': REQUEST_USER_AGENT}
@@ -59,9 +60,15 @@ class EmbyRestClient():
 		return headers
 
 	def authorizeUser(self, server_url, server_port, username, password):
-		self.server_root = f"{server_url}:{server_port}"
-		if self.access_token:
+		connection = (server_url, server_port, username, password)
+		if self.access_token and self.authorized_connection == connection:
 			return 301
+
+		self.server_root = f"{server_url}:{server_port}"
+		self.access_token = None
+		self.user_id = None
+		self.userSettings = {}
+		self.userData = {}
 
 		headers = self.constructHeaders()
 		payload = {
@@ -79,6 +86,7 @@ class EmbyRestClient():
 				auth_json_obj = loads(auth_response)
 				self.user_id = auth_json_obj.get('User', {}).get('Id', None)
 				self.access_token = auth_json_obj.get('AccessToken', None)
+				self.authorized_connection = connection
 				url = f"{self.server_root}/emby/UserSettings/{self.user_id}"
 				try:
 					headers = self.constructHeaders()
@@ -702,6 +710,55 @@ class EmbyRestClient():
 		if has_timeout_or_error:
 			ShowEmbyTimeoutNotification()
 		return None
+
+	def getUserAvatar(self, size=60, border_width=0, border_color=EMBY_ACCENT_GREEN_RGB):
+		if not self.access_token or not self.user_id:
+			return None
+		image_tag = self.userData.get("PrimaryImageTag")
+		if not image_tag:
+			return None
+
+		avatar_url = f"{self.server_root}/emby/Users/{self.user_id}/Images/Primary?tag={image_tag}&quality=90&format=png"
+		try:
+			response = get(avatar_url, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+			if response.status_code == 404:
+				return None
+			cache_dir = "/tmp" if config.plugins.e2embyclient.thumbcache_loc.value == "off" else config.plugins.e2embyclient.thumbcache_loc.value
+			makedirs(f"{cache_dir}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
+			im_tmp_path = f"{cache_dir}{EMBY_THUMB_CACHE_DIR}/avatar_{self.user_id}_{image_tag}_{size}_{border_width}.png"
+			crop_to_circle(response.content, size, im_tmp_path, border_width=border_width, border_color=border_color)
+			pix = LoadPixmap(im_tmp_path)
+			if config.plugins.e2embyclient.thumbcache_loc.value == "off":
+				try:
+					remove(im_tmp_path)
+				except Exception:
+					pass
+			return pix
+		except TimeoutError as te:
+			print(f"[E2EmbyClient][EmbyRestClient][getUserAvatar] Timeout error: {te}")
+		except ReadTimeout as rte:
+			print(f"[E2EmbyClient][EmbyRestClient][getUserAvatar] Read timeout error: {rte}")
+		except Exception as ex:
+			print(f"[E2EmbyClient][EmbyRestClient][getUserAvatar] Unknown error: {ex}")
+		return None
+
+	def getIsPremiere(self):
+		if not self.access_token:
+			return False
+		url = f"{self.server_root}/emby/Plugins/SecurityInfo"
+		headers = self.constructHeaders()
+		try:
+			response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+			if response.status_code == 200:
+				info = loads(response.content)
+				return bool(info.get("IsMBSupporter"))
+		except TimeoutError as te:
+			print(f"[E2EmbyClient][EmbyRestClient][getIsPremiere] Timeout error: {te}")
+		except ReadTimeout as rte:
+			print(f"[E2EmbyClient][EmbyRestClient][getIsPremiere] Read timeout error: {rte}")
+		except Exception as ex:
+			print(f"[E2EmbyClient][EmbyRestClient][getIsPremiere] Unknown error: {ex}")
+		return False
 
 	def sendWatched(self, item):
 		item_id = item.get("Id")

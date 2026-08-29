@@ -11,6 +11,8 @@ from Components.Label import Label
 from Components.Pixmap import Pixmap
 from Components.Sources.StaticText import StaticText
 from Screens.Screen import Screen, ScreenSummary
+from Tools.Directories import resolveFilename, SCOPE_GUISKIN
+from Tools.LoadPixmap import LoadPixmap
 
 from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
@@ -25,7 +27,7 @@ from .EmbyBoxSetItemView import EmbyBoxSetItemView
 from .EmbySeriesItemView import EmbySeriesItemView
 from .EmbyItemViewBase import EXIT_RESULT_MOVIE, EXIT_RESULT_SERIES, EXIT_RESULT_EPISODE
 from .HelperFunctions import create_thumb_cache_dir, delete_thumb_cache_dir
-from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR
+from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR, EMBY_ACCENT_GREEN_RGB
 from . import _
 
 current_thread = None
@@ -93,6 +95,8 @@ class E2EmbyHome(NotificationalScreen):
 				<widget backgroundColor="background" font="Bold; 50" alphatest="blend" foregroundColor="white" halign="right" position="e-275,25" render="Label" size="220,60" source="global.CurrentTime" valign="center" zPosition="20" cornerRadius="20" transparent="1"  shadowColor="black" shadowOffset="-1,-1">
 					<convert type="ClockToText">Default</convert>
 				</widget>
+				<widget name="premiere_badge" position="e-340,30" size="50,50" alphatest="blend" zPosition="20"/>
+				<widget name="avatar" position="e-270,25" size="60,60" alphatest="blend" zPosition="20"/>
 				<widget name="backdrop" position="0,0" size="e,e" alphatest="blend" zPosition="-3" scaleFlags="moveRightTop"/>
 				<widget name="title_logo" position="60,140" size="924,80" alphatest="blend"/>
 				<widget name="title" position="60,130" size="924,80" alphatest="blend" font="Bold;70" transparent="1" noWrap="1"/>
@@ -117,6 +121,7 @@ class E2EmbyHome(NotificationalScreen):
 		self.restoring_service = False
 		self.access_token = None
 		self.home_loaded = False
+		self.loaded_connection = None
 		self.last_item_id = None
 		self.last_widget_info_load_success = None
 		self.processing_cover = False
@@ -156,6 +161,10 @@ class E2EmbyHome(NotificationalScreen):
 		self["infoline"] = EmbyInfoLine(self)
 		self["plot"] = Label()
 		self["backdrop"] = Pixmap()
+		self["avatar"] = Pixmap()
+		self["avatar"].hide()
+		self["premiere_badge"] = Pixmap()
+		self["premiere_badge"].hide()
 		self["list_header"] = Label(_("My Media"))
 		self["list"] = EmbyList(isLibrary=True)
 		self["list_watching_header"] = Label(_("Continue watching"))
@@ -225,7 +234,18 @@ class E2EmbyHome(NotificationalScreen):
 		self.lists["list_watching"].enableSelection(self.selected_widget == "list_watching")
 		self.lists["list_recent_movies"].enableSelection(self.selected_widget == "list_recent_movies")
 		self.lists["list_recent_tvshows"].enableSelection(self.selected_widget == "list_recent_tvshows")
+		if self.home_loaded and activeConnection != self.loaded_connection:
+			self.home_loaded = False
 		if not self.home_loaded:
+			self.movie_libs_ids = []
+			self.tvshow_libs_ids = []
+			self.music_libs_ids = []
+			self.availableWidgets = ["list"]
+			self.last_item_id = None
+			self.last_widget_info_load_success = None
+			self.clearInfoPane()
+			self["avatar"].hide()
+			self["premiere_badge"].hide()
 			self.lists["list_watching"].visible(False)
 			self.lists["list_recent_movies"].visible(False)
 			self.lists["list_recent_tvshows"].visible(False)
@@ -496,9 +516,32 @@ class E2EmbyHome(NotificationalScreen):
 			return
 		threads.deferToThread(self.downloadCover, item_id, icon_img, orig_item_id)
 
+	def loadUserBadges(self):
+		avatar_pix = EmbyApiClient.getUserAvatar(size=60, border_width=4, border_color=EMBY_ACCENT_GREEN_RGB)
+		is_premiere = EmbyApiClient.getIsPremiere()
+		if self.loaded_connection != getActiveConnection():
+			return
+
+		if avatar_pix:
+			self["avatar"].setPixmap(avatar_pix)
+			self["avatar"].show()
+		else:
+			self["avatar"].hide()
+
+		if is_premiere:
+			premiere_pix = LoadPixmap(resolveFilename(SCOPE_GUISKIN, "icons/emby_premiere.png"))
+			if not premiere_pix:
+				premiere_pix = LoadPixmap(f"{plugin_dir}/emby_premiere.png")
+			self["premiere_badge"].setPixmap(premiere_pix)
+			self["premiere_badge"].show()
+		else:
+			self["premiere_badge"].hide()
+
 	def loadHome(self, activeConnection):
+		self.loaded_connection = activeConnection
 		DIRECTORY_PARSER.listDirectory()
 		EmbyApiClient.authorizeUser(activeConnection[1], activeConnection[2], activeConnection[3], activeConnection[4])
+		self.loadUserBadges()
 		libs = EmbyApiClient.getLibraries()
 		libs_list = []
 		i = 0

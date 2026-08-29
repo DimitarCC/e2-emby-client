@@ -3,11 +3,11 @@ from io import BytesIO
 from os import makedirs
 from shutil import rmtree
 from typing import Iterable, Callable, TypeVar
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from Components.config import config
 
-from .Variables import EMBY_THUMB_CACHE_DIR
+from .Variables import EMBY_THUMB_CACHE_DIR, EMBY_ACCENT_GREEN_RGB
 from . import _
 
 
@@ -107,6 +107,37 @@ def resize_fit_width_crop_height(image_bytes, target_size, dest_file, background
 
     # Save as JPEG
     cropped_img.convert("RGB").save(dest_file, format='JPEG')
+
+
+def crop_to_circle(image_bytes, size, dest_file, border_width=0, border_color=EMBY_ACCENT_GREEN_RGB):
+	with Image.open(BytesIO(image_bytes)) as img:
+		img = img.convert("RGBA")
+		short_side = min(img.width, img.height)
+		left = (img.width - short_side) // 2
+		top = (img.height - short_side) // 2
+		img = img.crop((left, top, left + short_side, top + short_side))
+
+		# supersample so the circle (and border) edges are antialiased
+		supersample = 4
+		big_size = size * supersample
+		big_border = border_width * supersample
+		photo_size = big_size - 2 * big_border
+
+		img = img.resize((photo_size, photo_size), Image.LANCZOS)
+		photo_mask = Image.new("L", (photo_size, photo_size), 0)
+		ImageDraw.Draw(photo_mask).ellipse((0, 0, photo_size, photo_size), fill=255)
+		img.putalpha(photo_mask)
+
+		canvas = Image.new("RGBA", (big_size, big_size), (0, 0, 0, 0))
+		if big_border > 0:
+			ring_mask = Image.new("L", (big_size, big_size), 0)
+			ImageDraw.Draw(ring_mask).ellipse((0, 0, big_size, big_size), fill=255)
+			ring = Image.new("RGBA", (big_size, big_size), border_color + (255,))
+			canvas.paste(ring, (0, 0), ring_mask)
+		canvas.paste(img, (big_border, big_border), img)
+
+		canvas = canvas.resize((size, size), Image.LANCZOS)
+		canvas.save(dest_file, format="PNG")
 
 
 def insert_at_position(d, key, value, index):
