@@ -564,7 +564,7 @@ class EmbyRestClient():
 			ShowEmbyTimeoutNotification()
 		return items
 
-	def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id="", widget_id="", fit_type="fill"):
+	def getItemImage(self, item_id, logo_tag, image_type, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, alpha_channel=None, req_width=-1, req_height=-1, orig_item_id="", widget_id="", fit_type="fill", on_timeout=None):
 		filename_suffix = ""
 
 		addon = ""
@@ -656,6 +656,8 @@ class EmbyRestClient():
 				has_timeout_or_error = False
 		if has_timeout_or_error:
 			ShowEmbyTimeoutNotification()
+			if on_timeout:
+				on_timeout()
 		return None
 
 	def getPersonImage(self, person_name, logo_tag, width=-1, height=-1, max_width=-1, max_height=-1, format="jpg", image_index=-1, req_width=-1, req_height=-1, widget_id=""):

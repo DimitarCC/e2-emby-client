@@ -1,5 +1,6 @@
 from os.path import join
 from pathlib import Path
+from time import sleep
 from twisted.internet import threads
 from PIL import Image
 
@@ -391,14 +392,23 @@ class E2EmbyHome(NotificationalScreen):
 		if not self[self.selected_widget].isLibrary:
 			self.onSelectedIndexChanged()
 
-	def downloadCover(self, item_id, icon_img, orig_item_id):
+	BACKDROP_MAX_RETRIES = 3
+	BACKDROP_RETRY_DELAY = 2
+
+	def downloadCover(self, item_id, icon_img, orig_item_id, attempt=0):
 		try:
-			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
+			timed_out = []
+			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha, on_timeout=lambda: timed_out.append(True))
 			if orig_item_id != self.last_item_id:
 				return
 			if backdrop_pix:
 				self["backdrop"].setPixmap(backdrop_pix)
 				self.backdrop_pix = backdrop_pix
+			elif timed_out and attempt < self.BACKDROP_MAX_RETRIES:
+				sleep(self.BACKDROP_RETRY_DELAY)
+				if orig_item_id != self.last_item_id:
+					return
+				self.downloadCover(item_id, icon_img, orig_item_id, attempt + 1)
 			else:
 				self["backdrop"].setPixmap(None)
 				self.backdrop_pix = None

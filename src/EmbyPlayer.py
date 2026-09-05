@@ -3,6 +3,7 @@
 from requests import get, post, delete
 from requests.exceptions import ReadTimeout
 from uuid import uuid4
+from time import sleep
 
 from twisted.internet import threads
 
@@ -599,13 +600,27 @@ class EmbyPlayer(MoviePlayer):
 			return
 		threads.deferToThread(self.updateEmbyProgressInternal, "TimeUpdate", self.current_pos)
 
+	def isPosWithinBounds(self, pos):
+		if pos is None or pos < 0:
+			return False
+		length = self.getLength()
+		if length and pos > length:
+			return False
+		return True
+
 	def updateEmbyProgressInternal(self, event, pos=-1):
 		if self.is_trailer:
 			return
-		if pos is None:
-			pos = 0
 		if pos == -1:
 			pos = self.getPosition()
+		if not self.isPosWithinBounds(pos):
+			for _ in range(3):
+				sleep(1)
+				pos = self.getPosition()
+				if self.isPosWithinBounds(pos):
+					break
+			else:
+				return
 		ticks = int(pos) * 10_000_000
 		item_id = self.item.get("Id")
 		media_sources = self.item.get("MediaSources")
