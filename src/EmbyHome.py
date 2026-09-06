@@ -4,7 +4,7 @@ from time import sleep
 from twisted.internet import threads
 from PIL import Image
 
-from enigma import eTimer, iPlayableService
+from enigma import eTimer, iPlayableService, ePoint
 
 from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
 from Components.config import config
@@ -18,6 +18,7 @@ from Tools.LoadPixmap import LoadPixmap
 from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
 from .EmbyInfoLine import EmbyInfoLine
+from .EmbyItemFunctionButtons import EmbyItemFunctionButtons, playItem
 from .EmbySetup import getActiveConnection, EmbySetup
 from .EmbyRestClient import EmbyApiClient, DIRECTORY_PARSER
 from .EmbyLibraryScreen import E2EmbyLibrary
@@ -27,6 +28,7 @@ from .EmbyEpisodeItemView import EmbyEpisodeItemView
 from .EmbyBoxSetItemView import EmbyBoxSetItemView
 from .EmbySeriesItemView import EmbySeriesItemView
 from .EmbyItemViewBase import EXIT_RESULT_MOVIE, EXIT_RESULT_SERIES, EXIT_RESULT_EPISODE
+from .EmbyLoadingScreen import showLoadingScreen
 from .HelperFunctions import create_thumb_cache_dir, delete_thumb_cache_dir
 from .Variables import plugin_dir, EMBY_THUMB_CACHE_DIR, EMBY_ACCENT_GREEN_RGB
 from . import _
@@ -104,6 +106,7 @@ class E2EmbyHome(NotificationalScreen):
 				<widget name="subtitle" position="60,235" size="924,40" alphatest="blend" font="Bold;35" transparent="1"/>
 				<widget name="infoline" position="60,240" size="e-120,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 				<widget name="plot" position="60,310" size="924,168" alphatest="blend" font="Regular;30" transparent="1"/>
+				<widget name="f_buttons" position="60,485" size="924,65" font="Regular;32" transparent="1"/>
 				<widget name="list_header" position="55,570" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 				<widget name="list_watching_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
 				<widget name="list_recent_movies_header" position="-1920,-1080" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1"/>
@@ -136,6 +139,10 @@ class E2EmbyHome(NotificationalScreen):
 		self.plot_height_orig = 168
 		self.plot_width_orig = 924
 
+		self.f_buttons_focused = False
+		self.f_buttons_visible = False
+		self.info_display_item = None
+
 		self.mask_alpha = Image.open(join(
 			plugin_dir, "mask_l.png")).convert("RGBA").split()[3]
 		if self.mask_alpha.mode != "L":
@@ -161,6 +168,8 @@ class E2EmbyHome(NotificationalScreen):
 		self["subtitle"] = Label()
 		self["infoline"] = EmbyInfoLine(self)
 		self["plot"] = Label()
+		self["f_buttons"] = EmbyItemFunctionButtons(self)
+		self["f_buttons"].onPlayerExit.append(self.playerExitCallback)
 		self["backdrop"] = Pixmap()
 		self["avatar"] = Pixmap()
 		self["avatar"].hide()
@@ -229,6 +238,7 @@ class E2EmbyHome(NotificationalScreen):
 		self.plot_height_orig = self["plot"].getSize()[1]
 		self.plot_width_orig = plot_size.width()
 		self["plot"].resize(plot_size.width(), self.plot_height_orig)
+		self["f_buttons"].instance.hide()
 
 	def __onShown(self):
 		activeConnection = getActiveConnection()
@@ -267,6 +277,9 @@ class E2EmbyHome(NotificationalScreen):
 		self.sel_timer.start(config.plugins.e2embyclient.changedelay.value, True)
 
 	def left(self):
+		if self.f_buttons_focused:
+			self["f_buttons"].movePrevious()
+			return
 		self.last_widget_info_load_success = None
 		if self.selected_widget == "list" and self[self.selected_widget].selectedIndex > 0:
 			self.clearInfoPane()
@@ -277,6 +290,9 @@ class E2EmbyHome(NotificationalScreen):
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveLeft)
 
 	def right(self):
+		if self.f_buttons_focused:
+			self["f_buttons"].moveNext()
+			return
 		self.last_widget_info_load_success = None
 		if self.selected_widget == "list" and self[self.selected_widget].selectedIndex < len(self[self.selected_widget].data) - 1:
 			self.clearInfoPane()
@@ -287,8 +303,14 @@ class E2EmbyHome(NotificationalScreen):
 		self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveRight)
 
 	def up(self):
+		if self.f_buttons_focused:
+			return
 		current_widget_index = self.availableWidgets.index(self.selected_widget)
 		if current_widget_index == 0:
+			if self.f_buttons_visible:
+				self.f_buttons_focused = True
+				self.lists[self.selected_widget].enableSelection(False)
+				self["f_buttons"].enableSelection(True)
 			return
 		y = self.top_slot_y
 
@@ -312,6 +334,11 @@ class E2EmbyHome(NotificationalScreen):
 		self.onSelectedIndexChanged()
 
 	def down(self):
+		if self.f_buttons_focused:
+			self.f_buttons_focused = False
+			self["f_buttons"].enableSelection(False)
+			self.lists[self.selected_widget].enableSelection(True)
+			return
 		current_widget_index = self.availableWidgets.index(
 			self.selected_widget)
 		if current_widget_index == len(self.availableWidgets) - 1:
@@ -348,20 +375,80 @@ class E2EmbyHome(NotificationalScreen):
 			self.close()
 
 	def processItem(self):
+		if self.f_buttons_focused:
+			self["f_buttons"].getSelectedButton()[3]()
+			return
 		widget = self[self.selected_widget]
 		selected_item = widget.getCurrentItem()
 		if widget.isLibrary:
 			self.session.openWithCallback(self.exitCallback, E2EmbyLibrary, selected_item)
 		else:
-			item_type = selected_item.get("Type")
-			embyScreenClass = EmbyMovieItemView
-			if item_type == "Episode":
-				embyScreenClass = EmbyEpisodeItemView
-			elif item_type == "BoxSet":
-				embyScreenClass = EmbyBoxSetItemView
-			elif item_type == "Series":
-				embyScreenClass = EmbySeriesItemView
-			self.session.openWithCallback(self.exitCallback, embyScreenClass, selected_item, self.backdrop_pix, self.logo_pix)
+			self.openItemView(selected_item)
+
+	def openItemView(self, selected_item):
+		item_type = selected_item.get("Type")
+		embyScreenClass = EmbyMovieItemView
+		if item_type == "Episode":
+			embyScreenClass = EmbyEpisodeItemView
+		elif item_type == "BoxSet":
+			embyScreenClass = EmbyBoxSetItemView
+		elif item_type == "Series":
+			embyScreenClass = EmbySeriesItemView
+		self.session.openWithCallback(self.exitCallback, embyScreenClass, selected_item, self.backdrop_pix, self.logo_pix)
+
+	def openMoreInfo(self):
+		if self.info_display_item:
+			self.openItemView(self.info_display_item)
+
+	def playCurrentItem(self):
+		if not self.info_display_item:
+			return
+		item = self.info_display_item
+		if item.get("Type") == "Series":
+			threads.deferToThread(self.resolvePlayableEpisodeAndPlay, item)
+		else:
+			self.startPlayback(item)
+
+	def resolvePlayableEpisodeAndPlay(self, series_item):
+		series_id = series_item.get("Id")
+		resume_episode = EmbyApiClient.getResumeEpisodeForSeries(series_id)
+		play_item = resume_episode[0] if resume_episode else None
+		if not play_item:
+			next_up = EmbyApiClient.getNextUpEpisodeForSeries(series_id)
+			play_item = next_up[0] if next_up else None
+		if not play_item:
+			episodes = EmbyApiClient.getEpisodesForSeries(series_id)
+			if episodes:
+				sorted_episodes = sorted(episodes, key=lambda ep: (ep.get("ParentIndexNumber", 0), ep.get("IndexNumber", 0)))
+				play_item = sorted_episodes[0]
+		if play_item:
+			full_item = EmbyApiClient.getSingleItem(play_item.get("Id"))
+			if full_item and full_item.get("Id"):
+				self.startPlayback(full_item)
+
+	def startPlayback(self, item):
+		showLoadingScreen(self.session)
+		startPos = int(item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
+		playItem(item, self.session, self.playerExitCallback, startPos=startPos)
+
+	def playerExitCallback(self, *result):
+		self.last_widget_info_load_success = None
+		self.onSelectedIndexChanged()
+
+	def hideFunctionButtons(self):
+		self.f_buttons_visible = False
+		self.info_display_item = None
+		if self.f_buttons_focused:
+			self.f_buttons_focused = False
+			self["f_buttons"].enableSelection(False)
+			self.lists[self.selected_widget].enableSelection(True)
+		self["f_buttons"].instance.hide()
+
+	def showFunctionButtonsForItem(self, item):
+		self.info_display_item = item
+		self["f_buttons"].setSimpleButtons(item, self.playCurrentItem, self.openMoreInfo, keepSelection=self.f_buttons_focused)
+		self.f_buttons_visible = True
+		self["f_buttons"].instance.show()
 
 	def exitCallback(self, *result):
 		if not len(result):
@@ -423,6 +510,7 @@ class E2EmbyHome(NotificationalScreen):
 		self["subtitle"].text = ""
 		self["infoline"].updateInfo({})
 		self["plot"].text = ""
+		self.hideFunctionButtons()
 
 	def loadSelectedItemDetails(self, item, widget):
 		if not self.home_loaded:
@@ -507,6 +595,11 @@ class E2EmbyHome(NotificationalScreen):
 		self["infoline"].updateInfo(item)
 
 		self["plot"].text = item.get("Overview", "")
+
+		if isLib:
+			self.showFunctionButtonsForItem(item)
+		else:
+			self.hideFunctionButtons()
 
 		backdrop_image_tags = item.get("BackdropImageTags")
 		parent_backdrop_image_tags = item.get("ParentBackdropImageTags")

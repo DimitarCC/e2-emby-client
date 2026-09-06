@@ -85,6 +85,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		self.selectedIndex = 0
 		self.selectionEnabled = True
 		self.isMoveLeftRight = False
+		self.collapsible = True
 		self.screen.onShow.append(self.onContainerShown)
 		self.data = []
 		self.resumeIcon = LoadPixmap("%s/resume.png" % plugin_dir)
@@ -97,6 +98,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 		self.notFavoriteIcon = LoadPixmap("%s/notfavorite.png" % plugin_dir)
 		self.tvIcon = LoadPixmap("%s/tv.png" % plugin_dir)
 		self.versionsIcon = LoadPixmap("%s/videoversions.png" % plugin_dir)
+		self.infoIcon = LoadPixmap("%s/notify_info.png" % plugin_dir)
 		self.selectedMediaSourceId = None
 		self.playButtonIndex = 0
 		self.font = gFont("Regular", 22)
@@ -269,6 +271,25 @@ class EmbyItemFunctionButtons(GUIComponent):
 		else:
 			self.updateInfo()
 
+	def setSimpleButtons(self, item, playCallback, infoCallback, keepSelection=False):
+		self.item = item
+		self.selectedMediaSourceId = None
+		self.collapsible = False
+		self.buttons = [
+			(0, self.playIcon, _("Play"), playCallback),
+			(1, self.infoIcon, _("More info"), infoCallback),
+		]
+		self.playButtonIndex = 0
+		if keepSelection:
+			self.selectedIndex = max(0, min(self.selectedIndex, len(self.buttons) - 1))
+			self.isMoveLeftRight = True
+			self.updateInfo()
+		else:
+			self.selectedIndex = self.playButtonIndex
+			self.isMoveLeftRight = True
+			self.selectionEnabled = False
+			self.updateInfo()
+
 	def updateInfo(self):
 		l_list = []
 		l_list.append((self.buttons,))
@@ -300,7 +321,7 @@ class EmbyItemFunctionButtons(GUIComponent):
 
 		textWidth = self._calcTextSize(
 			text, font=self.font, size=eSize(self.getDesktopWith() // 3, 0))[0]
-		if not selected and (current_draw_idex > 0 or self.isMoveLeftRight):
+		if self.collapsible and not selected and (current_draw_idex > 0 or self.isMoveLeftRight):
 			textWidth = 0
 			text = ""
 		rec_height = height
