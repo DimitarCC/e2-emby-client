@@ -601,6 +601,8 @@ class E2EmbyHome(NotificationalScreen):
 			pass
 
 		self.home_loaded = True
+		self.last_widget_info_load_success = None
+		self.loadSelectedItemDetails(self[self.selected_widget].selectedItem, self[self.selected_widget])
 
 	def __onClose(self):
 		Path.unlink(f"/tmp{EMBY_THUMB_CACHE_DIR}/backdrop.png", missing_ok=True)

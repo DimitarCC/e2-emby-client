@@ -45,6 +45,7 @@ def initConfig():
 	config.plugins.e2embyclient.theme_music_settle_delay = ConfigInteger(default=300, limits=(0, 5000))
 	config.plugins.e2embyclient.init_seek_delay_default = ConfigInteger(default=10, limits=(0, 2000))
 	config.plugins.e2embyclient.init_seek_delay_exteplayer3 = ConfigInteger(default=300, limits=(0, 2000))
+	config.plugins.e2embyclient.audio_track_change_settle_delay = ConfigInteger(default=500, limits=(0, 2000))
 	for idx in range(config.plugins.e2embyclient.connectioncount.value):
 		initConnection(idx)
 
@@ -113,6 +114,9 @@ class EmbySetup(Setup):
 		config.plugins.e2embyclient.save()
 		self.createItems()
 		self.createSetup()
+		newItem = next((item for item in self.connectionItems if item[3] == index), None)
+		if newItem:
+			self.moveToItem(newItem)
 
 	def changedEntry(self):
 		current = self["config"].getCurrent()

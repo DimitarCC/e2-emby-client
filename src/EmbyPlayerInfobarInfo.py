@@ -153,7 +153,7 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 	def constructAudioLabel(self):
 		source = self.item.get("MediaSources", [{}])[0]
 		streams = source.get("MediaStreams", [])
-		atrack = streams[self.curAtrackIndex]
+		atrack = next((track for track in streams if track.get("Type") == "Audio" and track.get("Index") == self.curAtrackIndex), {})
 		return atrack.get("DisplayTitle", "").split(" (")[0]
 
 	def constructSubtitleLabel(self):

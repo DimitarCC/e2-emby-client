@@ -98,6 +98,8 @@ class EmbyPlayer(MoviePlayer):
 		self.seek_timer.callback.append(self.onSeekRequest)
 		self.up_next_countdown_timer = eTimer()
 		self.up_next_countdown_timer.callback.append(self.onUpNextCountdownTick)
+		self.audio_track_settle_timer = eTimer()
+		self.audio_track_settle_timer.callback.append(self.onAudioSubTrackChanged)
 		self.setPlayingItem(item, startPos, is_trailer, play_session_id, defaultAudioIndex, defaultSubtitleIndex)
 		self.onProgressTimer()
 		self["NumberSeekActions"] = NumberActionMap(["NumberActions"],
@@ -152,6 +154,8 @@ class EmbyPlayer(MoviePlayer):
 		return ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex
 
 	def setPlayingItem(self, item, startPos, is_trailer, play_session_id, defaultAudioIndex, defaultSubtitleIndex):
+		self.audio_track_settle_timer.stop()
+		self.audio_track_settle_checked = False
 		self.is_trailer = is_trailer
 		self.init_seek_to = startPos
 		self.curAudioIndex = -1
@@ -744,6 +748,7 @@ class EmbyPlayer(MoviePlayer):
 		return aIndex, curAudioIndex, subtitle, sindex
 
 	def onAudioSubTrackChanged(self):
+		self.audio_track_settle_timer.stop()
 		service = self.session.nav.getCurrentService()
 		audioTracks = service and service.audioTracks()
 		selectedAudio = audioTracks.getCurrentTrack()
@@ -754,6 +759,14 @@ class EmbyPlayer(MoviePlayer):
 			if self.curAudioIndex != emby_atrack_index:
 				self.curAudioIndex = emby_atrack_index
 				threads.deferToThread(self.updateEmbyProgressInternal, "AudioTrackChange")
+				self.audio_track_settle_checked = False
+			elif not self.audio_track_settle_checked and config.plugins.e2embyclient.play_system.value in ("4097", "5002"):
+				# servicehisilicon/exteplayer3 can apply the track switch
+				# asynchronously, so getCurrentTrack() may still report the
+				# previous track right after selectTrack() returns. Re-check
+				# once more after a short settle delay before giving up.
+				self.audio_track_settle_checked = True
+				self.audio_track_settle_timer.start(config.plugins.e2embyclient.audio_track_change_settle_delay.value, True)
 		old_subs_index = self.curSubsIndex
 		if self.selected_subtitle:
 			if len(self.selected_subtitle) > SUBTITLE_TUPLE_SIZE:
@@ -900,6 +913,7 @@ class EmbyPlayer(MoviePlayer):
 			self.progress_timer.stop()
 
 	def clearHooks(self):
+		self.audio_track_settle_timer.stop()
 		AudioSelection.fillSubtitleExt = None
 		if self.onAudioSubTrackChanged in AudioSelection.hooks:
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)

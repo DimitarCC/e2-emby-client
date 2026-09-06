@@ -15,7 +15,7 @@ from Tools.LoadPixmap import LoadPixmap
 from . import _
 from .EmbyNotification import ShowEmbyTimeoutNotification
 from .Variables import REQUEST_USER_AGENT, EMBY_THUMB_CACHE_DIR, EMBY_ACCENT_GREEN_RGB
-from .HelperFunctions import crop_image_from_bytes, crop_to_circle, resize_and_center_image, resize_fit_width_crop_height
+from .HelperFunctions import crop_image_from_bytes, crop_to_circle, generate_generic_avatar, resize_and_center_image, resize_fit_width_crop_height
 
 
 class DirectoryParser:
@@ -713,18 +713,31 @@ class EmbyRestClient():
 			ShowEmbyTimeoutNotification()
 		return None
 
+	def getGenericUserAvatar(self, size=60, border_width=0, border_color=EMBY_ACCENT_GREEN_RGB):
+		cache_dir = "/tmp" if config.plugins.e2embyclient.thumbcache_loc.value == "off" else config.plugins.e2embyclient.thumbcache_loc.value
+		makedirs(f"{cache_dir}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
+		im_tmp_path = f"{cache_dir}{EMBY_THUMB_CACHE_DIR}/avatar_generic_{size}_{border_width}.png"
+		generate_generic_avatar(size, im_tmp_path, border_width=border_width, border_color=border_color)
+		pix = LoadPixmap(im_tmp_path)
+		if config.plugins.e2embyclient.thumbcache_loc.value == "off":
+			try:
+				remove(im_tmp_path)
+			except Exception:
+				pass
+		return pix
+
 	def getUserAvatar(self, size=60, border_width=0, border_color=EMBY_ACCENT_GREEN_RGB):
 		if not self.access_token or not self.user_id:
 			return None
 		image_tag = self.userData.get("PrimaryImageTag")
 		if not image_tag:
-			return None
+			return self.getGenericUserAvatar(size=size, border_width=border_width, border_color=border_color)
 
 		avatar_url = f"{self.server_root}/emby/Users/{self.user_id}/Images/Primary?tag={image_tag}&quality=90&format=png"
 		try:
 			response = get(avatar_url, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
 			if response.status_code == 404:
-				return None
+				return self.getGenericUserAvatar(size=size, border_width=border_width, border_color=border_color)
 			cache_dir = "/tmp" if config.plugins.e2embyclient.thumbcache_loc.value == "off" else config.plugins.e2embyclient.thumbcache_loc.value
 			makedirs(f"{cache_dir}{EMBY_THUMB_CACHE_DIR}", exist_ok=True)
 			im_tmp_path = f"{cache_dir}{EMBY_THUMB_CACHE_DIR}/avatar_{self.user_id}_{image_tag}_{size}_{border_width}.png"
@@ -742,7 +755,7 @@ class EmbyRestClient():
 			print(f"[E2EmbyClient][EmbyRestClient][getUserAvatar] Read timeout error: {rte}")
 		except Exception as ex:
 			print(f"[E2EmbyClient][EmbyRestClient][getUserAvatar] Unknown error: {ex}")
-		return None
+		return self.getGenericUserAvatar(size=size, border_width=border_width, border_color=border_color)
 
 	def getIsPremiere(self):
 		if not self.access_token:

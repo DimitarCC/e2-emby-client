@@ -5,8 +5,8 @@ from . import _
 
 
 class EmbySkipIntroScreen(Screen):
-	skin = ["""<screen name="EmbySkipIntroScreen" position="fill" flags="wfNoBorder" zPosition="1000" backgroundColor="#FF000000">
-					<widget name="skip_intro_button" position="e-450,e-230" size="300,80" backgroundColor="#32772b" foregroundColor="#ffffff" font="Bold;35" halign="center" valign="center" cornerRadius="10" widgetBorderWidth="2" widgetBorderColor="#ffffff"/>
+	skin = ["""<screen name="EmbySkipIntroScreen" position="fill" flags="wfNoBorder" zPosition="1000" backgroundColor="#FF000000" alphaBlend="1">
+					<widget name="skip_intro_button" position="e-450,e-230" size="300,80" backgroundColor="#32772b" foregroundColor="#ffffff" font="Bold;35" halign="center" valign="center" cornerRadius="10" widgetBorderWidth="2" widgetBorderColor="#ffffff" />
 				</screen>"""]  # noqa: E101
 
 	def __init__(self, session):

@@ -140,6 +140,37 @@ def crop_to_circle(image_bytes, size, dest_file, border_width=0, border_color=EM
 		canvas.save(dest_file, format="PNG")
 
 
+def generate_generic_avatar(size, dest_file, border_width=0, border_color=EMBY_ACCENT_GREEN_RGB, bg_color=(90, 90, 90), fg_color=(200, 200, 200)):
+	supersample = 4
+	big_size = size * supersample
+	big_border = border_width * supersample
+	photo_size = big_size - 2 * big_border
+
+	canvas = Image.new("RGBA", (big_size, big_size), (0, 0, 0, 0))
+	if big_border > 0:
+		ring_mask = Image.new("L", (big_size, big_size), 0)
+		ImageDraw.Draw(ring_mask).ellipse((0, 0, big_size, big_size), fill=255)
+		ring = Image.new("RGBA", (big_size, big_size), border_color + (255,))
+		canvas.paste(ring, (0, 0), ring_mask)
+
+	photo = Image.new("RGBA", (photo_size, photo_size), bg_color + (255,))
+	draw = ImageDraw.Draw(photo)
+	head_r = photo_size * 0.19
+	head_cx, head_cy = photo_size / 2, photo_size * 0.38
+	draw.ellipse((head_cx - head_r, head_cy - head_r, head_cx + head_r, head_cy + head_r), fill=fg_color + (255,))
+	body_w, body_h = photo_size * 0.62, photo_size * 0.5
+	body_left, body_top = (photo_size - body_w) / 2, photo_size * 0.62
+	draw.ellipse((body_left, body_top, body_left + body_w, body_top + body_h), fill=fg_color + (255,))
+
+	photo_mask = Image.new("L", (photo_size, photo_size), 0)
+	ImageDraw.Draw(photo_mask).ellipse((0, 0, photo_size, photo_size), fill=255)
+	photo.putalpha(photo_mask)
+
+	canvas.paste(photo, (big_border, big_border), photo)
+	canvas = canvas.resize((size, size), Image.LANCZOS)
+	canvas.save(dest_file, format="PNG")
+
+
 def insert_at_position(d, key, value, index):
 	# Ensure index is within bounds
 	index = max(0, min(index, len(d)))
