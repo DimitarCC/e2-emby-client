@@ -919,7 +919,7 @@ class EmbyRestClient():
 		post_data["ItemId"] = item_id
 		post_data["MediaSourceId"] = media_source_id
 		post_data["PlaySessionId"] = playSessionId
-		post_data["AudioStreamIndex"] = defAudioIndex + 1
+		post_data["AudioStreamIndex"] = defAudioIndex
 		if stopped:
 			post_data["IsPaused"] = True
 			post_data["PlaybackRate"] = 1

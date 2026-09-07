@@ -100,6 +100,10 @@ class EmbyPlayer(MoviePlayer):
 		self.up_next_countdown_timer.callback.append(self.onUpNextCountdownTick)
 		self.audio_track_settle_timer = eTimer()
 		self.audio_track_settle_timer.callback.append(self.onAudioSubTrackChanged)
+		self.init_audio_track_settle_timer = eTimer()
+		self.init_audio_track_settle_timer.callback.append(self.__onInitAudioTrackSettle)
+		self.init_audio_track_retries = 0
+		self.init_audio_track_index = -1
 		self.setPlayingItem(item, startPos, is_trailer, play_session_id, defaultAudioIndex, defaultSubtitleIndex)
 		self.onProgressTimer()
 		self["NumberSeekActions"] = NumberActionMap(["NumberActions"],
@@ -156,6 +160,9 @@ class EmbyPlayer(MoviePlayer):
 	def setPlayingItem(self, item, startPos, is_trailer, play_session_id, defaultAudioIndex, defaultSubtitleIndex):
 		self.audio_track_settle_timer.stop()
 		self.audio_track_settle_checked = False
+		self.init_audio_track_settle_timer.stop()
+		self.init_audio_track_retries = 0
+		self.init_audio_track_index = -1
 		self.is_trailer = is_trailer
 		self.init_seek_to = startPos
 		self.curAudioIndex = -1
@@ -788,8 +795,10 @@ class EmbyPlayer(MoviePlayer):
 		if isinstance(track, int) and track > -1:
 			service = self.session.nav.getCurrentService()
 			audioTracks = service and service.audioTracks()
-			if audioTracks.getNumberOfTracks() > track:
+			if audioTracks and audioTracks.getNumberOfTracks() > track:
 				audioTracks.selectTrack(track)
+				return audioTracks.getCurrentTrack() == track
+		return True
 
 	def __setSubtitleTrack(self):
 		if self.CurIndexEmbeddedSubs > -1:
@@ -819,6 +828,7 @@ class EmbyPlayer(MoviePlayer):
 			init_play_pos = int(self.init_seek_to) * 10_000_000
 		audioIndex, curAudioIndex, subtitle, sindex = self.getSelectedAudioSubStreamFromEmby()
 		self.curAudioIndex = curAudioIndex
+		self.init_audio_track_index = audioIndex
 		self.__setAudioTrack(aIndex=audioIndex)
 		self.runSubtitles(subtitle=subtitle, sindex=sindex)
 		if not subtitle and sindex > -1:
@@ -827,9 +837,22 @@ class EmbyPlayer(MoviePlayer):
 		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
 
+	def __onInitAudioTrackSettle(self):
+		self.init_audio_track_settle_timer.stop()
+		self.init_audio_track_retries += 1
+		applied = self.__setAudioTrack(aIndex=self.init_audio_track_index)
+		if not applied and self.init_audio_track_retries < 5:
+			self.init_audio_track_settle_timer.start(config.plugins.e2embyclient.audio_track_change_settle_delay.value, True)
+		else:
+			# Refresh curAudioIndex/info_line from what the backend actually
+			# applied - the re-apply above bypasses onAudioSubTrackChanged, so
+			# without this the infobar keeps showing the pre-seek track.
+			self.onAudioSubTrackChanged()
+
 	def __initSeekProcess(self):
 		init_play_pos = -1
 		res = 0
+		did_seek = False
 		if self.init_seek_to and self.init_seek_to > -1:
 			pts = int(self.init_seek_to) * 90000
 			seekable = self.getSeek()
@@ -840,7 +863,16 @@ class EmbyPlayer(MoviePlayer):
 			if res == -1 or len[1] <= 0:
 				return -1
 			init_play_pos = int(self.init_seek_to) * 10_000_000
+			did_seek = True
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
+		if did_seek and config.plugins.e2embyclient.play_system.value in ("4097", "5002"):
+			# servicehisilicon/exteplayer3 can reset the audio track back to
+			# the stream default when the initial resume seek re-opens/
+			# re-negotiates the demux, so the track selected right after
+			# evStart gets silently overridden. Re-apply it once the resume
+			# seek has actually gone through.
+			self.init_audio_track_retries = 0
+			self.init_audio_track_settle_timer.start(config.plugins.e2embyclient.audio_track_change_settle_delay.value, True)
 		return res
 
 	def __onPlayerInit(self):
@@ -914,6 +946,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def clearHooks(self):
 		self.audio_track_settle_timer.stop()
+		self.init_audio_track_settle_timer.stop()
 		AudioSelection.fillSubtitleExt = None
 		if self.onAudioSubTrackChanged in AudioSelection.hooks:
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)
