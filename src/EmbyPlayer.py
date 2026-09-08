@@ -853,8 +853,16 @@ class EmbyPlayer(MoviePlayer):
 		init_play_pos = -1
 		res = 0
 		did_seek = False
-		if self.init_seek_to and self.init_seek_to > -1:
-			pts = int(self.init_seek_to) * 90000
+		seek_to = self.init_seek_to if self.init_seek_to and self.init_seek_to > -1 else None
+		if seek_to is None and config.plugins.e2embyclient.play_system.value == "4097":
+			# servicemp3/HiPlayer reports a wrongly-offset play position for
+			# the first few seconds of a fresh stream, but reports correctly
+			# again as soon as any seek actually happens (same as a resume
+			# seek does). Nudge forward by 1s to force that same
+			# recalibration even when there is no real resume position.
+			seek_to = 1
+		if seek_to is not None:
+			pts = int(seek_to) * 90000
 			seekable = self.getSeek()
 			if seekable is None:
 				return -1
@@ -862,7 +870,7 @@ class EmbyPlayer(MoviePlayer):
 			len = seekable.getLength() if config.plugins.e2embyclient.play_system.value == "5002" else [0, 1]
 			if res == -1 or len[1] <= 0:
 				return -1
-			init_play_pos = int(self.init_seek_to) * 10_000_000
+			init_play_pos = int(seek_to) * 10_000_000
 			did_seek = True
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
 		if did_seek and config.plugins.e2embyclient.play_system.value in ("4097", "5002"):
