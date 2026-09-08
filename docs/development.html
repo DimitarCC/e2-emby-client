@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Development — E2EmbyClient</title>
+<meta name="description" content="Project layout, linting, translations, and how to build and contribute to E2EmbyClient.">
+<link rel="icon" href="../assets/img/plugin.png">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="container nav-inner">
+    <a class="brand" href="../index.html">
+      <img src="../assets/img/plugin.png" alt="">
+      E2EmbyClient
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="installation.html" class="active">Docs</a>
+      <a href="controls.html">Controls</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <a class="nav-gh" href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub &#8599;</a>
+  </nav>
+</header>
+
+<main class="container docs-layout">
+  <aside class="docs-side">
+    <button class="docs-side-toggle">On this page &#9662;</button>
+    <div class="docs-side-inner">
+      <h4>Getting Started</h4>
+      <ul>
+        <li><a href="installation.html">Installation</a></li>
+        <li><a href="setup.html">Setup &amp; First Run</a></li>
+      </ul>
+      <h4>Using the Client</h4>
+      <ul>
+        <li><a href="controls.html">Controls &amp; Navigation</a></li>
+        <li><a href="configuration.html">Configuration Reference</a></li>
+        <li><a href="faq.html">FAQ &amp; Troubleshooting</a></li>
+      </ul>
+      <h4>Contributing</h4>
+      <ul>
+        <li><a href="development.html" class="active">Development</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <article class="docs-content">
+    <h1>Development</h1>
+    <p class="subtitle">Project layout, linting rules, translation workflow, and what CI checks on every push.</p>
+
+    <h2 id="layout" class="top-anchor">Project layout</h2>
+    <pre><code>src/                    Plugin package (installed to Plugins/Extensions/E2EmbyClient)
+├── plugin.py           Plugin entry point / menu registration
+├── EmbySetup.py        Configuration schema and setup screens
+├── EmbyRestClient.py   Emby REST API client
+├── EmbyHome.py         Home screen
+├── EmbyLibraryScreen.py    Library grid screen
+├── EmbyGridList.py / EmbyList.py   List/grid widgets
+├── EmbyMovieItemView.py, EmbySeriesItemView.py,
+│   EmbyEpisodeItemView.py, EmbyBoxSetItemView.py   Detail screens per item type
+├── EmbyPlayer.py        Playback screen (seek, tracks, subtitles, skip intro, up next)
+├── EmbyItemFunctionButtons.py   Play/watched/favorite/etc. action buttons
+├── EmbyUpNextScreen.py, EmbySkipIntroScreen.py   Playback overlays
+├── EmbyThemeMusic.py     Theme music playback
+├── EmbyNotification.py   In-app notifications
+├── HelperFunctions.py, Variables.py, Globals.py   Shared utilities/constants
+├── keymap.xml, setup.xml     Enigma2 keymap and setup definitions
+└── locale/               Translations (.po/.mo)
+
+meta/                   Debian control files used by build.sh
+CI/                     Linting/build helper scripts used in CI
+po/                     Translation update scripts</code></pre>
+
+    <h2 id="building">Building locally</h2>
+    <p><code>build.sh</code> copies <code>src/</code> and <code>meta/</code> into a temp directory, regenerates translations, stamps the version from the current git revision, and packs everything into a Debian-style <code>.ipk</code> with <code>ar</code>. See <a href="installation.html#from-source">Installation &mdash; build the .ipk yourself</a> for the exact steps.</p>
+    <p>The version string embedded in the package looks like:</p>
+    <pre><code>&lt;base-version&gt;+git&lt;revision-count&gt;+&lt;short-hash&gt;+&lt;short-hash-10&gt;-r0</code></pre>
+    <p>so every build can be traced back to the exact commit it came from.</p>
+
+    <h2 id="linting">Linting</h2>
+    <p>Two linters run in CI on every push and pull request (see <a href="https://github.com/DimitarCC/e2-emby-client/tree/main/.github/workflows" target="_blank" rel="noopener">.github/workflows</a>):</p>
+    <ul>
+      <li><strong><a href="https://docs.astral.sh/ruff/" target="_blank" rel="noopener">Ruff</a></strong> — configured in <code>pyproject.toml</code> (120-char line length, <code>E</code>/<code>F</code>/<code>W</code> rule sets). Run it locally with:
+        <pre><code>ruff check src</code></pre>
+      </li>
+      <li><strong>Pylint</strong> — run against the same source tree in its own workflow.</li>
+    </ul>
+    <p><strong>Import sorting</strong> uses <a href="https://pycqa.github.io/isort/" target="_blank" rel="noopener">isort</a> with the black profile and 120-character lines, also configured in <code>pyproject.toml</code>.</p>
+
+    <h2 id="ci">Continuous integration</h2>
+    <p>Besides the two linters, the workflow set includes:</p>
+    <ul>
+      <li><strong>compile.yml</strong> — byte-compiles the plugin to catch syntax errors before they reach a box.</li>
+      <li><strong>autotag.yml</strong> — automated tagging on the repository.</li>
+      <li><strong>buildbot.yml</strong> — build automation for the project.</li>
+    </ul>
+
+    <h2 id="translations">Translations</h2>
+    <p>Translatable strings live in <code>po/</code> as <code>.po</code> files, compiled to <code>.mo</code> for runtime use. The project currently ships Bulgarian (<code>bg</code>) and German (<code>de</code>) locales alongside the English source strings.</p>
+    <p>After changing any translatable string in the Python source:</p>
+    <ol>
+      <li>Run <code>python setup_translate.py</code> (or the platform-specific script in <code>po/</code>, e.g. <code>updateallpo-multiOS.sh</code>) to regenerate the <code>.pot</code>/<code>.po</code> template.</li>
+      <li>Update the translated strings in the relevant <code>.po</code> file(s).</li>
+      <li>Regenerate the compiled <code>.mo</code> files — this also happens automatically as part of <code>build.sh</code>.</li>
+    </ol>
+    <div class="callout tip">
+      <strong>Adding a new language</strong>
+      <p>Copy an existing <code>.po</code> file (e.g. <code>po/de.po</code>) to a new locale code, translate its entries, and it will be picked up the next time the <code>.po</code>/<code>.mo</code> update scripts run.</p>
+    </div>
+
+    <h2 id="oe-feed">OpenEmbedded / feed integration</h2>
+    <p>The BitBake recipe <code>enigma2-plugin-extensions-e2embyclient.bb</code> targets both <code>oe-alliance-core</code> and <code>openpli-oe-core</code> style feeds (see the commented alternative <code>inherit</code> line in the recipe). It builds directly from the <code>main</code> branch on GitHub via <code>SRCREV = "${AUTOREV}"</code>, and declares <code>python3-pillow</code> and <code>python3-requests</code> as runtime dependencies.</p>
+
+    <h2 id="contributing">Contributing</h2>
+    <ul>
+      <li>Keep changes scoped and run Ruff/Pylint locally before opening a pull request — CI will otherwise fail on the same checks.</li>
+      <li>Match the existing code style (tabs for indentation in <code>src/</code>, 120-character line length).</li>
+      <li>If you add or change any user-facing string, update the translation template as described above.</li>
+      <li>Open issues and pull requests on <a href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub</a>.</li>
+    </ul>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>Licensed under the <a href="https://github.com/DimitarCC/e2-emby-client/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL-3.0</a>. Not affiliated with Emby LLC.</span>
+    <div class="footer-links">
+      <a href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://emby.media/" target="_blank" rel="noopener">Emby</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/script.js"></script>
+</body>
+</html>

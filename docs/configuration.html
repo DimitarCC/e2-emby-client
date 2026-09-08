@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Configuration Reference — E2EmbyClient</title>
+<meta name="description" content="Every E2EmbyClient setting under Emby Player → Setup, explained: timeouts, UI settings, player settings and connections.">
+<link rel="icon" href="../assets/img/plugin.png">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="container nav-inner">
+    <a class="brand" href="../index.html">
+      <img src="../assets/img/plugin.png" alt="">
+      E2EmbyClient
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="installation.html" class="active">Docs</a>
+      <a href="controls.html">Controls</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <a class="nav-gh" href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub &#8599;</a>
+  </nav>
+</header>
+
+<main class="container docs-layout">
+  <aside class="docs-side">
+    <button class="docs-side-toggle">On this page &#9662;</button>
+    <div class="docs-side-inner">
+      <h4>Getting Started</h4>
+      <ul>
+        <li><a href="installation.html">Installation</a></li>
+        <li><a href="setup.html">Setup &amp; First Run</a></li>
+      </ul>
+      <h4>Using the Client</h4>
+      <ul>
+        <li><a href="controls.html">Controls &amp; Navigation</a></li>
+        <li><a href="configuration.html" class="active">Configuration Reference</a></li>
+        <li><a href="faq.html">FAQ &amp; Troubleshooting</a></li>
+      </ul>
+      <h4>Contributing</h4>
+      <ul>
+        <li><a href="development.html">Development</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <article class="docs-content">
+    <h1>Configuration Reference</h1>
+    <p class="subtitle">All settings live under <strong>Emby Player &rarr; Setup</strong>, grouped into Timeouts, UI Settings, Player Settings and Connections.</p>
+
+    <h2 id="timeouts" class="top-anchor">Timeouts</h2>
+    <table>
+      <thead><tr><th>Setting</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Connection retries count</td><td>5 (range 5&ndash;20)</td><td>Number of retry attempts for failed connections to the Emby server.</td></tr>
+        <tr><td>Connection timeout</td><td>2 s (range 1&ndash;20)</td><td>Timeout for establishing a connection to the server.</td></tr>
+        <tr><td>Connection read timeout</td><td>10 s (range 2&ndash;20)</td><td>Timeout for reading a response once connected.</td></tr>
+        <tr><td>Theme music settle delay</td><td>300 ms (range 0&ndash;5000)</td><td>Delay after theme music stops before the next stream starts playing.</td></tr>
+        <tr><td>Player initial seek delay</td><td>10 ms (range 0&ndash;2000)</td><td>Delay before the player's first seek attempt (GStreamer / HiPlayer).</td></tr>
+        <tr><td>Player initial seek delay (Exteplayer3)</td><td>300 ms (range 0&ndash;2000)</td><td>Same as above, tuned separately for Exteplayer3, which settles more slowly.</td></tr>
+        <tr><td>Audio track change settle delay</td><td>500 ms (range 0&ndash;2000)</td><td>Delay before re-checking the active audio track after switching, to let the playback engine settle.</td></tr>
+      </tbody>
+    </table>
+    <div class="callout tip">
+      <strong>When to touch the timeouts</strong>
+      <p>Increase the connection timeout and retry count on flaky Wi-Fi links to a remote server. Increase the seek delays if you notice the player briefly showing the wrong position right after starting or resuming playback, particularly on Exteplayer3.</p>
+    </div>
+
+    <h2 id="ui-settings">UI Settings</h2>
+    <table>
+      <thead><tr><th>Setting</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Thumb cache location</td><td>Temporary (<code>/tmp</code>)</td><td>Where poster/backdrop thumbnails are cached — a temporary location cleared on reboot, or a persistent mount point (HDD/USB) if one is available.</td></tr>
+        <tr><td>UI scroll delay</td><td>150 ms</td><td>Delay between list selection-changed events, i.e. how fast you can scroll through a list before it fetches new info for the highlighted item.</td></tr>
+        <tr><td>Add to Main Menu</td><td>Off</td><td>Expose <em>Emby Player</em> directly on the Enigma2 main menu.</td></tr>
+        <tr><td>Add to Extensions Menu</td><td>Off</td><td>Expose <em>Emby Player</em> under Extensions, in addition to Plugins &rarr; Extensions.</td></tr>
+        <tr><td>Stop playing service on home load</td><td>Off</td><td>Stop the currently playing live service while browsing Emby, and restore it automatically when you exit the plugin.</td></tr>
+        <tr><td>Play theme music</td><td>Off</td><td>Play a movie's or series' theme music (if available on the server) while its detail screen is open. Only shown when <em>Stop playing service on home load</em> is enabled.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="player-settings">Player Settings</h2>
+    <table>
+      <thead><tr><th>Setting</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Playback system</td><td>GStreamer / HiPlayer</td><td>Which playback engine to use: GStreamer or HiPlayer (whichever your box's media service reports), or Exteplayer3 if the ServiceApp plugin is installed.</td></tr>
+        <tr><td>Encoding for non-UTF-8 subtitles</td><td>Latin</td><td>Fallback character encoding applied to subtitle files that aren't UTF-8 — choose Latin, Cyrillic, Japanese, Chinese (Traditional or Simplified), or Arabic to match your content.</td></tr>
+        <tr><td>Show Skip Intro button</td><td>On</td><td>Show a Skip Intro button during a marked intro segment.</td></tr>
+        <tr><td>Show Up Next screen</td><td>On</td><td>Show the autoplay Up Next overlay with a countdown near the end of an episode.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="connections">Connections</h2>
+    <p>The bottom of the Setup screen lists your configured Emby server connections. See <a href="setup.html#managing">Managing connections</a> in the setup tutorial for how to add, edit, remove and switch the active one.</p>
+    <table>
+      <thead><tr><th>Field</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td>Name</td><td>A free-form label for the connection, shown in the connections list.</td></tr>
+        <tr><td>URL</td><td>Root address of the Emby server, e.g. <code>https://192.168.1.10</code>.</td></tr>
+        <tr><td>Port</td><td>Emby server port. The Emby default is <code>8096</code>.</td></tr>
+        <tr><td>User</td><td>Emby account username.</td></tr>
+        <tr><td>Password</td><td>Emby account password.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="next">Related</h2>
+    <ul>
+      <li><a href="setup.html">Setup &amp; First Run</a> — first-time configuration walkthrough.</li>
+      <li><a href="controls.html">Controls &amp; Navigation</a> — how Skip Intro, Up Next and subtitle switching behave during playback.</li>
+    </ul>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>Licensed under the <a href="https://github.com/DimitarCC/e2-emby-client/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL-3.0</a>. Not affiliated with Emby LLC.</span>
+    <div class="footer-links">
+      <a href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://emby.media/" target="_blank" rel="noopener">Emby</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controls &amp; Navigation — E2EmbyClient</title>
+<meta name="description" content="Remote control reference for E2EmbyClient: navigation, playback, item actions and setup screens.">
+<link rel="icon" href="../assets/img/plugin.png">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="container nav-inner">
+    <a class="brand" href="../index.html">
+      <img src="../assets/img/plugin.png" alt="">
+      E2EmbyClient
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="installation.html" class="active">Docs</a>
+      <a href="controls.html">Controls</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <a class="nav-gh" href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub &#8599;</a>
+  </nav>
+</header>
+
+<main class="container docs-layout">
+  <aside class="docs-side">
+    <button class="docs-side-toggle">On this page &#9662;</button>
+    <div class="docs-side-inner">
+      <h4>Getting Started</h4>
+      <ul>
+        <li><a href="installation.html">Installation</a></li>
+        <li><a href="setup.html">Setup &amp; First Run</a></li>
+      </ul>
+      <h4>Using the Client</h4>
+      <ul>
+        <li><a href="controls.html" class="active">Controls &amp; Navigation</a></li>
+        <li><a href="configuration.html">Configuration Reference</a></li>
+        <li><a href="faq.html">FAQ &amp; Troubleshooting</a></li>
+      </ul>
+      <h4>Contributing</h4>
+      <ul>
+        <li><a href="development.html">Development</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <article class="docs-content">
+    <h1>Controls &amp; Navigation</h1>
+    <p class="subtitle">How the remote maps to actions across the home screen, library grids, detail screens, setup screens and the player.</p>
+
+    <h2 id="general" class="top-anchor">General navigation</h2>
+    <p>These mappings apply across the home screen, library grids and setup/connection screens.</p>
+    <div class="key-row">
+      <kbd>OK</kbd><kbd>Exit</kbd><kbd>Back</kbd><kbd>Red</kbd><kbd>Green</kbd><kbd>Yellow</kbd><kbd>Blue</kbd><kbd>Menu</kbd>
+    </div>
+    <table>
+      <thead><tr><th>Key</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>OK</kbd></td><td>Select the highlighted item / confirm.</td></tr>
+        <tr><td><kbd>Exit</kbd> / <kbd>Back</kbd></td><td>Close the current screen and go back one level.</td></tr>
+        <tr><td><kbd>Red</kbd></td><td>Cancel / close without saving (setup and dialog screens).</td></tr>
+        <tr><td><kbd>Green</kbd></td><td>Save (setup and connection editor screens).</td></tr>
+        <tr><td><kbd>Yellow</kbd></td><td>Context action — e.g. add/edit a connection in Setup.</td></tr>
+        <tr><td><kbd>Blue</kbd></td><td>Context action — e.g. remove a connection in Setup.</td></tr>
+        <tr><td><kbd>Menu</kbd></td><td>Open the context menu, where available.</td></tr>
+        <tr><td>Directional pad</td><td>Move the selection between items in a grid, list or the item action button row.</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="item-actions">Item detail screens</h2>
+    <p>Movie, series, season and episode detail screens show a row of contextual action buttons — the exact set depends on the item type and its state:</p>
+    <div class="grid">
+      <div class="card"><h3><span class="icon"><img src="../assets/img/play.png" alt=""></span>Play</h3><p>Shown when the item has no playback progress yet.</p></div>
+      <div class="card"><h3><span class="icon"><img src="../assets/img/resume.png" alt=""></span>Resume / Play from start</h3><p>Shown together once playback progress exists, with the remaining time displayed on the Resume button.</p></div>
+      <div class="card"><h3><span class="icon"><img src="../assets/img/videoversions.png" alt=""></span>Versions</h3><p>Shown when an item has more than one media source, letting you pick which version to play.</p></div>
+      <div class="card"><h3><span class="icon"><img src="../assets/img/trailer.png" alt=""></span>Play trailer</h3><p>Shown when the item has a linked remote trailer.</p></div>
+      <div class="card"><h3><span class="icon"><img src="../assets/img/watched.png" alt=""></span>Watched</h3><p>Toggles the played/unplayed state on the server.</p></div>
+      <div class="card"><h3><span class="icon"><img src="../assets/img/star.png" alt=""></span>Favorite</h3><p>Toggles the favorite state on the server.</p></div>
+      <div class="card"><h3><span class="icon"><img src="../assets/img/tv.png" alt=""></span>Go to series</h3><p>Shown on episodes — jumps to the parent series' detail screen.</p></div>
+    </div>
+    <p>Move between buttons with <strong>left/right</strong> on the directional pad and press <kbd>OK</kbd> to activate the highlighted one.</p>
+
+    <h2 id="player">Playback controls</h2>
+    <p>The player is built on Enigma2's standard movie-player infobar, so the usual playback keys (play/pause, stop, fast-forward, rewind) work as on any other video. On top of that, E2EmbyClient adds:</p>
+    <table>
+      <thead><tr><th>Key</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td><kbd>Play</kbd> / <kbd>Pause</kbd></td><td>Toggle playback.</td></tr>
+        <tr><td><kbd>1</kbd> <kbd>3</kbd> <kbd>4</kbd> <kbd>6</kbd> <kbd>7</kbd> <kbd>9</kbd></td><td>Numeric quick-seek, same convention as the standard Enigma2 movie player.</td></tr>
+        <tr><td><kbd>Up</kbd></td><td>Show the chapter/segment list.</td></tr>
+        <tr><td><kbd>Down</kbd></td><td>Show the next-up playlist.</td></tr>
+        <tr><td><kbd>Info</kbd> / <kbd>EPG</kbd></td><td>Show the info panel (title, plot, progress) over the video.</td></tr>
+        <tr><td><kbd>Audio</kbd></td><td>Open audio track selection — also lists available subtitle tracks, including embedded and external ones.</td></tr>
+        <tr><td><kbd>OK</kbd></td><td>Select the highlighted chapter or playlist entry.</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="skip-intro">Skip Intro</h3>
+    <p>When an item has an intro marker and <em>Show Skip Intro button</em> is enabled (see <a href="configuration.html#player-settings">Configuration</a>), a Skip Intro button appears during the marked segment. Press <kbd>OK</kbd> while it's shown to jump past the intro.</p>
+
+    <h3 id="up-next">Up Next</h3>
+    <p>Near the end of an episode, if <em>Show Up Next screen</em> is enabled, an overlay appears showing the next episode with an autoplay countdown. Use left/right to move between its buttons (e.g. play now / cancel) and <kbd>OK</kbd> to confirm, or let the countdown finish to autoplay.</p>
+
+    <h2 id="subtitles">Subtitles &amp; audio tracks</h2>
+    <p>Open the audio selection dialog during playback to switch audio or subtitle tracks. Subtitle files using legacy, non-UTF-8 encodings (Cyrillic, Japanese, Chinese, Arabic, etc.) are decoded using the fallback encoding configured under <a href="configuration.html#player-settings">Player Settings</a>.</p>
+
+    <h2 id="next">Related</h2>
+    <ul>
+      <li><a href="configuration.html">Configuration Reference</a> — toggle the Skip Intro button, Up Next screen, and set the subtitle fallback encoding.</li>
+      <li><a href="faq.html">FAQ &amp; Troubleshooting</a> — playback and seeking issues.</li>
+    </ul>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>Licensed under the <a href="https://github.com/DimitarCC/e2-emby-client/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL-3.0</a>. Not affiliated with Emby LLC.</span>
+    <div class="footer-links">
+      <a href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://emby.media/" target="_blank" rel="noopener">Emby</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/script.js"></script>
+</body>
+</html>

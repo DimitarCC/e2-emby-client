@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Setup &amp; First Run — E2EmbyClient</title>
+<meta name="description" content="Step-by-step tutorial for adding your first Emby server connection to E2EmbyClient and browsing your library.">
+<link rel="icon" href="../assets/img/plugin.png">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="container nav-inner">
+    <a class="brand" href="../index.html">
+      <img src="../assets/img/plugin.png" alt="">
+      E2EmbyClient
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="installation.html" class="active">Docs</a>
+      <a href="controls.html">Controls</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <a class="nav-gh" href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub &#8599;</a>
+  </nav>
+</header>
+
+<main class="container docs-layout">
+  <aside class="docs-side">
+    <button class="docs-side-toggle">On this page &#9662;</button>
+    <div class="docs-side-inner">
+      <h4>Getting Started</h4>
+      <ul>
+        <li><a href="installation.html">Installation</a></li>
+        <li><a href="setup.html" class="active">Setup &amp; First Run</a></li>
+      </ul>
+      <h4>Using the Client</h4>
+      <ul>
+        <li><a href="controls.html">Controls &amp; Navigation</a></li>
+        <li><a href="configuration.html">Configuration Reference</a></li>
+        <li><a href="faq.html">FAQ &amp; Troubleshooting</a></li>
+      </ul>
+      <h4>Contributing</h4>
+      <ul>
+        <li><a href="development.html">Development</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <article class="docs-content">
+    <h1>Setup &amp; First Run</h1>
+    <p class="subtitle">A walkthrough of connecting E2EmbyClient to your Emby server, from a fresh install to browsing your library.</p>
+
+    <h2 id="launch" class="top-anchor">1. Launch the plugin</h2>
+    <p>Open <strong>Menu &rarr; Plugins &rarr; Extensions &rarr; Emby Player</strong>. If you enabled <em>Add to Main Menu</em> in the settings (see <a href="configuration.html#ui-settings">Configuration</a>), you'll also find it directly on the main menu.</p>
+    <div class="callout warn">
+      <strong>FHD skins only</strong>
+      <p>If your current skin's resolution is below 1920&times;1080, the plugin shows an error message and exits immediately. Switch to an FHD skin first.</p>
+    </div>
+    <p>On the very first launch — before any server connection exists — the plugin skips the home screen and opens <strong>Setup</strong> automatically, since there's nothing to browse yet.</p>
+
+    <h2 id="add-connection">2. Add a server connection</h2>
+    <ol class="steps">
+      <li>
+        <h3>Open the connection editor</h3>
+        <p>In the Setup screen, scroll to the <strong>Connections</strong> section at the bottom and press <kbd>OK</kbd> or the <kbd>Yellow</kbd> button to add a new connection.</p>
+      </li>
+      <li>
+        <h3>Name the connection</h3>
+        <p>Give it a label of your choosing, e.g. <em>Living Room Server</em> or <em>Home Emby</em>. This is only used inside the plugin, purely for your own reference when you have more than one server.</p>
+      </li>
+      <li>
+        <h3>Enter the server address</h3>
+        <p>Fill in the <strong>URL</strong> field with the root address of your Emby server, for example <code>https://192.168.1.10</code> or <code>http://emby.local</code>, and set the <strong>Port</strong> (the Emby default is <code>8096</code> for HTTP, commonly <code>8920</code> for HTTPS).</p>
+      </li>
+      <li>
+        <h3>Enter your credentials</h3>
+        <p>Fill in the Emby <strong>User</strong> and <strong>Password</strong> for the account you want the box to use. This should be an account that already exists on the Emby server — the plugin does not create new server accounts.</p>
+      </li>
+      <li>
+        <h3>Save</h3>
+        <p>Press <kbd>Green</kbd> (Save) to store the connection. It's added to the connections list and automatically marked as active if it's your first one.</p>
+      </li>
+    </ol>
+
+    <h2 id="managing">3. Managing connections</h2>
+    <p>You can configure more than one Emby server (or more than one user on the same server) and switch between them freely:</p>
+    <ul>
+      <li>Press <kbd>Yellow</kbd> on an existing connection entry to <strong>edit</strong> it.</li>
+      <li>Press <kbd>Blue</kbd> on an existing connection entry to <strong>remove</strong> it.</li>
+      <li>Toggle a connection's checkbox to make it the <strong>active</strong> connection — this is the server the plugin talks to when you open the home screen.</li>
+    </ul>
+
+    <h2 id="browsing">4. Browse your library</h2>
+    <p>Exit Setup once you have an active connection — the plugin loads the Emby home screen, showing your libraries (Movies, Series, and any other views configured on the server) as browsable rows and grids.</p>
+    <ul>
+      <li>Open a library to see its grid view, with an alphabet/character bar on the side for quickly jumping to a letter.</li>
+      <li>Select any movie, series, season or episode to open its detail screen — cast, plot, ratings, genres and media info, alongside contextual action buttons (Play, Resume, Trailer, Watched, Favorite, etc.).</li>
+      <li>See <a href="controls.html">Controls &amp; Navigation</a> for the full remote-control reference once you're browsing.</li>
+    </ul>
+
+    <div class="callout tip">
+      <strong>Multiple servers or users</strong>
+      <p>Add a separate connection per server, or per user on the same server, then flip the active checkbox in Setup whenever you want to switch. There is no need to re-enter credentials each time — every configured connection is stored.</p>
+    </div>
+
+    <h2 id="next">Next steps</h2>
+    <ul>
+      <li><a href="controls.html">Controls &amp; Navigation</a> — remote control reference for browsing and playback.</li>
+      <li><a href="configuration.html">Configuration Reference</a> — tune timeouts, playback engine, subtitle encoding and more.</li>
+      <li><a href="faq.html">FAQ &amp; Troubleshooting</a> — fixes for common connection and playback issues.</li>
+    </ul>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>Licensed under the <a href="https://github.com/DimitarCC/e2-emby-client/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL-3.0</a>. Not affiliated with Emby LLC.</span>
+    <div class="footer-links">
+      <a href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://emby.media/" target="_blank" rel="noopener">Emby</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/script.js"></script>
+</body>
+</html>

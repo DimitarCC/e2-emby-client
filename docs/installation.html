@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installation — E2EmbyClient</title>
+<meta name="description" content="How to install E2EmbyClient: pre-built .ipk, building from source, and OpenEmbedded/feed integration.">
+<link rel="icon" href="../assets/img/plugin.png">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="container nav-inner">
+    <a class="brand" href="../index.html">
+      <img src="../assets/img/plugin.png" alt="">
+      E2EmbyClient
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="installation.html" class="active">Docs</a>
+      <a href="controls.html">Controls</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <a class="nav-gh" href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub &#8599;</a>
+  </nav>
+</header>
+
+<main class="container docs-layout">
+  <aside class="docs-side">
+    <button class="docs-side-toggle">On this page &#9662;</button>
+    <div class="docs-side-inner">
+      <h4>Getting Started</h4>
+      <ul>
+        <li><a href="installation.html" class="active">Installation</a></li>
+        <li><a href="setup.html">Setup &amp; First Run</a></li>
+      </ul>
+      <h4>Using the Client</h4>
+      <ul>
+        <li><a href="controls.html">Controls &amp; Navigation</a></li>
+        <li><a href="configuration.html">Configuration Reference</a></li>
+        <li><a href="faq.html">FAQ &amp; Troubleshooting</a></li>
+      </ul>
+      <h4>Contributing</h4>
+      <ul>
+        <li><a href="development.html">Development</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <article class="docs-content">
+    <h1>Installation</h1>
+    <p class="subtitle">Three ways to get E2EmbyClient onto your Enigma2 box: a pre-built package, building it yourself, or wiring it into an image feed.</p>
+
+    <h2 id="requirements" class="top-anchor">Before you start</h2>
+    <ul>
+      <li>An Enigma2 image running an <strong>FHD (1920&times;1080)</strong> skin. The plugin checks the desktop resolution on launch and refuses to start below that.</li>
+      <li>An <a href="https://emby.media/" target="_blank" rel="noopener">Emby Server</a> instance reachable from the box, and a user account on it.</li>
+      <li>Python 3 with the <code>pillow</code> and <code>requests</code> packages — these are declared as dependencies of the <code>.ipk</code> and installed automatically by <code>opkg</code>/<code>apt</code>.</li>
+      <li>Optional: the <a href="https://github.com/openpli/enigma2-plugin-systemplugins-serviceapp" target="_blank" rel="noopener">ServiceApp</a> plugin, only needed if you plan to play back through Exteplayer3.</li>
+    </ul>
+
+    <h2 id="prebuilt">Option A — install a pre-built .ipk</h2>
+    <p>This is the fastest route if you just want to run the plugin.</p>
+    <ol>
+      <li>Download the latest <code>enigma2-plugin-extensions-e2embyclient_*_all.ipk</code> from the project's <a href="https://github.com/DimitarCC/e2-emby-client/releases" target="_blank" rel="noopener">GitHub releases</a> page, or from your image feed if it's included there.</li>
+      <li>Transfer the file to the box (network share, USB stick, or <code>scp</code>) and install it through your image's package manager — or from a terminal:
+        <pre><code>opkg install enigma2-plugin-extensions-e2embyclient_*_all.ipk</code></pre>
+      </li>
+      <li>Restart the GUI (or reboot the box) if prompted.</li>
+    </ol>
+    <div class="callout tip">
+      <strong>Tip</strong>
+      <p>Most images also let you install <code>.ipk</code> files via the file manager (green/OK on the file) instead of the command line.</p>
+    </div>
+
+    <h2 id="from-source">Option B — build the .ipk yourself</h2>
+    <p>The <code>build.sh</code> script at the repository root packages the <code>src/</code> directory into a Debian-style <code>.ipk</code>.</p>
+    <ol>
+      <li>Clone the repository:
+        <pre><code>git clone https://github.com/DimitarCC/e2-emby-client.git
+cd e2-emby-client</code></pre>
+      </li>
+      <li>Run the build script:
+        <pre><code>./build.sh</code></pre>
+      </li>
+      <li>Copy the resulting <code>enigma2-plugin-extensions-e2embyclient_&lt;version&gt;_all.ipk</code> from the repository root to your box and install it as in Option A.</li>
+    </ol>
+    <div class="callout warn">
+      <strong>Windows users</strong>
+      <p>Run <code>build.sh</code> from Git Bash or MSYS2, not PowerShell or cmd.exe. You may need to install additional packages (for example <code>ar.exe</code>, part of binutils). Any POSIX shell works fine on Linux or macOS.</p>
+    </div>
+    <p>The script bumps the package version using the current git revision/commit hash, so every build is traceable back to a specific commit.</p>
+
+    <h2 id="oe-feed">Option C — OpenEmbedded / image feed integration</h2>
+    <p>If you maintain an Enigma2 image feed based on <code>oe-alliance-core</code> or <code>openpli-oe-core</code>, a BitBake recipe is provided at
+      <code>enigma2-plugin-extensions-e2embyclient.bb</code> in the repository root. Add it to your feed's plugin layer the same way you would any other extension plugin recipe, then build and publish through your normal feed pipeline.</p>
+
+    <h2 id="next">Next step</h2>
+    <p>Once the plugin is installed, head to <a href="setup.html">Setup &amp; First Run</a> to connect it to your Emby server.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>Licensed under the <a href="https://github.com/DimitarCC/e2-emby-client/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL-3.0</a>. Not affiliated with Emby LLC.</span>
+    <div class="footer-links">
+      <a href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://emby.media/" target="_blank" rel="noopener">Emby</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E2EmbyClient — Emby for Enigma2</title>
+<meta name="description" content="A native Emby client plugin for Enigma2 set-top boxes. Browse libraries, play movies and series, and control playback using the box's own playback engine.">
+<link rel="icon" href="assets/img/plugin.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="container nav-inner">
+    <a class="brand" href="index.html">
+      <img src="assets/img/plugin.png" alt="">
+      E2EmbyClient
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <div class="nav-links">
+      <a href="index.html" class="active">Home</a>
+      <a href="docs/installation.html">Docs</a>
+      <a href="docs/controls.html">Controls</a>
+      <a href="docs/configuration.html">Configuration</a>
+      <a href="docs/faq.html">FAQ</a>
+    </div>
+    <a class="nav-gh" href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub &#8599;</a>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <span class="eyebrow">Open source &middot; GPL-3.0</span>
+      <h1>Emby, right on your Enigma2 box</h1>
+      <p class="lead">E2EmbyClient is a native Emby client plugin for Enigma2 set-top boxes. Browse your libraries, play movies, series and live content, and control playback with the box's own playback engine — no transcoding gateway, no second app.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="docs/installation.html">Get started</a>
+        <a class="btn btn-ghost" href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">View source</a>
+      </div>
+      <div class="badges">
+        <img src="https://github.com/DimitarCC/e2-emby-client/actions/workflows/ruff.yml/badge.svg" alt="Ruff Linter status">
+        <img src="https://github.com/DimitarCC/e2-emby-client/actions/workflows/pylint.yml/badge.svg" alt="Pylint Code Check status">
+        <img src="https://img.shields.io/badge/License-GPL--3.0-blue.svg" alt="License: GPL-3.0">
+      </div>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="container">
+      <div class="section-head">
+        <h2>Everything you'd expect from a native client</h2>
+        <p>Built specifically for Enigma2 skins and playback engines — GStreamer, HiPlayer or Exteplayer3.</p>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/emby-verysmall.png" alt=""></span>Library browsing</h3>
+          <p>Grid-based library screens for movies, series, box sets and episodes, with an alphabet/character jump bar for fast navigation.</p>
+        </div>
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/tv.png" alt=""></span>Rich detail views</h3>
+          <p>Dedicated info screens for movies, series, seasons and episodes — cast, plot, ratings, genres and media info.</p>
+        </div>
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/play.png" alt=""></span>Full playback control</h3>
+          <p>Resume, play from start, and play trailers. Multiple video/audio version selection, with seek handling tuned per playback engine.</p>
+        </div>
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/videoversions.png" alt=""></span>Audio &amp; subtitles</h3>
+          <p>Switch audio and subtitle tracks on the fly, including non-UTF-8 subtitle encodings — Cyrillic, Japanese, Chinese, Arabic and more.</p>
+        </div>
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/resume.png" alt=""></span>Skip Intro &amp; Up Next</h3>
+          <p>A Skip Intro button for content with intro markers, and an Up Next screen with an autoplay countdown before the next episode.</p>
+        </div>
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/watched.png" alt=""></span>Item actions</h3>
+          <p>Mark watched/unwatched, favorite/unfavorite, or jump straight to a parent series from any detail screen.</p>
+        </div>
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/star.png" alt=""></span>Theme music &amp; notifications</h3>
+          <p>Optional theme music while browsing a movie or series detail screen, plus in-app notifications for connection and playback status.</p>
+        </div>
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/plugin.png" alt=""></span>Multiple servers</h3>
+          <p>Configure and switch between several Emby servers or users, each with its own credentials.</p>
+        </div>
+        <div class="card">
+          <h3><span class="icon"><img src="assets/img/trailer.png" alt=""></span>Thumbnail caching</h3>
+          <p>Thumbnail cache to a temporary or persistent (HDD/USB) location, with automatic cleanup.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="requirements">
+    <div class="container">
+      <div class="section-head">
+        <h2>Requirements</h2>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>FHD skin</h3>
+          <p>An Enigma2 image running an FHD (1920&times;1080) skin — the plugin refuses to start on lower resolutions.</p>
+        </div>
+        <div class="card">
+          <h3>Emby Server</h3>
+          <p>An <a href="https://emby.media/" target="_blank" rel="noopener">Emby Server</a> instance reachable from the box, plus a valid user account.</p>
+        </div>
+        <div class="card">
+          <h3>Python packages</h3>
+          <p><code>pillow</code> and <code>requests</code> — installed automatically as dependencies of the <code>.ipk</code> package.</p>
+        </div>
+        <div class="card">
+          <h3>Optional: ServiceApp</h3>
+          <p>Install <a href="https://github.com/openpli/enigma2-plugin-systemplugins-serviceapp" target="_blank" rel="noopener">ServiceApp</a> if you want to use Exteplayer3 as the playback engine.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="quicklinks">
+    <div class="container">
+      <div class="section-head">
+        <h2>Where to go next</h2>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>&#128230; Installation</h3>
+          <p>Install a pre-built <code>.ipk</code>, build one yourself, or integrate the plugin into an OpenEmbedded feed.</p>
+          <p><a href="docs/installation.html">Read the installation guide &rarr;</a></p>
+        </div>
+        <div class="card">
+          <h3>&#128640; Setup &amp; first run</h3>
+          <p>Add your first Emby server connection and get browsing in a couple of minutes.</p>
+          <p><a href="docs/setup.html">Follow the setup tutorial &rarr;</a></p>
+        </div>
+        <div class="card">
+          <h3>&#127918; Controls</h3>
+          <p>Remote control reference for navigation, playback, item actions and the setup screens.</p>
+          <p><a href="docs/controls.html">See the controls reference &rarr;</a></p>
+        </div>
+        <div class="card">
+          <h3>&#9881;&#65039; Configuration</h3>
+          <p>Every setting under Emby Player &rarr; Setup, explained in detail.</p>
+          <p><a href="docs/configuration.html">Browse configuration options &rarr;</a></p>
+        </div>
+        <div class="card">
+          <h3>&#128295; Development</h3>
+          <p>Project layout, linting, translations and how to build the <code>.ipk</code> from source.</p>
+          <p><a href="docs/development.html">Read the developer guide &rarr;</a></p>
+        </div>
+        <div class="card">
+          <h3>&#10067; FAQ &amp; troubleshooting</h3>
+          <p>Answers to common questions and fixes for the most frequent setup issues.</p>
+          <p><a href="docs/faq.html">Check the FAQ &rarr;</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>Licensed under the <a href="https://github.com/DimitarCC/e2-emby-client/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL-3.0</a>. Not affiliated with Emby LLC.</span>
+    <div class="footer-links">
+      <a href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://emby.media/" target="_blank" rel="noopener">Emby</a>
+      <a href="docs/faq.html">FAQ</a>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/script.js"></script>
+</body>
+</html>

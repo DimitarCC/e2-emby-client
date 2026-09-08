@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAQ &amp; Troubleshooting — E2EmbyClient</title>
+<meta name="description" content="Answers to common E2EmbyClient questions and fixes for the most frequent setup, connection and playback issues.">
+<link rel="icon" href="../assets/img/plugin.png">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <nav class="container nav-inner">
+    <a class="brand" href="../index.html">
+      <img src="../assets/img/plugin.png" alt="">
+      E2EmbyClient
+    </a>
+    <button class="nav-toggle" aria-label="Toggle navigation">&#9776;</button>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="installation.html" class="active">Docs</a>
+      <a href="controls.html">Controls</a>
+      <a href="configuration.html">Configuration</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+    <a class="nav-gh" href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub &#8599;</a>
+  </nav>
+</header>
+
+<main class="container docs-layout">
+  <aside class="docs-side">
+    <button class="docs-side-toggle">On this page &#9662;</button>
+    <div class="docs-side-inner">
+      <h4>Getting Started</h4>
+      <ul>
+        <li><a href="installation.html">Installation</a></li>
+        <li><a href="setup.html">Setup &amp; First Run</a></li>
+      </ul>
+      <h4>Using the Client</h4>
+      <ul>
+        <li><a href="controls.html">Controls &amp; Navigation</a></li>
+        <li><a href="configuration.html">Configuration Reference</a></li>
+        <li><a href="faq.html" class="active">FAQ &amp; Troubleshooting</a></li>
+      </ul>
+      <h4>Contributing</h4>
+      <ul>
+        <li><a href="development.html">Development</a></li>
+      </ul>
+    </div>
+  </aside>
+
+  <article class="docs-content">
+    <h1>FAQ &amp; Troubleshooting</h1>
+    <p class="subtitle">Common questions, plus fixes for the setup, connection and playback issues that come up most often.</p>
+
+    <h2 id="general" class="top-anchor">General</h2>
+
+    <h3>Is this an official Emby app?</h3>
+    <p>No. E2EmbyClient is an independent, open-source client built specifically for Enigma2 set-top boxes. It is not affiliated with or endorsed by Emby LLC.</p>
+
+    <h3>Which Enigma2 images does it work on?</h3>
+    <p>Any Enigma2-based image, as long as the active skin runs at FHD (1920&times;1080) resolution and the box has enough performance for the configured playback engine (GStreamer, HiPlayer, or Exteplayer3 via ServiceApp).</p>
+
+    <h3>Does it support live TV from Emby?</h3>
+    <p>The plugin plays content exposed by your Emby libraries (movies, series, episodes, and their trailers) through the box's own playback engine. If <em>Stop playing service on home load</em> is enabled, your box's own live TV playback is paused while you browse and automatically restored when you exit.</p>
+
+    <h2 id="setup-issues">Setup &amp; connection issues</h2>
+
+    <h3>The plugin refuses to start / shows an error about resolution</h3>
+    <p>E2EmbyClient requires an FHD (1920&times;1080) skin and checks this on launch. Switch to an FHD skin and reopen the plugin.</p>
+
+    <h3>&quot;Emby Player&quot; only opens the Setup screen</h3>
+    <p>This is expected the first time you run the plugin, before any server connection is configured. Add a connection as described in <a href="setup.html#add-connection">Setup &amp; First Run</a>, then exit Setup to reach the home screen.</p>
+
+    <h3>The box can't reach my Emby server</h3>
+    <ul>
+      <li>Double-check the <strong>URL</strong> and <strong>Port</strong> fields — the URL should be the server's root address (e.g. <code>https://192.168.1.10</code>), not an API path.</li>
+      <li>Confirm the box and the Emby server are on the same reachable network, and that no firewall is blocking the configured port.</li>
+      <li>If the server is slow to respond (e.g. over Wi-Fi or a remote connection), raise <em>Connection timeout</em> and <em>Connection read timeout</em> under <a href="configuration.html#timeouts">Timeouts</a>.</li>
+      <li>Verify the <strong>User</strong>/<strong>Password</strong> are valid credentials on that Emby server — the plugin does not create accounts, only authenticates against existing ones.</li>
+    </ul>
+
+    <h3>I have more than one Emby server or user — do I need multiple installs?</h3>
+    <p>No. Add one connection per server or per user in Setup, then toggle the checkbox on the connection you want active. See <a href="setup.html#managing">Managing connections</a>.</p>
+
+    <h2 id="playback-issues">Playback issues</h2>
+
+    <h3>Resuming a video starts at the wrong position, then jumps</h3>
+    <p>This is usually a playback-engine settling delay. Try increasing <em>Player initial seek delay</em> (or the Exteplayer3-specific variant, if that's your active playback system) under <a href="configuration.html#timeouts">Timeouts</a>.</p>
+
+    <h3>Switching audio tracks doesn't stick / reverts</h3>
+    <p>Increase <em>Audio track change settle delay</em> under <a href="configuration.html#timeouts">Timeouts</a> — some playback engines need a little longer to report the newly active track.</p>
+
+    <h3>Subtitles show garbled or wrong characters</h3>
+    <p>This happens with legacy, non-UTF-8 subtitle files. Set <em>Encoding for non-UTF-8 subtitles</em> under <a href="configuration.html#player-settings">Player Settings</a> to match your content's language/encoding (Cyrillic, Japanese, Chinese, Arabic, etc.).</p>
+
+    <h3>The Skip Intro button or Up Next screen never appears</h3>
+    <ul>
+      <li>Confirm the corresponding toggle (<em>Show Skip Intro button</em> / <em>Show Up Next screen</em>) is enabled under <a href="configuration.html#player-settings">Player Settings</a>.</li>
+      <li>Skip Intro only appears for items that have intro markers defined on the Emby server; Up Next only appears for episodes with a following episode available.</li>
+    </ul>
+
+    <h3>Which playback engine should I choose?</h3>
+    <p>GStreamer/HiPlayer (whichever your box reports) is the default and works out of the box. Choose Exteplayer3 only if the <a href="https://github.com/openpli/enigma2-plugin-systemplugins-serviceapp" target="_blank" rel="noopener">ServiceApp</a> plugin is installed and you specifically need its playback behavior (e.g. for certain stream formats).</p>
+
+    <h2 id="storage">Thumbnails &amp; storage</h2>
+
+    <h3>Where are thumbnails cached, and can I clear them?</h3>
+    <p>By default thumbnails go to a temporary location (<code>/tmp</code>) that's cleared on reboot. You can point <em>Thumb cache location</em> under <a href="configuration.html#ui-settings">UI Settings</a> at a persistent HDD/USB mount instead — the plugin also performs automatic cleanup of stale entries.</p>
+
+    <h2 id="more-help">Still stuck?</h2>
+    <p>Open an issue on <a href="https://github.com/DimitarCC/e2-emby-client/issues" target="_blank" rel="noopener">GitHub Issues</a> with your Enigma2 image/version, the configured playback engine, and any relevant log output.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="container footer-inner">
+    <span>Licensed under the <a href="https://github.com/DimitarCC/e2-emby-client/blob/main/LICENSE" target="_blank" rel="noopener">GNU GPL-3.0</a>. Not affiliated with Emby LLC.</span>
+    <div class="footer-links">
+      <a href="https://github.com/DimitarCC/e2-emby-client" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://emby.media/" target="_blank" rel="noopener">Emby</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+  </div>
+</footer>
+
+<script src="../assets/script.js"></script>
+</body>
+</html>
