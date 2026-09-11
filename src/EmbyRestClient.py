@@ -244,6 +244,66 @@ class EmbyRestClient():
 			ShowEmbyTimeoutNotification()
 		return items
 
+	def getRecentlyPlayedItemsForLibrary(self, library_id, library_type, limit=40):
+		items = {}
+		headers = self.constructHeaders()
+		include_items = ""
+		if library_type == "movies":
+			include_items = "Movie"
+		elif library_type == "tvshow":
+			include_items = "Episode"
+		elif library_type == "music":
+			include_items = "Audio"
+		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes={include_items}&ParentId={library_id}&SortBy=DatePlayed&SortOrder=Descending&Filters=IsPlayed&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response_obj = response.content
+				res_json_obj = loads(response_obj)
+				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return items
+
+	def getFrequentlyPlayedItemsForLibrary(self, library_id, library_type, limit=40):
+		items = {}
+		headers = self.constructHeaders()
+		include_items = ""
+		if library_type == "movies":
+			include_items = "Movie"
+		elif library_type == "tvshow":
+			include_items = "Episode"
+		elif library_type == "music":
+			include_items = "Audio"
+		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes={include_items}&ParentId={library_id}&SortBy=PlayCount&SortOrder=Descending&Filters=IsPlayed&Fields=Overview,Genres,CriticRating,OfficialRating,Width,Height,CommunityRating,MediaStreams,PremiereDate,DateCreated&Limit={limit}"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response_obj = response.content
+				res_json_obj = loads(response_obj)
+				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return items
+
 	def getSingleItem(self, item_id):
 		item = {}
 		headers = self.constructHeaders()
@@ -562,6 +622,8 @@ class EmbyRestClient():
 			includeItems = "Movie&IsMovie=true&Recursive=true&Filters=IsNotFolder"
 		elif type == "tvshows":
 			includeItems = "Series&IsFolder=true&Recursive=true"
+		elif type == "music":
+			includeItems = "Audio&Recursive=true"
 		items = self.getItems("", "DateCreated", includeItems, f"&ParentId={parent_id}", limit)
 		return items and choice(items) or {}
 

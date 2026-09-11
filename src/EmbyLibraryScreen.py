@@ -13,17 +13,23 @@ from Screens.Screen import Screen
 from .EmbyGridList import EmbyGridList
 from .EmbyList import EmbyList
 from .EmbyListController import EmbyListController
+from .EmbyMusicRowList import EmbyMusicRowList
 from .EmbyRestClient import EmbyApiClient
 from .EmbyInfoLine import EmbyInfoLine
+from .EmbyItemFunctionButtons import playItem
 from .EmbyMovieItemView import EmbyMovieItemView
 from .EmbyEpisodeItemView import EmbyEpisodeItemView
 from .EmbyBoxSetItemView import EmbyBoxSetItemView
 from .EmbySeriesItemView import EmbySeriesItemView
 from .EmbyLibraryHeaderButtons import EmbyLibraryHeaderButtons
 from .EmbyLibraryCharacterBar import EmbyLibraryCharacterBar
+from .EmbyLoadingScreen import showLoadingScreen
 from .EmbyNotification import NotificationalScreen
 from .Variables import plugin_dir, PAGERSUPPORT
 from . import _
+
+
+GRID_ROW_WIDGETS = ("list_music_recent", "list_music_frequent")
 
 
 MODE_RECOMMENDATIONS = 0
@@ -52,6 +58,12 @@ class E2EmbyLibrary(NotificationalScreen):
 					<widget name="list_watching" position="40,620" size="e-80,268" iconWidth="338" iconHeight="192" scrollbarMode="showNever" iconType="Thumb" transparent="1" />
 					<widget name="list_recent_added_header" position="55,928" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recent_added" position="40,978" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
+					<widget name="list_latest_music_header" position="55,928" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_latest_music" position="40,978" size="e-80,300" iconWidth="225" iconHeight="225" scrollbarMode="showNever" iconType="Primary" transparent="1" />
+					<widget name="list_music_recent_header" position="55,1330" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_music_recent" position="40,1380" size="e-80,180" columns="3" iconHeight="64" font="Regular;24" badgeFont="Regular;20" scrollbarMode="showNever" transparent="1" />
+					<widget name="list_music_frequent_header" position="55,1610" size="900,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
+					<widget name="list_music_frequent" position="40,1660" size="e-80,180" columns="3" iconHeight="64" font="Regular;24" badgeFont="Regular;20" scrollbarMode="showNever" transparent="1" />
 					<widget name="list_recommend_header_0" position="55,1286" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
 					<widget name="list_recommend_0" position="40,1336" size="e-80,426" iconWidth="232" iconHeight="330" scrollbarMode="showNever" iconType="Primary" transparent="1" />
 					<widget name="list_recommend_header_1" position="55,1644" size="1400,40" alphatest="blend" font="Regular;28" valign="center" halign="left" transparent="1" noWrap="1"/>
@@ -110,6 +122,13 @@ class E2EmbyLibrary(NotificationalScreen):
 		self["list_recent_added_header"] = Label(recently_added_header_text)
 		self["list_recent_added"] = EmbyList()
 
+		self["list_latest_music_header"] = Label(_("Latest Music"))
+		self["list_latest_music"] = EmbyList()
+		self["list_music_recent_header"] = Label(_("Recently Played"))
+		self["list_music_recent"] = EmbyMusicRowList()
+		self["list_music_frequent_header"] = Label(_("Frequently Played"))
+		self["list_music_frequent"] = EmbyMusicRowList()
+
 		self["list_recommend_header_0"] = Label("")
 		self["list_recommend_0"] = EmbyList()
 		self["list_recommend_header_1"] = Label("")
@@ -125,6 +144,9 @@ class E2EmbyLibrary(NotificationalScreen):
 		self.lists = {}
 		self.lists["list_watching"] = EmbyListController(self["list_watching"], self["list_watching_header"])
 		self.lists["list_recent_added"] = EmbyListController(self["list_recent_added"], self["list_recent_added_header"])
+		self.lists["list_latest_music"] = EmbyListController(self["list_latest_music"], self["list_latest_music_header"])
+		self.lists["list_music_recent"] = EmbyListController(self["list_music_recent"], self["list_music_recent_header"])
+		self.lists["list_music_frequent"] = EmbyListController(self["list_music_frequent"], self["list_music_frequent_header"])
 		self.lists["list_recommend_0"] = EmbyListController(self["list_recommend_0"], self["list_recommend_header_0"])
 		self.lists["list_recommend_1"] = EmbyListController(self["list_recommend_1"], self["list_recommend_header_1"])
 		self.lists["list_recommend_2"] = EmbyListController(self["list_recommend_2"], self["list_recommend_header_2"])
@@ -133,6 +155,9 @@ class E2EmbyLibrary(NotificationalScreen):
 		self.lists["list_recommend_5"] = EmbyListController(self["list_recommend_5"], self["list_recommend_header_5"])
 		self["list_watching"].onSelectionChanged.append(self.onSelectedIndexChanged)
 		self["list_recent_added"].onSelectionChanged.append(self.onSelectedIndexChanged)
+		self["list_latest_music"].onSelectionChanged.append(self.onSelectedIndexChanged)
+		self["list_music_recent"].onSelectionChanged.append(self.onSelectedIndexChanged)
+		self["list_music_frequent"].onSelectionChanged.append(self.onSelectedIndexChanged)
 		self["list_recommend_0"].onSelectionChanged.append(self.onSelectedIndexChanged)
 		self["list_recommend_1"].onSelectionChanged.append(self.onSelectedIndexChanged)
 		self["list_recommend_2"].onSelectionChanged.append(self.onSelectedIndexChanged)
@@ -273,6 +298,10 @@ class E2EmbyLibrary(NotificationalScreen):
 		if self.selected_widget == "header":
 			return
 
+		if self.selected_widget in GRID_ROW_WIDGETS and not self[self.selected_widget].getIsAtFirstRow():
+			self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveUp)
+			return
+
 		current_widget_index = self.available_widgets.index(self.selected_widget) if self.selected_widget in self.available_widgets else -1
 		if (self.selected_widget == "list" and self["list"].getIsAtFirstRow()) or current_widget_index == 0:
 			if self.type != "boxsets":
@@ -318,6 +347,8 @@ class E2EmbyLibrary(NotificationalScreen):
 				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveDown)
 			elif self.selected_widget == "charbar":
 				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].moveDown)
+			elif self.selected_widget in GRID_ROW_WIDGETS and not self[self.selected_widget].getIsAtLastRow():
+				self[self.selected_widget].instance.moveSelection(self[self.selected_widget].instance.moveDown)
 			else:
 				if current_widget_index == len(self.available_widgets) - 1:
 					return
@@ -357,6 +388,9 @@ class E2EmbyLibrary(NotificationalScreen):
 			self["backdrop"].show()
 			self.lists["list_watching"].visible("list_watching" in self.available_widgets)
 			self.lists["list_recent_added"].visible("list_recent_added" in self.available_widgets)
+			self.lists["list_latest_music"].visible("list_latest_music" in self.available_widgets)
+			self.lists["list_music_recent"].visible("list_music_recent" in self.available_widgets)
+			self.lists["list_music_frequent"].visible("list_music_frequent" in self.available_widgets)
 			self.lists["list_recommend_0"].visible("list_recommend_0" in self.available_widgets)
 			self.lists["list_recommend_1"].visible("list_recommend_1" in self.available_widgets)
 			self.lists["list_recommend_2"].visible("list_recommend_2" in self.available_widgets)
@@ -373,6 +407,9 @@ class E2EmbyLibrary(NotificationalScreen):
 			self["backdrop"].hide()
 			self.lists["list_watching"].visible(False)
 			self.lists["list_recent_added"].visible(False)
+			self.lists["list_latest_music"].visible(False)
+			self.lists["list_music_recent"].visible(False)
+			self.lists["list_music_frequent"].visible(False)
 			self.lists["list_recommend_0"].visible(False)
 			self.lists["list_recommend_1"].visible(False)
 			self.lists["list_recommend_2"].visible(False)
@@ -420,6 +457,10 @@ class E2EmbyLibrary(NotificationalScreen):
 		else:
 			selected_item = self[self.selected_widget].getCurrentItem()
 			item_type = selected_item.get("Type")
+			if item_type == "Audio":
+				showLoadingScreen(self.session)
+				playItem(selected_item, self.session, self.playerExitCallback)
+				return
 			embyScreenClass = EmbyMovieItemView
 			if item_type == "Episode":
 				embyScreenClass = EmbyEpisodeItemView
@@ -441,6 +482,10 @@ class E2EmbyLibrary(NotificationalScreen):
 				threads.deferToThread(self.loadItems)
 			elif self.mode == MODE_FAVORITES:
 				threads.deferToThread(self.loadFavItems)
+
+	def playerExitCallback(self, *result):
+		self.last_item_id = None
+		self.onSelectedIndexChanged()
 
 	def loadItems(self):
 		items = EmbyApiClient.getItemsFromLibrary(self.library_id, self.type)
@@ -470,11 +515,44 @@ class E2EmbyLibrary(NotificationalScreen):
 		self["charbar"].setList(list)
 		self.onSelectedIndexChanged()
 
+	def loadMusicRow(self, widget_name, items):
+		list = []
+		if items:
+			i = 0
+			for item in items:
+				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
+				list.append((i, item, item.get('Name'), None, played_perc, True))
+				i += 1
+			self[widget_name].loadData(list)
+		is_available = len(list) > 0
+		if is_available:
+			self.available_widgets.append(widget_name)
+			if not self.selected_widget:
+				self.selected_widget = widget_name
+				if self.lists is None:
+					return
+				self.lists[self.selected_widget].enableSelection(True)
+		is_visible = is_available and self.mode == MODE_RECOMMENDATIONS and self.selected_widget == widget_name
+		if self.lists is None:
+			return
+		self.lists[widget_name].visible(is_visible).enableSelection(is_visible)
+
+	def loadMusicSuggestionRows(self):
+		self.loadMusicRow("list_latest_music", EmbyApiClient.getRecentlyAddedItemsForLibrary(self.library_id))
+		self.loadMusicRow("list_music_recent", EmbyApiClient.getRecentlyPlayedItemsForLibrary(self.library_id, self.type))
+		self.loadMusicRow("list_music_frequent", EmbyApiClient.getFrequentlyPlayedItemsForLibrary(self.library_id, self.type))
+
 	def loadSuggestionTabbleItems(self):
 		if self.lists is None:
 			return
 
 		self.available_widgets = []
+
+		if self.type == "music":
+			self.loadMusicSuggestionRows()
+			self.onSelectedIndexChanged()
+			return
+
 		items = EmbyApiClient.getResumableItemsForLibrary(self.library_id, self.type)
 		list = []
 		if items:
@@ -675,6 +753,23 @@ class E2EmbyLibrary(NotificationalScreen):
 			backdrop_image_tags = parent_backdrop_image_tags
 
 		if not backdrop_image_tags or len(backdrop_image_tags) == 0:
+			# Audio items never have their own BackdropImageTags - fall back to
+			# the track's (or its album's) cover art, cropped/masked the same
+			# way a real backdrop would be, so music rows aren't left blank.
+			if itemType == "Audio":
+				cover_item_id = orig_item_id
+				cover_tag = item.get("ImageTags", {}).get("Primary")
+				if not cover_tag:
+					album_id = item.get("AlbumId")
+					album_tag = item.get("AlbumPrimaryImageTag")
+					if album_id and album_tag:
+						cover_item_id = album_id
+						cover_tag = album_tag
+				if cover_tag:
+					if orig_item_id != self.last_item_id:
+						return
+					threads.deferToThread(self.downloadCover, cover_item_id, cover_tag, orig_item_id, "Primary")
+					return
 			self["backdrop"].setPixmap(None)
 			self.backdrop_pix = None
 			return
@@ -687,9 +782,9 @@ class E2EmbyLibrary(NotificationalScreen):
 			return
 		threads.deferToThread(self.downloadCover, item_id, icon_img, orig_item_id)
 
-	def downloadCover(self, item_id, icon_img, orig_item_id):
+	def downloadCover(self, item_id, icon_img, orig_item_id, image_type="Backdrop"):
 		try:
-			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha)
+			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type=image_type, alpha_channel=self.mask_alpha)
 			if orig_item_id != self.last_item_id:
 				return
 			if backdrop_pix:

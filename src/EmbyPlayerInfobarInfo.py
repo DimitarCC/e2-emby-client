@@ -89,6 +89,11 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 		title = ""
 		if type == "Episode":
 			title = f"{self.item.get("SeriesName", "")} • S{self.item.get("ParentIndexNumber", 0)}:E{self.item.get("IndexNumber", 0)} • {" ".join(self.item.get("Name", "").splitlines())}"
+		elif type == "Audio":
+			artist = self.item.get("AlbumArtist") or ", ".join(self.item.get("Artists") or [])
+			album = self.item.get("Album", "")
+			name = " ".join(self.item.get("Name", "").splitlines())
+			title = " • ".join(p for p in (artist, album, name) if p)
 		else:
 			title = " ".join(self.item.get("Name", "").splitlines())
 

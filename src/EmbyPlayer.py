@@ -33,10 +33,16 @@ from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
 
 
 class EmbyPlayer(MoviePlayer):
+	MUSIC_COVER_SIZE = 640  # keep in sync with the "cover" widget's skin size below
+
 	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="#ff000000">
+					<widget name="audio_bg" position="0,0" size="e,e" zPosition="-2" backgroundColor="#ff000000" />
 					<widget name="info_line" position="240,954" size="e-40-240,45" font="Regular; 35" fontAdditional="Bold;24" transparent="1" zPosition="5"/>
 					<widget name="info_bkg" backgroundColor="#10111111" position="-2,540" zPosition="-1" size="e+4,315" widgetBorderWidth="1" widgetBorderColor="#444444" />
 		 			<widget name="poster" backgroundColor="#10111111" position="30,557" zPosition="2" size="187,280" cornerRadius="6" widgetBorderWidth="1" widgetBorderColor="#444444" scale="1" />
+					<widget name="cover" backgroundColor="#10111111" position="center,110" zPosition="1" size="640,640" cornerRadius="10" widgetBorderWidth="1" widgetBorderColor="#444444" scale="1" />
+					<widget name="music_title" position="center,770" size="1400,55" font="Bold;42" halign="center" valign="center" transparent="1" foregroundColor="white" noWrap="1"/>
+					<widget name="music_artist" position="center,830" size="1400,45" font="Regular;30" halign="center" valign="center" transparent="1" foregroundColor="#aaaaaa" noWrap="1"/>
 					<widget name="list_chapters" position="35,560" size="e-70,310" iconWidth="340" iconHeight="188" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
 		 			<widget name="info_panel_line" position="275,560" size="e-340,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
 					<widget name="plot" position="275,630" size="e-340,230" alphatest="blend" font="Regular;30" transparent="1"/>
@@ -60,8 +66,16 @@ class EmbyPlayer(MoviePlayer):
 		self.onPlayStateChanged.append(self.__playStateChanged)
 		self.onHide.append(self.__onHide)
 		self.selectedSubtitleTrack = (0, 0, 0, 0, "und")
+		self["audio_bg"] = Label("")
+		self["audio_bg"].hide()
 		self["poster"] = Pixmap()
 		self["poster"].hide()
+		self["cover"] = Pixmap()
+		self["cover"].hide()
+		self["music_title"] = Label("")
+		self["music_title"].hide()
+		self["music_artist"] = Label("")
+		self["music_artist"].hide()
 		self["info_panel_line"] = EmbyInfoLine(self)
 		self["info_panel_line"].hide()
 		self["plot"] = Label()
@@ -145,7 +159,10 @@ class EmbyPlayer(MoviePlayer):
 			container = media_source.get("Container")
 			media_source_id = media_source.get("Id")
 			play_session_id = str(uuid4())
-			directStreamUrl = f"/videos/{item_id}/original.{container}?DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
+			if item.get("Type") == "Audio":
+				directStreamUrl = f"/audio/{item_id}/stream.{container}?static=true&DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
+			else:
+				directStreamUrl = f"/videos/{item_id}/original.{container}?DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
 			url = f"{EmbyApiClient.server_root}{directStreamUrl}"
 			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), item_name))
 		if is_trailer and trailer_url:
@@ -187,6 +204,7 @@ class EmbyPlayer(MoviePlayer):
 		self.current_pos = -1
 		self.lastPos = -1
 		self.selected_widget = None
+		self.is_audio = self.item.get("Type") == "Audio" and not is_trailer
 		if is_trailer:
 			self["info_line"].updateInfo(self.item, -1, -1, True)
 		else:
@@ -196,6 +214,72 @@ class EmbyPlayer(MoviePlayer):
 		if self.upNextEligible:
 			threads.deferToThread(self.fetchUpNextItem)
 		self.info_shown = False
+		self.updateMusicDisplay()
+
+	def updateMusicDisplay(self):
+		if not self.is_audio:
+			self["audio_bg"].hide()
+			self["cover"].hide()
+			self["music_title"].hide()
+			self["music_artist"].hide()
+			return
+		# There's no video for an audio-only stream, so the base MoviePlayer's
+		# auto-hide timer would otherwise hide this whole screen after a few
+		# seconds of inactivity, exposing Enigma2's own radio-mode background
+		# behind it - keep the OSD up and an opaque layer in front of that at
+		# all times while a track is playing (see startHideTimer() override
+		# and the periodic backstop in onProgressTimer()).
+		self.hideTimer.stop()
+		self["audio_bg"].show()
+		artist = self.item.get("AlbumArtist") or ", ".join(self.item.get("Artists") or [])
+		album = self.item.get("Album", "")
+		self["music_title"].setText(" ".join(self.item.get("Name", "").splitlines()))
+		self["music_artist"].setText(" • ".join(p for p in (artist, album) if p))
+		self["music_title"].show()
+		self["music_artist"].show()
+		if self["cover"].instance:
+			# .instance isn't bound yet the first time this runs - it's reached
+			# from setPlayingItem() during __init__, before the screen's skin/
+			# widgets are applied, and unlike .hide()/.show()/Label.setText(),
+			# Pixmap.setPixmap() isn't defensive against a None instance.
+			self["cover"].setPixmap(None)
+		self["cover"].hide()
+		threads.deferToThread(self.loadMusicCover, self.item)
+
+	def loadMusicCover(self, item):
+		item_id = item.get("Id")
+		icon_img = (item.get("ImageTags") or {}).get("Primary")
+		if not icon_img:
+			album_id = item.get("AlbumId")
+			album_tag = item.get("AlbumPrimaryImageTag")
+			if album_id and album_tag:
+				item_id = album_id
+				icon_img = album_tag
+		if not icon_img:
+			return
+		# self["cover"].instance isn't bound yet the first time this runs (this
+		# is reached from setPlayingItem() during __init__, before the screen's
+		# skin/widgets are applied), so use the skin's cover size directly
+		# instead of instance.size().
+		pix_path = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=self.MUSIC_COVER_SIZE, height=self.MUSIC_COVER_SIZE, image_type="Primary")
+		if not self.is_audio or item.get("Id") != self.item.get("Id"):
+			return
+		# getItemImage() returns a cached file path for "Primary" (only "Logo"
+		# or an alpha_channel request get a pre-loaded pixmap back) - callers
+		# are expected to LoadPixmap() it themselves, same as EmbyList/
+		# EmbyGridList/EmbyMusicRowList do in their buildEntry().
+		pix = pix_path and LoadPixmap(pix_path)
+		if pix and self["cover"].instance:
+			self["cover"].setPixmap(pix)
+			self["cover"].show()
+
+	def startHideTimer(self):
+		# self.is_audio isn't set yet if the base MoviePlayer.__init__() (which
+		# runs before our setPlayingItem() call) triggers this itself.
+		if getattr(self, "is_audio", False):
+			self.hideTimer.stop()
+			return
+		MoviePlayer.startHideTimer(self)
 
 	def __onHide(self):
 		self["list_chapters"].hide()
@@ -450,6 +534,8 @@ class EmbyPlayer(MoviePlayer):
 			return
 		if self.is_trailer:
 			return
+		if self.is_audio:
+			return
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.__onHide()
 
@@ -570,6 +656,11 @@ class EmbyPlayer(MoviePlayer):
 		self["time_remaining_summary"].setText(text_remaining)
 
 	def onProgressTimer(self):
+		if self.is_audio:
+			# Backstop for startHideTimer() below - runs every second, so the
+			# hide timer never accumulates enough idle time to fire even if
+			# some base-class path re-arms it directly instead.
+			self.hideTimer.stop()
 		curr_pos = self.getPosition()
 		if not curr_pos:
 			curr_pos = 0

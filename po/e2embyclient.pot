@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-17 14:10+0300\n"
+"POT-Creation-Date: 2026-09-11 15:32+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -28,15 +28,15 @@ msgstr[1] ""
 msgid "---"
 msgstr ""
 
-#: ../src/plugin.py:17
+#: ../src/plugin.py:16
 msgid "A client for Emby server"
 msgstr ""
 
-#: ../src/EmbySetup.py:70 ../src/EmbySetup.py:85
+#: ../src/EmbySetup.py:71 ../src/EmbySetup.py:86
 msgid "Add"
 msgstr ""
 
-#: ../src/EmbySetup.py:74
+#: ../src/EmbySetup.py:75
 msgid "Add Connection"
 msgstr ""
 
@@ -56,11 +56,15 @@ msgstr ""
 msgid "Add to Main Menu"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:537
+#: ../src/setup.xml
+msgid "Audio track change settle delay"
+msgstr ""
+
+#: ../src/EmbyLibraryScreen.py:615
 msgid "Because you liked"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:535
+#: ../src/EmbyLibraryScreen.py:613
 msgid "Because you recently watched"
 msgstr ""
 
@@ -76,7 +80,7 @@ msgstr ""
 msgid "Chapters"
 msgstr ""
 
-#: ../src/EmbyHome.py:109
+#: ../src/EmbyHome.py:186
 msgid "Close"
 msgstr ""
 
@@ -96,7 +100,7 @@ msgstr ""
 msgid "Connections"
 msgstr ""
 
-#: ../src/EmbyHome.py:103 ../src/EmbyLibraryScreen.py:104
+#: ../src/EmbyHome.py:180 ../src/EmbyLibraryScreen.py:116
 msgid "Continue watching"
 msgstr ""
 
@@ -108,24 +112,24 @@ msgstr ""
 msgid "E2EmbyClient Setup"
 msgstr ""
 
-#: ../src/plugin.py:89
+#: ../src/plugin.py:56
 msgid "E2EmbyClient works only with FHD (1920x1080) skins. Please load FHD skin."
 msgstr ""
 
-#: ../src/EmbySetup.py:82
+#: ../src/EmbySetup.py:83
 msgid "Edit"
 msgstr ""
 
-#: ../src/EmbyEpisodeItemView.py:34 ../src/EmbyHome.py:58
+#: ../src/EmbyEpisodeItemView.py:34 ../src/EmbyHome.py:122
 #: ../src/EmbyItemViewBase.py:33 ../src/EmbyMovieItemView.py:45
 msgid "Emby"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:86
+#: ../src/EmbyLibraryScreen.py:98
 msgid "Emby Library"
 msgstr ""
 
-#: ../src/plugin.py:16 ../src/plugin.py:105
+#: ../src/plugin.py:15 ../src/plugin.py:72
 msgid "Emby Player"
 msgstr ""
 
@@ -141,7 +145,7 @@ msgstr ""
 msgid "Extras"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:264
+#: ../src/EmbyItemFunctionButtons.py:266
 msgid "Favorite"
 msgstr ""
 
@@ -149,11 +153,15 @@ msgstr ""
 msgid "Favorites"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:539
+#: ../src/EmbyLibraryScreen.py:129
+msgid "Frequently Played"
+msgstr ""
+
+#: ../src/EmbyLibraryScreen.py:617
 msgid "From director"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:266
+#: ../src/EmbyItemFunctionButtons.py:268
 msgid "Go to series"
 msgstr ""
 
@@ -161,11 +169,23 @@ msgstr ""
 msgid "Included in Collections"
 msgstr ""
 
+#: ../src/EmbyLibraryScreen.py:125
+msgid "Latest Music"
+msgstr ""
+
+#: ../src/EmbyLoadingScreen.py:88 ../src/EmbyLoadingScreen.py:99
+msgid "Loading"
+msgstr ""
+
+#: ../src/EmbyItemFunctionButtons.py:280
+msgid "More info"
+msgstr ""
+
 #: ../src/EmbyLibraryHeaderButtons.py:107
 msgid "Movies"
 msgstr ""
 
-#: ../src/EmbyHome.py:101
+#: ../src/EmbyHome.py:178
 msgid "My Media"
 msgstr ""
 
@@ -185,11 +205,11 @@ msgstr ""
 msgid "Password for the Connection."
 msgstr ""
 
-#: ../src/plugin.py:33
+#: ../src/plugin.py:32
 msgid "Persistent thumbnail cache in"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:256
+#: ../src/EmbyItemFunctionButtons.py:258 ../src/EmbyItemFunctionButtons.py:279
 msgid "Play"
 msgstr ""
 
@@ -197,7 +217,7 @@ msgstr ""
 msgid "Play Now"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:253
+#: ../src/EmbyItemFunctionButtons.py:255
 msgid "Play from start"
 msgstr ""
 
@@ -209,7 +229,7 @@ msgstr ""
 msgid "Play theme music"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:260
+#: ../src/EmbyItemFunctionButtons.py:262
 msgid "Play trailer"
 msgstr ""
 
@@ -247,19 +267,23 @@ msgstr ""
 msgid "Present"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:107
+#: ../src/EmbyLibraryScreen.py:127
+msgid "Recently Played"
+msgstr ""
+
+#: ../src/EmbyLibraryScreen.py:119
 msgid "Recently added"
 msgstr ""
 
-#: ../src/EmbyHome.py:105
+#: ../src/EmbyHome.py:182
 msgid "Recently added movies"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:109
+#: ../src/EmbyLibraryScreen.py:121
 msgid "Recently added series"
 msgstr ""
 
-#: ../src/EmbyHome.py:107
+#: ../src/EmbyHome.py:184
 msgid "Recently added tvshows"
 msgstr ""
 
@@ -268,15 +292,15 @@ msgstr ""
 msgid "Recommendations"
 msgstr ""
 
-#: ../src/EmbySetup.py:71 ../src/EmbySetup.py:83
+#: ../src/EmbySetup.py:72 ../src/EmbySetup.py:84
 msgid "Remove"
 msgstr ""
 
-#: ../src/EmbySetup.py:75
+#: ../src/EmbySetup.py:76
 msgid "Remove Connection"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:252
+#: ../src/EmbyItemFunctionButtons.py:254
 msgid "Resume"
 msgstr ""
 
@@ -284,7 +308,7 @@ msgstr ""
 msgid "Root URL address of the Connection."
 msgstr ""
 
-#: ../src/EmbyInfoLine.py:162 ../src/EmbySeriesItemView.py:75
+#: ../src/EmbyInfoLine.py:162 ../src/EmbySeriesItemView.py:76
 msgid "Season"
 msgstr ""
 
@@ -300,7 +324,7 @@ msgstr ""
 msgid "Series"
 msgstr ""
 
-#: ../src/EmbySetup.py:76
+#: ../src/EmbySetup.py:77
 msgid "Setup Actions"
 msgstr ""
 
@@ -320,7 +344,7 @@ msgstr ""
 msgid "Show an Up Next screen with an autoplay countdown before the next episode of a series."
 msgstr ""
 
-#: ../src/EmbyMovieItemView.py:51 ../src/EmbySeriesItemView.py:52
+#: ../src/EmbyMovieItemView.py:51 ../src/EmbySeriesItemView.py:53
 msgid "Similar"
 msgstr ""
 
@@ -328,7 +352,7 @@ msgstr ""
 msgid "Skip Intro"
 msgstr ""
 
-#: ../src/EmbySeriesItemView.py:73
+#: ../src/EmbySeriesItemView.py:74
 msgid "Specials"
 msgstr ""
 
@@ -338,6 +362,10 @@ msgstr ""
 
 #: ../src/setup.xml
 msgid "Specify the connection retries count."
+msgstr ""
+
+#: ../src/setup.xml
+msgid "Specify the delay (in ms) after switching the audio track before re-checking which track is active. Some playback engines (e.g. servicehisilicon, Exteplayer3) apply the change asynchronously."
 msgstr ""
 
 #: ../src/setup.xml
@@ -380,7 +408,7 @@ msgstr ""
 msgid "Stop the currently playing service when the Emby home screen loads, and restore it when the plugin is closed."
 msgstr ""
 
-#: ../src/plugin.py:35
+#: ../src/plugin.py:34
 msgid "Temporary thumbnail cache"
 msgstr ""
 
@@ -425,14 +453,14 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:249
+#: ../src/EmbyItemFunctionButtons.py:251
 msgid "Versions"
 msgstr ""
 
-#: ../src/EmbyItemFunctionButtons.py:262
+#: ../src/EmbyItemFunctionButtons.py:264
 msgid "Watched"
 msgstr ""
 
-#: ../src/EmbyLibraryScreen.py:541
+#: ../src/EmbyLibraryScreen.py:619
 msgid "With actor"
 msgstr ""

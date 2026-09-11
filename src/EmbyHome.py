@@ -482,10 +482,10 @@ class E2EmbyHome(NotificationalScreen):
 	BACKDROP_MAX_RETRIES = 3
 	BACKDROP_RETRY_DELAY = 2
 
-	def downloadCover(self, item_id, icon_img, orig_item_id, attempt=0):
+	def downloadCover(self, item_id, icon_img, orig_item_id, image_type="Backdrop", attempt=0):
 		try:
 			timed_out = []
-			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type="Backdrop", alpha_channel=self.mask_alpha, on_timeout=lambda: timed_out.append(True))
+			backdrop_pix = EmbyApiClient.getItemImage(item_id=item_id, logo_tag=icon_img, width=1280, image_type=image_type, alpha_channel=self.mask_alpha, on_timeout=lambda: timed_out.append(True))
 			if orig_item_id != self.last_item_id:
 				return
 			if backdrop_pix:
@@ -495,7 +495,7 @@ class E2EmbyHome(NotificationalScreen):
 				sleep(self.BACKDROP_RETRY_DELAY)
 				if orig_item_id != self.last_item_id:
 					return
-				self.downloadCover(item_id, icon_img, orig_item_id, attempt + 1)
+				self.downloadCover(item_id, icon_img, orig_item_id, image_type, attempt + 1)
 			else:
 				self["backdrop"].setPixmap(None)
 				self.backdrop_pix = None
@@ -607,6 +607,24 @@ class E2EmbyHome(NotificationalScreen):
 			backdrop_image_tags = parent_backdrop_image_tags
 
 		if not backdrop_image_tags or len(backdrop_image_tags) == 0:
+			# Audio items never have their own BackdropImageTags - fall back to
+			# the track's (or its album's) cover art, cropped/masked the same
+			# way a real backdrop would be, so a highlighted music library
+			# isn't left with a blank backdrop.
+			if itemType == "Audio":
+				cover_item_id = orig_item_id
+				cover_tag = item.get("ImageTags", {}).get("Primary")
+				if not cover_tag:
+					album_id = item.get("AlbumId")
+					album_tag = item.get("AlbumPrimaryImageTag")
+					if album_id and album_tag:
+						cover_item_id = album_id
+						cover_tag = album_tag
+				if cover_tag:
+					if orig_item_id != self.last_item_id:
+						return
+					threads.deferToThread(self.downloadCover, cover_item_id, cover_tag, orig_item_id, "Primary")
+					return
 			self["backdrop"].setPixmap(None)
 			self.backdrop_pix = None
 			return
