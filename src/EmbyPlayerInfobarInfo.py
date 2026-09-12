@@ -183,8 +183,14 @@ class EmbyPlayerInfobarInfo(GUIComponent):
 			alabel = self.constructAudioLabel()
 			slabel = self.constructSubtitleLabel()
 
-			if resString:
+			if resString or alabel or slabel or mpaa:
+				# Right-edge margin for the first (rightmost) box, whichever
+				# one that ends up being - previously only applied ahead of
+				# the VIDEO box, so an audio-only item (no video label) had
+				# its AUDIO box flush against the raw widget width instead.
 				xPos -= 20
+
+			if resString:
 				xPos = self.constructLabelBox(res, "VIDEO  ", resString, height, xPos, yPos)
 
 			if alabel:

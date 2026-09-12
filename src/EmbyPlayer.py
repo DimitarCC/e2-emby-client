@@ -17,6 +17,8 @@ from Components.Sources.Progress import Progress
 from Components.Sources.StaticText import StaticText
 from Screens.AudioSelection import AudioSelection
 from Screens.InfoBar import MoviePlayer
+from Screens.InfoBarGenerics import Seekbar
+from Screens.MinuteInput import MinuteInput
 from Tools.LoadPixmap import LoadPixmap
 from Tools.SubtitleRenderer import SubtitleRenderer
 
@@ -34,24 +36,27 @@ from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
 
 class EmbyPlayer(MoviePlayer):
 	MUSIC_COVER_SIZE = 640  # keep in sync with the "cover" widget's skin size below
+	SEEKABLE_POLL_INTERVAL = 50  # ms - how often to poll isCurrentlySeekable() while waiting
+	SEEKABLE_POLL_TIMEOUT = 10000  # ms - give up waiting for seekability after this long
+	AUDIO_OFFSET_MIN_SETTLE_MS = 750  # ms - minimum time to let the reported position settle before trusting it
 
 	skin = ["""<screen name="EmbyPlayer" position="fill" flags="wfNoBorder" backgroundColor="#ff000000">
-					<widget name="audio_bg" position="0,0" size="e,e" zPosition="-2" backgroundColor="#ff000000" />
-					<widget name="info_line" position="240,954" size="e-40-240,45" font="Regular; 35" fontAdditional="Bold;24" transparent="1" zPosition="5"/>
-					<widget name="info_bkg" backgroundColor="#10111111" position="-2,540" zPosition="-1" size="e+4,315" widgetBorderWidth="1" widgetBorderColor="#444444" />
-		 			<widget name="poster" backgroundColor="#10111111" position="30,557" zPosition="2" size="187,280" cornerRadius="6" widgetBorderWidth="1" widgetBorderColor="#444444" scale="1" />
-					<widget name="cover" backgroundColor="#10111111" position="center,110" zPosition="1" size="640,640" cornerRadius="10" widgetBorderWidth="1" widgetBorderColor="#444444" scale="1" />
-					<widget name="music_title" position="center,770" size="1400,55" font="Bold;42" halign="center" valign="center" transparent="1" foregroundColor="white" noWrap="1"/>
-					<widget name="music_artist" position="center,830" size="1400,45" font="Regular;30" halign="center" valign="center" transparent="1" foregroundColor="#aaaaaa" noWrap="1"/>
-					<widget name="list_chapters" position="35,560" size="e-70,310" iconWidth="340" iconHeight="188" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1"/>
-		 			<widget name="info_panel_line" position="275,560" size="e-340,60" font="Bold;32" fontAdditional="Bold;28" transparent="1" />
-					<widget name="plot" position="275,630" size="e-340,230" alphatest="blend" font="Regular;30" transparent="1"/>
-					<eLabel backgroundColor="#10111111" position="60,900" zPosition="-1" size="e-120,115" cornerRadius="8" widgetBorderWidth="1" widgetBorderColor="#444444" />
-					<widget name="statusicon" position="120,935" zPosition="3" size="48,48" scale="1" pixmaps="icons/pvr/play.svg,icons/pvr/pause.svg,icons/pvr/stop.svg,icons/pvr/ff.svg,icons/pvr/rew.svg,icons/pvr/slow.svg"/>
-					<widget name="speed" foregroundColor="white" halign="left" position="200,935" size="48,48" font="Bold; 24" transparent="1"/>
-					<widget name="time_elapsed" position="210,905" size="100,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="#ffffff"/>
-					<widget name="time_remaining_total" position="e-270-10,905" size="200,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="#ffffff"/>
-					<widget source="progress" render="Progress" backgroundColor="#02333333" foregroundColor="#32772b" position="340,925" zPosition="2" size="e-260-340,12" transparent="1" cornerRadius="6"/>
+					<widget name="audio_bg" position="0,0" size="e,e" zPosition="-2" backgroundColor="#00000000" alphaBlend="1" />
+					<widget name="info_line" position="240,954" size="e-40-240,45" font="Regular; 35" fontAdditional="Bold;24" transparent="1" zPosition="5"  alphaBlend="1"/>
+					<widget name="info_bkg" backgroundColor="#10111111" position="-2,540" zPosition="-1" size="e+4,315" widgetBorderWidth="1" widgetBorderColor="#444444"  alphaBlend="1"/>
+		 			<widget name="poster" backgroundColor="#10111111" position="30,557" zPosition="2" size="187,280" cornerRadius="6" widgetBorderWidth="1" widgetBorderColor="#444444" scale="1"  alphaBlend="1"/>
+					<widget name="cover" backgroundColor="#10111111" position="center,110" zPosition="1" size="640,640" cornerRadius="10" widgetBorderWidth="1" widgetBorderColor="#444444" scale="1"  alphaBlend="1"/>
+					<widget name="music_title" position="center,770" size="1400,55" font="Bold;42" halign="center" valign="center" transparent="1" foregroundColor="white" noWrap="1" alphaBlend="1"/>
+					<widget name="music_artist" position="center,830" size="1400,45" font="Regular;30" halign="center" valign="center" transparent="1" foregroundColor="#aaaaaa" noWrap="1" alphaBlend="1"/>
+					<widget name="list_chapters" position="35,560" size="e-70,310" iconWidth="340" iconHeight="188" font="Regular;22" scrollbarMode="showNever" iconType="Chapter" transparent="1" alphaBlend="1"/>
+		 			<widget name="info_panel_line" position="275,560" size="e-340,60" font="Bold;32" fontAdditional="Bold;28" transparent="1"  alphaBlend="1"/>
+					<widget name="plot" position="275,630" size="e-340,230" alphatest="blend" font="Regular;30" transparent="1" alphaBlend="1"/>
+					<eLabel backgroundColor="#10111111" position="60,900" zPosition="-1" size="e-120,115" cornerRadius="8" widgetBorderWidth="1" widgetBorderColor="#444444"  alphaBlend="1"/>
+					<widget name="statusicon" position="120,935" zPosition="3" size="48,48" scale="1" pixmaps="icons/pvr/play.svg,icons/pvr/pause.svg,icons/pvr/stop.svg,icons/pvr/ff.svg,icons/pvr/rew.svg,icons/pvr/slow.svg" alphaBlend="1"/>
+					<widget name="speed" foregroundColor="white" halign="left" position="200,935" size="48,48" font="Bold; 24" transparent="1" alphaBlend="1"/>
+					<widget name="time_elapsed" position="210,905" size="100,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="#ffffff" alphaBlend="1"/>
+					<widget name="time_remaining_total" position="e-270-10,905" size="200,51" font="Bold; 26" halign="right" valign="center" backgroundColor="#02111111" transparent="1" foregroundColor="#ffffff" alphaBlend="1"/>
+					<widget source="progress" render="Progress" backgroundColor="#02333333" foregroundColor="#32772b" position="340,925" zPosition="2" size="e-260-340,12" transparent="1" cornerRadius="6" alphaBlend="1"/>
 				</screen>"""]  # noqa: E101
 
 	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False, trailer_url=None):
@@ -65,6 +70,7 @@ class EmbyPlayer(MoviePlayer):
 			AudioSelection.hooks.append(self.onAudioSubTrackChanged)
 		self.onPlayStateChanged.append(self.__playStateChanged)
 		self.onHide.append(self.__onHide)
+		self.onLayoutFinish.append(self.__onLayoutFinished)
 		self.selectedSubtitleTrack = (0, 0, 0, 0, "und")
 		self["audio_bg"] = Label("")
 		self["audio_bg"].hide()
@@ -100,10 +106,11 @@ class EmbyPlayer(MoviePlayer):
 		self["time_remaining_summary"] = StaticText("")
 		self.init_timer = eTimer()
 		self.init_timer.callback.append(self.__onPlayerInit)
-		if config.plugins.e2embyclient.play_system.value == "5002":
-			self.init_timer.start(50)
-		self.init_seek_timer = eTimer()
-		self.init_seek_timer.callback.append(self.__onPlayerInitSeek)
+		# Poll for a seekable service right away instead of waiting for
+		# evStart - on servicehisilicon, evStart fires only after the
+		# decoder is already showing picture from position 0, so waiting
+		# for it makes the resume seek visibly land ~1s late.
+		self.init_timer.start(50)
 		self.progress_timer = eTimer()
 		self.progress_timer.callback.append(self.onProgressTimer)
 		self.emby_progress_timer = eTimer()
@@ -118,6 +125,16 @@ class EmbyPlayer(MoviePlayer):
 		self.init_audio_track_settle_timer.callback.append(self.__onInitAudioTrackSettle)
 		self.init_audio_track_retries = 0
 		self.init_audio_track_index = -1
+		self.seekable_wait_timer = eTimer()
+		self.seekable_wait_timer.callback.append(self.__onSeekableWaitTick)
+		self.seekable_wait_callback = None
+		self.seekable_wait_elapsed = 0
+		self.audio_offset_recheck_timer = eTimer()
+		self.audio_offset_recheck_timer.callback.append(self.__onAudioOffsetRecheckTick)
+		self.audio_offset_recheck_target = None
+		self.audio_offset_recheck_last_pos = None
+		self.audio_offset_recheck_stable_ms = 0
+		self.audio_offset_recheck_elapsed = 0
 		self.setPlayingItem(item, startPos, is_trailer, play_session_id, defaultAudioIndex, defaultSubtitleIndex)
 		self.onProgressTimer()
 		self["NumberSeekActions"] = NumberActionMap(["NumberActions"],
@@ -180,8 +197,13 @@ class EmbyPlayer(MoviePlayer):
 		self.init_audio_track_settle_timer.stop()
 		self.init_audio_track_retries = 0
 		self.init_audio_track_index = -1
+		self.__cancelSeekableWait()
+		self.__cancelAudioOffsetRecheck()
 		self.is_trailer = is_trailer
 		self.init_seek_to = startPos
+		self.init_seek_is_nudge = False
+		self.post_track_switch_seek_target = None
+		self.audio_pos_offset = 0
 		self.curAudioIndex = -1
 		self.CurIndexEmbeddedSubs = -1
 		self.curSubsIndex = -1
@@ -217,6 +239,8 @@ class EmbyPlayer(MoviePlayer):
 		self.updateMusicDisplay()
 
 	def updateMusicDisplay(self):
+		if self.instance:
+			self.instance.setWidgetAlphaBlend(self.is_audio)
 		if not self.is_audio:
 			self["audio_bg"].hide()
 			self["cover"].hide()
@@ -280,6 +304,14 @@ class EmbyPlayer(MoviePlayer):
 			self.hideTimer.stop()
 			return
 		MoviePlayer.startHideTimer(self)
+
+	def __onLayoutFinished(self):
+		# self["cover"]/self.instance aren't bound until now (see the
+		# .instance guards in updateMusicDisplay()/loadMusicCover(), reached
+		# earlier from setPlayingItem() during __init__) - re-run it once the
+		# skin is actually applied so the alpha-blend widget flag from below
+		# gets set for a track that started playing before layout finished.
+		self.instance.setWidgetAlphaBlend(self.is_audio)
 
 	def __onHide(self):
 		self["list_chapters"].hide()
@@ -383,6 +415,50 @@ class EmbyPlayer(MoviePlayer):
 		else:
 			self.upNextDismissed = False
 
+	def __maybeArmAudioOffsetRecheck(self, target_seconds):
+		# servicemp3/HiPlayer can re-trigger a fresh (and possibly different)
+		# bogus reported-position offset on ANY seek, not just ones landing
+		# near the start of the stream, and the offset then stays constant
+		# for playback until the next seek - so re-measure it after every
+		# seek whose true target we know, rather than only near start.
+		if self.is_audio and config.plugins.e2embyclient.play_system.value == "4097" and target_seconds >= 0:
+			self.__armAudioOffsetRecheck(target_seconds)
+
+	def doSeek(self, pts):
+		MoviePlayer.doSeek(self, pts)
+		self.__maybeArmAudioOffsetRecheck(pts / 90000)
+
+	def doSeekRelative(self, pts):
+		before = self.getPosition() or 0
+		MoviePlayer.doSeekRelative(self, pts)
+		self.__maybeArmAudioOffsetRecheck(before + pts / 90000)
+
+	def __openSeekbarOrMinuteInput(self, fwd, use_seekbar):
+		# The on-screen Seekbar calls iSeekableService.seekTo() directly once
+		# closed, bypassing doSeek()/doSeekRelative() entirely - reimplement
+		# the base class's dispatch (InfoBarGenerics.seekFwdSeekbar/
+		# seekBackSeekbar/seekFwdManual/seekBackManual/seekFwdVod all funnel
+		# into this same choice) with our own callback so a Seekbar-driven
+		# seek can still be caught once it actually lands.
+		if use_seekbar:
+			self.session.openWithCallback(self.__onSeekbarClosed, Seekbar, fwd)
+		elif fwd:
+			self.session.openWithCallback(self.fwdSeekTo, MinuteInput)
+		else:
+			self.session.openWithCallback(self.rwdSeekTo, MinuteInput)
+
+	def __onSeekbarClosed(self, *result):
+		# The Seekbar computes its target as length*percent internally and
+		# never exposes it, so there's no true target to compare against
+		# here (unlike doSeek()/doSeekRelative() below, where we know it
+		# exactly) - use the raw reading right at close time as a best-effort
+		# stand-in target, then let __armAudioOffsetRecheck's settle-poll
+		# detect whether the backend's reported position drifts away from it.
+		seekable = self.__getSeekableService()
+		pos = seekable and seekable.getPlayPosition()
+		if pos is not None and not pos[0]:
+			self.__maybeArmAudioOffsetRecheck(pos[1] / 90000)
+
 	def seekBack(self):
 		if self.upNextShown:
 			moveUpNextSelectionLeft()
@@ -426,7 +502,7 @@ class EmbyPlayer(MoviePlayer):
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
-		MoviePlayer.seekFwdManual(self, fwd)
+		self.__openSeekbarOrMinuteInput(fwd, config.seek.baractivation.value == "leftright")
 		self.showAfterSeek()
 		self.hideTimer.stop()
 
@@ -438,7 +514,7 @@ class EmbyPlayer(MoviePlayer):
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
-		MoviePlayer.seekBackManual(self, fwd)
+		self.__openSeekbarOrMinuteInput(fwd, config.seek.baractivation.value == "leftright")
 		self.showAfterSeek()
 		self.hideTimer.stop()
 
@@ -450,7 +526,7 @@ class EmbyPlayer(MoviePlayer):
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
-		MoviePlayer.seekBackSeekbar(self, fwd)
+		self.__openSeekbarOrMinuteInput(fwd, config.seek.baractivation.value != "leftright")
 
 	def seekFwdSeekbar(self, fwd=True):
 		if self.upNextShown:
@@ -460,7 +536,7 @@ class EmbyPlayer(MoviePlayer):
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
-		MoviePlayer.seekFwdSeekbar(self, fwd)
+		self.__openSeekbarOrMinuteInput(fwd, config.seek.baractivation.value != "leftright")
 
 	def seekFwdVod(self, fwd=True):
 		if self.upNextShown:
@@ -470,7 +546,9 @@ class EmbyPlayer(MoviePlayer):
 		if self.selected_widget and self.selected_widget == "list_chapters":
 			self.supressChapterSelect = True
 			return
-		MoviePlayer.seekFwdVod(self, fwd)
+		if self.getSeek() is None:
+			return
+		self.__openSeekbarOrMinuteInput(fwd, config.seek.baractivation.value == "leftright")
 
 	def right(self):
 		if self.upNextShown:
@@ -494,6 +572,12 @@ class EmbyPlayer(MoviePlayer):
 			startPos = int(chapter.get("StartPositionTicks", "0")) / 10_000_000
 			self.doSeek(int(startPos) * 90000)
 			self.showAfterSeek()
+		elif self.is_audio:
+			# OK is a no-op during music playback: the OSD is kept
+			# permanently visible for audio (see updateMusicDisplay()), so
+			# toggleShow() would hide it with nothing left showing, which
+			# reads as the player having closed.
+			pass
 		else:
 			if DISTRO != "openatv":
 				self.toggleShow()
@@ -582,7 +666,16 @@ class EmbyPlayer(MoviePlayer):
 		pos = seek.getPlayPosition()
 		if pos[0]:
 			return 0
-		return pos[1] / 90000
+		raw = pos[1] / 90000
+		if self.is_audio and self.audio_pos_offset:
+			# servicemp3/HiPlayer keeps reporting true_position + audio_pos_offset
+			# for the entire remainder of playback since the last seek, once
+			# the bug triggers - audible playback itself is unaffected and
+			# stays perfectly continuous, only the reported position is off,
+			# so the same constant correction applies until the next seek
+			# re-measures it (see __maybeArmAudioOffsetRecheck).
+			return max(0, raw - self.audio_pos_offset)
+		return raw
 
 	def numberSeek(self, key):
 		if self.upNextShown:
@@ -913,66 +1006,194 @@ class EmbyPlayer(MoviePlayer):
 		media_source_id = media_source.get("Id")
 		EmbyApiClient.setPlaySessionParameters(self.play_session_id, item_id, media_source_id, aIndex, sIndex, playPos, stopped)
 
-	def __initTrackProcess(self):
+	def __getSeekableService(self):
+		seek = self.getSeek()
+		if seek is None or not seek.isCurrentlySeekable():
+			return None
+		return seek
+
+	def __cancelSeekableWait(self):
+		self.seekable_wait_timer.stop()
+		self.seekable_wait_callback = None
+		self.seekable_wait_elapsed = 0
+
+	def __waitForSeekable(self, callback):
+		# Poll isCurrentlySeekable() on a short interval instead of a fixed
+		# delay - the backend (servicehisilicon/exteplayer3 in particular)
+		# becomes seekable at an unpredictable point after evStart, and a
+		# fixed delay is either a visible extra wait or a race that fires
+		# too early and silently no-ops the seek/track switch.
+		self.seekable_wait_callback = callback
+		self.seekable_wait_elapsed = 0
+		seekable = self.__getSeekableService()
+		if seekable is not None:
+			self.seekable_wait_callback = None
+			callback(seekable)
+			return
+		self.seekable_wait_timer.start(self.SEEKABLE_POLL_INTERVAL, True)
+
+	def __onSeekableWaitTick(self):
+		callback = self.seekable_wait_callback
+		if callback is None:
+			return
+		seekable = self.__getSeekableService()
+		if seekable is not None:
+			self.seekable_wait_callback = None
+			self.seekable_wait_elapsed = 0
+			callback(seekable)
+			return
+		self.seekable_wait_elapsed += self.SEEKABLE_POLL_INTERVAL
+		if self.seekable_wait_elapsed >= self.SEEKABLE_POLL_TIMEOUT:
+			self.seekable_wait_callback = None
+			self.seekable_wait_elapsed = 0
+			callback(None)
+			return
+		self.seekable_wait_timer.start(self.SEEKABLE_POLL_INTERVAL, True)
+
+	def __cancelAudioOffsetRecheck(self):
+		self.audio_offset_recheck_timer.stop()
+		self.audio_offset_recheck_target = None
+		self.audio_offset_recheck_last_pos = None
+		self.audio_offset_recheck_stable_ms = 0
+		self.audio_offset_recheck_elapsed = 0
+
+	def __armAudioOffsetRecheck(self, target):
+		# servicemp3/HiPlayer's reported position after any seek can be off
+		# by a fixed amount that only settles a short, variable time after
+		# the seek and stays constant until the next seek - so poll
+		# getPlayPosition() until reads agree for at least
+		# AUDIO_OFFSET_MIN_SETTLE_MS (or give up after SEEKABLE_POLL_TIMEOUT)
+		# rather than trusting a single read right away or waiting a fixed
+		# delay. The minimum settle window matters most for small/fast seeks
+		# (e.g. number-key seeking) where two consecutive 50ms-apart reads
+		# can coincidentally agree well before the backend actually finishes
+		# recalculating its still-transitioning baseline.
+		self.audio_offset_recheck_target = target
+		self.audio_offset_recheck_last_pos = None
+		self.audio_offset_recheck_stable_ms = 0
+		self.audio_offset_recheck_elapsed = 0
+		self.audio_offset_recheck_timer.start(self.SEEKABLE_POLL_INTERVAL, True)
+
+	def __onAudioOffsetRecheckTick(self):
+		target = self.audio_offset_recheck_target
+		if target is None:
+			return
+		seekable = self.__getSeekableService()
+		pos = seekable and seekable.getPlayPosition()
+		reported = None if pos is None or pos[0] else pos[1] / 90000
+		agreed = reported is not None and self.audio_offset_recheck_last_pos is not None and abs(reported - self.audio_offset_recheck_last_pos) < 0.5
+		self.audio_offset_recheck_stable_ms = self.audio_offset_recheck_stable_ms + self.SEEKABLE_POLL_INTERVAL if agreed else 0
+		settled = self.audio_offset_recheck_stable_ms >= self.AUDIO_OFFSET_MIN_SETTLE_MS
+		self.audio_offset_recheck_elapsed += self.SEEKABLE_POLL_INTERVAL
+		timed_out = self.audio_offset_recheck_elapsed >= self.SEEKABLE_POLL_TIMEOUT
+		if settled or timed_out:
+			self.__cancelAudioOffsetRecheck()
+			if reported is not None:
+				self.audio_pos_offset = max(0, reported - target)
+			return
+		self.audio_offset_recheck_last_pos = reported
+		self.audio_offset_recheck_timer.start(self.SEEKABLE_POLL_INTERVAL, True)
+
+	def __initTrackProcess(self, seekable):
 		init_play_pos = -1
 		if self.init_seek_to and self.init_seek_to > -1:
 			init_play_pos = int(self.init_seek_to) * 10_000_000
 		audioIndex, curAudioIndex, subtitle, sindex = self.getSelectedAudioSubStreamFromEmby()
 		self.curAudioIndex = curAudioIndex
 		self.init_audio_track_index = audioIndex
-		self.__setAudioTrack(aIndex=audioIndex)
-		self.runSubtitles(subtitle=subtitle, sindex=sindex)
-		if not subtitle and sindex > -1:
-			self.CurIndexEmbeddedSubs = sindex
-		self.curSubsIndex = subtitle and subtitle[3] or sindex
+		if not self.is_audio:
+			# Audio-only items have exactly one audio track and no
+			# subtitles, so there's nothing to select - and selectTrack()
+			# itself can re-open/re-negotiate the demux on servicemp3,
+			# which is enough on its own to drop playback away from true 0.
+			self.__setAudioTrack(aIndex=audioIndex)
+			self.runSubtitles(subtitle=subtitle, sindex=sindex)
+			if not subtitle and sindex > -1:
+				self.CurIndexEmbeddedSubs = sindex
+			self.curSubsIndex = subtitle and subtitle[3] or sindex
 		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
+		if seekable is not None:
+			self.__initSeekProcess(seekable)
 
 	def __onInitAudioTrackSettle(self):
+		# Video only - audio items never call __setAudioTrack() from
+		# __initSeekProcess in the first place, so this timer is never
+		# started for them (see the is_audio guard there).
 		self.init_audio_track_settle_timer.stop()
 		self.init_audio_track_retries += 1
 		applied = self.__setAudioTrack(aIndex=self.init_audio_track_index)
 		if not applied and self.init_audio_track_retries < 5:
 			self.init_audio_track_settle_timer.start(config.plugins.e2embyclient.audio_track_change_settle_delay.value, True)
 		else:
-			# Refresh curAudioIndex/info_line from what the backend actually
-			# applied - the re-apply above bypasses onAudioSubTrackChanged, so
-			# without this the infobar keeps showing the pre-seek track.
-			self.onAudioSubTrackChanged()
+			# selectTrack() above can itself re-open/re-negotiate the demux on
+			# servicehisilicon/exteplayer3 (same as the initial resume seek),
+			# which silently resets playback back to position 0. Re-seek to
+			# the resume position once more so that reopen doesn't discard it,
+			# once the backend reports seekable again after the reopen. When
+			# the initial seek was only the synthetic PTS-recalibration nudge
+			# (no real resume position), land back on true 0 instead of the
+			# nudge target - otherwise playback is left wherever the nudge
+			# happened to settle, which can drift well past the intended ~1s.
+			target = 0 if self.init_seek_is_nudge else self.init_seek_to
+			if target is not None and target > -1:
+				self.post_track_switch_seek_target = target
+				self.__waitForSeekable(self.__onPostTrackSwitchSeekable)
+			else:
+				self.onAudioSubTrackChanged()
 
-	def __initSeekProcess(self):
+	def __onPostTrackSwitchSeekable(self, seekable):
+		if seekable is not None:
+			seekable.seekTo(int(self.post_track_switch_seek_target) * 90000)
+		# Refresh curAudioIndex/info_line from what the backend actually
+		# applied - the re-apply above bypasses onAudioSubTrackChanged, so
+		# without this the infobar keeps showing the pre-seek track.
+		self.onAudioSubTrackChanged()
+
+	def __initSeekProcess(self, seekable):
 		init_play_pos = -1
-		res = 0
 		did_seek = False
 		seek_to = self.init_seek_to if self.init_seek_to and self.init_seek_to > -1 else None
-		if seek_to is None and config.plugins.e2embyclient.play_system.value == "4097":
+		self.init_seek_is_nudge = seek_to is None
+		is_audio_pts_bug_case = self.is_audio and config.plugins.e2embyclient.play_system.value == "4097"
+		if seek_to is None and not self.is_audio and config.plugins.e2embyclient.play_system.value == "4097":
 			# servicemp3/HiPlayer reports a wrongly-offset play position for
-			# the first few seconds of a fresh stream, but reports correctly
-			# again as soon as any seek actually happens (same as a resume
-			# seek does). Nudge forward by 1s to force that same
-			# recalibration even when there is no real resume position.
+			# the first few seconds of a fresh video stream, but reports
+			# correctly again as soon as any seek actually happens (same as a
+			# resume seek does). Nudge forward by 1s to force that same
+			# recalibration even when there is no real resume position. This
+			# is purely internal PTS recalibration - the settle step below
+			# seeks back to the true start once it lands, so it must never
+			# be visible as "playback starts a second or more in".
 			seek_to = 1
 		if seek_to is not None:
 			pts = int(seek_to) * 90000
-			seekable = self.getSeek()
-			if seekable is None:
-				return -1
 			res = seekable.seekTo(pts)
 			len = seekable.getLength() if config.plugins.e2embyclient.play_system.value == "5002" else [0, 1]
-			if res == -1 or len[1] <= 0:
-				return -1
-			init_play_pos = int(seek_to) * 10_000_000
-			did_seek = True
+			if res != -1 and len[1] > 0:
+				init_play_pos = int(seek_to) * 10_000_000
+				did_seek = True
+		if is_audio_pts_bug_case:
+			# servicemp3/HiPlayer can misreport the play position by a fixed
+			# amount for the entire stream after landing on any position - an
+			# actual corrective seek is audible as a glitch on audio (unlike
+			# the video case above), so instead measure the bogus reading once
+			# the real seek (if any) above has landed, and subtract it from
+			# every getPosition() read (see self.audio_pos_offset /
+			# __armAudioOffsetRecheck). With no real resume position, nothing
+			# was seeked above, so measure straight from true 0.
+			self.__armAudioOffsetRecheck(seek_to if did_seek else 0)
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
-		if did_seek and config.plugins.e2embyclient.play_system.value in ("4097", "5002"):
+		if did_seek and not self.is_audio and config.plugins.e2embyclient.play_system.value in ("4097", "5002"):
 			# servicehisilicon/exteplayer3 can reset the audio track back to
 			# the stream default when the initial resume seek re-opens/
 			# re-negotiates the demux, so the track selected right after
 			# evStart gets silently overridden. Re-apply it once the resume
-			# seek has actually gone through.
+			# seek has actually gone through. Audio items never call
+			# __setAudioTrack() in the first place (see __initTrackProcess),
+			# so there's no reopen here to correct for.
 			self.init_audio_track_retries = 0
 			self.init_audio_track_settle_timer.start(config.plugins.e2embyclient.audio_track_change_settle_delay.value, True)
-		return res
 
 	def __onPlayerInit(self):
 		pos = self.getPosition()
@@ -980,15 +1201,6 @@ class EmbyPlayer(MoviePlayer):
 			self.init_timer.stop()
 			self.__evServiceStart()
 			hideLoadingScreen()
-			self.init_seek_timer.start(config.plugins.e2embyclient.init_seek_delay_exteplayer3.value if config.plugins.e2embyclient.play_system.value == "5002" else config.plugins.e2embyclient.init_seek_delay_default.value)
-
-	def __onPlayerInitSeek(self):
-		if self.is_trailer:
-			self.init_seek_timer.stop()
-			return
-		res = self.__initSeekProcess()
-		if res > -1:
-			self.init_seek_timer.stop()
 
 	def __updatedInfoEmby(self):
 		self.__setSubtitleTrack()
@@ -998,7 +1210,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def __evServiceStart(self):
 		if not self.is_trailer:
-			self.__initTrackProcess()
+			self.__waitForSeekable(self.__initTrackProcess)
 		if self.progress_timer:
 			self.progress_timer.start(1000)
 		if not self.is_trailer:
@@ -1046,6 +1258,7 @@ class EmbyPlayer(MoviePlayer):
 	def clearHooks(self):
 		self.audio_track_settle_timer.stop()
 		self.init_audio_track_settle_timer.stop()
+		self.__cancelSeekableWait()
 		AudioSelection.fillSubtitleExt = None
 		if self.onAudioSubTrackChanged in AudioSelection.hooks:
 			AudioSelection.hooks.remove(self.onAudioSubTrackChanged)
@@ -1083,6 +1296,14 @@ class EmbyPlayer(MoviePlayer):
 		if self.skipIntroShown:
 			self.skipIntroDismissed = True
 			self.hideSkipIntroButton()
+			return
+		if self.is_audio:
+			# The hide-then-exit-on-next-press pattern below exists so Exit
+			# first hides the OSD while video keeps playing behind it - for
+			# audio-only playback the OSD is kept permanently visible (see
+			# updateMusicDisplay()) and there's no video to keep showing, so
+			# Exit should stop playback immediately instead.
+			self.leavePlayer()
 			return
 		if self.shown:
 			self.hide()
