@@ -210,8 +210,12 @@ class EmbyMusicRowList(GUIComponent):
 		if item_index not in self.updatingIndexesInProgress:
 			self.updatingIndexesInProgress.append(item_index)
 
-		item_id = orig_id
-		icon_img = (item.get("ImageTags") or {}).get("Primary")
+		# PrimaryImageItemId/PrimaryImageTag is Emby's own resolved pointer to
+		# the item's effective primary image (e.g. a track's own album cover)
+		# and is the reliable source for music art - ImageTags.Primary alone
+		# can be missing for these items.
+		item_id = item.get("PrimaryImageItemId") or orig_id
+		icon_img = item.get("PrimaryImageTag") or (item.get("ImageTags") or {}).get("Primary")
 		if not icon_img:
 			album_id = item.get("AlbumId")
 			album_tag = item.get("AlbumPrimaryImageTag")

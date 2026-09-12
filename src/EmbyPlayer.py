@@ -59,12 +59,17 @@ class EmbyPlayer(MoviePlayer):
 					<widget source="progress" render="Progress" backgroundColor="#02333333" foregroundColor="#32772b" position="340,925" zPosition="2" size="e-260-340,12" transparent="1" cornerRadius="6" alphaBlend="1"/>
 				</screen>"""]  # noqa: E101
 
-	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False, trailer_url=None):
+	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False, trailer_url=None, queue=None, queue_index=0):
 		Globals.IsPlayingFile = True
 		item = item or {}
 		ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex = self.buildServiceRef(item, is_trailer, trailer_url)
 		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
 		self.session = session
+		# Queue state is session-scoped (persists/increments across tracks as the
+		# queue advances) rather than per-item state, so it lives here rather than
+		# in setPlayingItem() - see playNextQueuedTrack().
+		self.queue = queue
+		self.queue_index = queue_index
 		AudioSelection.fillSubtitleExt = self.subtitleListIject
 		if self.onAudioSubTrackChanged not in AudioSelection.hooks:
 			AudioSelection.hooks.append(self.onAudioSubTrackChanged)
@@ -393,6 +398,26 @@ class EmbyPlayer(MoviePlayer):
 		ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex = self.buildServiceRef(next_item, False, None)
 		if ref is None:
 			self.hideUpNextOverlay(dismiss=True)
+			return
+		self.__evServiceEnd()
+		self.__onHide()
+		showLoadingScreen(self.session)
+		self.setPlayingItem(next_item, 0, False, play_session_id, defaultAudioIndex, defaultSubtitleIndex)
+		self.session.nav.playService(ref)
+
+	def hasNextQueuedTrack(self):
+		return bool(self.queue) and self.queue_index + 1 < len(self.queue)
+
+	def playNextQueuedTrack(self):
+		# Mirrors playUpNextItem()'s low-level mechanics (advance to a new item
+		# without closing/reopening the player screen), but with no overlay or
+		# countdown - music auto-advance should be immediate and silent.
+		if not self.hasNextQueuedTrack():
+			return
+		self.queue_index += 1
+		next_item = self.queue[self.queue_index]
+		ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex = self.buildServiceRef(next_item, False, None)
+		if ref is None:
 			return
 		self.__evServiceEnd()
 		self.__onHide()
@@ -1226,7 +1251,14 @@ class EmbyPlayer(MoviePlayer):
 			return
 		last_play_pos = -1
 		if self.lastPos > 0:
-			last_play_pos = int(self.lastPos) * 10_000_000
+			# self.lastPos is whatever getPosition() last reported, which can
+			# occasionally spike past the track's real length (e.g. a stale
+			# audio_pos_offset reading right as playback stops) - clamp it so a
+			# mid-track stop is never reported to Emby as having reached the
+			# end, which would wrongly mark the item fully played.
+			length = self.getLength()
+			pos = min(self.lastPos, length) if length else self.lastPos
+			last_play_pos = int(pos) * 10_000_000
 		# Capture the outgoing item's identifiers synchronously - self.item and
 		# self.play_session_id may already point at the next item (up-next
 		# autoplay reuses this instance and switches self.item right after
@@ -1317,6 +1349,14 @@ class EmbyPlayer(MoviePlayer):
 		if not self.execing:
 			return
 		if not playing:
+			return
+		# This is the real end-of-stream signal (iPlayableService.evEOF, via the
+		# base InfoBarSeek framework) - auto-advancing a music queue must happen
+		# here, not from the 'END' playstate in __playStateChanged(), which
+		# never gets a chance to run: doEofInternal() always wins the race and
+		# closes the player first via handleLeave() below.
+		if self.is_audio and self.hasNextQueuedTrack():
+			self.playNextQueuedTrack()
 			return
 		# The stream can reach its actual end slightly before our estimated
 		# "30s remaining" trigger fires (e.g. imprecise reported duration), so

@@ -16,7 +16,7 @@ from .EmbyListController import EmbyListController
 from .EmbyMusicRowList import EmbyMusicRowList
 from .EmbyRestClient import EmbyApiClient
 from .EmbyInfoLine import EmbyInfoLine
-from .EmbyItemFunctionButtons import playItem
+from .EmbyItemFunctionButtons import playQueue
 from .EmbyMovieItemView import EmbyMovieItemView
 from .EmbyEpisodeItemView import EmbyEpisodeItemView
 from .EmbyBoxSetItemView import EmbyBoxSetItemView
@@ -35,6 +35,9 @@ GRID_ROW_WIDGETS = ("list_music_recent", "list_music_frequent")
 MODE_RECOMMENDATIONS = 0
 MODE_LIST = 1
 MODE_FAVORITES = 2
+MODE_ALBUMS = 3
+MODE_ARTISTS = 4
+MODE_ARTIST_ALBUMS = 5
 
 
 class E2EmbyLibrary(NotificationalScreen):
@@ -91,6 +94,13 @@ class E2EmbyLibrary(NotificationalScreen):
 		self.backdrop_pix = None
 		self.logo_pix = None
 		self.mode = MODE_RECOMMENDATIONS
+		self.selected_artist_id = None
+		# Movies/Series use portrait poster art; Albums/Artists use square
+		# covers - EmbyGridList is a single shared widget instance, so its icon
+		# size is switched at runtime (see setIconSize()) rather than skinned
+		# per-mode. Matches the skin's "list" widget iconWidth/iconHeight.
+		self.list_portrait_icon_size = (225, 315)
+		self.list_square_icon_size = 225
 		self.plot_posy_orig = 310
 		self.plot_height_orig = 168
 		self.plot_width_orig = 924
@@ -259,9 +269,9 @@ class E2EmbyLibrary(NotificationalScreen):
 		if self.selected_widget is None:
 			return
 
-		if self.selected_widget == "charbar" and self.mode in [MODE_LIST, MODE_FAVORITES]:
+		if self.selected_widget == "charbar" and self.mode in [MODE_LIST, MODE_FAVORITES, MODE_ALBUMS, MODE_ARTISTS, MODE_ARTIST_ALBUMS]:
 			return
-		if self.mode in [MODE_LIST, MODE_FAVORITES] and self.selected_widget == "list" and self["list"].getIsAtFirstColumn():
+		if self.mode in [MODE_LIST, MODE_FAVORITES, MODE_ALBUMS, MODE_ARTISTS, MODE_ARTIST_ALBUMS] and self.selected_widget == "list" and self["list"].getIsAtFirstColumn():
 			self.selected_widget = "charbar"
 			self["list"].toggleSelection(False)
 			self["charbar"].enableSelection(True)
@@ -435,13 +445,29 @@ class E2EmbyLibrary(NotificationalScreen):
 			elif command == "list":
 				self.clearListWidget(MODE_LIST)
 				self.mode = MODE_LIST
+				self["list"].setIconSize(self.list_portrait_icon_size[0], self.list_portrait_icon_size[1])
 				threads.deferToThread(self.loadItems)
 				self.toggleSuggestionSectionVisibility(False)
 				self.toggleItemsSectionVisibility(True)
 			elif command == "favlist":
 				self.clearListWidget(MODE_FAVORITES)
 				self.mode = MODE_FAVORITES
+				self["list"].setIconSize(self.list_portrait_icon_size[0], self.list_portrait_icon_size[1])
 				threads.deferToThread(self.loadFavItems)
+				self.toggleSuggestionSectionVisibility(False)
+				self.toggleItemsSectionVisibility(True)
+			elif command == "albums":
+				self.clearListWidget(MODE_ALBUMS)
+				self.mode = MODE_ALBUMS
+				self["list"].setIconSize(self.list_square_icon_size, self.list_square_icon_size)
+				threads.deferToThread(self.loadAlbums)
+				self.toggleSuggestionSectionVisibility(False)
+				self.toggleItemsSectionVisibility(True)
+			elif command == "artists":
+				self.clearListWidget(MODE_ARTISTS)
+				self.mode = MODE_ARTISTS
+				self["list"].setIconSize(self.list_square_icon_size, self.list_square_icon_size)
+				threads.deferToThread(self.loadArtists)
 				self.toggleSuggestionSectionVisibility(False)
 				self.toggleItemsSectionVisibility(True)
 		elif self.selected_widget == "charbar":
@@ -459,7 +485,33 @@ class E2EmbyLibrary(NotificationalScreen):
 			item_type = selected_item.get("Type")
 			if item_type == "Audio":
 				showLoadingScreen(self.session)
-				playItem(selected_item, self.session, self.playerExitCallback)
+				start_pos = int(selected_item.get("UserData", {}).get("PlaybackPositionTicks", "0")) / 10_000_000
+				# Build the queue from whichever widget the click actually came
+				# from - self.list_data only reflects the main "list" widget
+				# (MODE_LIST/MODE_ALBUMS/etc.), but an Audio item can just as
+				# well be selected from a MODE_RECOMMENDATIONS music row
+				# (list_music_recent/list_music_frequent), whose own .data is
+				# what actually matches selected_item in that case.
+				source_data = self[self.selected_widget].data
+				queue = [row[1] for row in source_data] or [selected_item]
+				start_index = next((i for i, row in enumerate(source_data) if row[1].get("Id") == selected_item.get("Id")), 0)
+				playQueue(queue, start_index, self.session, self.playerExitCallback, startPos=start_pos)
+				return
+			elif item_type == "MusicAlbum":
+				from .EmbyAlbumItemView import EmbyAlbumItemView
+				# Unlike Movies/Series, the library screen's currently-cached
+				# backdrop_pix/logo_pix belong to whatever item was highlighted
+				# in the grid, not necessarily this album, and albums have no
+				# backdrop widget or Logo art of their own anyway - always let
+				# EmbyAlbumItemView fetch its own cover instead of reusing these.
+				self.session.openWithCallback(self.exitCallback, EmbyAlbumItemView, selected_item)
+				return
+			elif item_type == "MusicArtist":
+				self.selected_artist_id = selected_item.get("Id")
+				self.clearListWidget(MODE_ARTIST_ALBUMS)
+				self.mode = MODE_ARTIST_ALBUMS
+				self["list"].setIconSize(self.list_square_icon_size, self.list_square_icon_size)
+				threads.deferToThread(self.loadArtistAlbums)
 				return
 			embyScreenClass = EmbyMovieItemView
 			if item_type == "Episode":
@@ -482,6 +534,12 @@ class E2EmbyLibrary(NotificationalScreen):
 				threads.deferToThread(self.loadItems)
 			elif self.mode == MODE_FAVORITES:
 				threads.deferToThread(self.loadFavItems)
+			elif self.mode == MODE_ALBUMS:
+				threads.deferToThread(self.loadAlbums)
+			elif self.mode == MODE_ARTISTS:
+				threads.deferToThread(self.loadArtists)
+			elif self.mode == MODE_ARTIST_ALBUMS:
+				threads.deferToThread(self.loadArtistAlbums)
 
 	def playerExitCallback(self, *result):
 		self.last_item_id = None
@@ -509,6 +567,45 @@ class E2EmbyLibrary(NotificationalScreen):
 			for item in items:
 				played_perc = item.get("UserData", {}).get("PlayedPercentage", "0")
 				list.append((i, item, item.get('Name'), None, played_perc, True))
+				i += 1
+			self["list"].loadData(list)
+		self.list_data = list
+		self["charbar"].setList(list)
+		self.onSelectedIndexChanged()
+
+	def loadAlbums(self):
+		items = EmbyApiClient.getAlbumsForLibrary(self.library_id)
+		list = []
+		if items:
+			i = 0
+			for item in items:
+				list.append((i, item, item.get('Name'), None, "0", True))
+				i += 1
+			self["list"].loadData(list)
+		self.list_data = list
+		self["charbar"].setList(list)
+		self.onSelectedIndexChanged()
+
+	def loadArtists(self):
+		items = EmbyApiClient.getArtistsForLibrary(self.library_id)
+		list = []
+		if items:
+			i = 0
+			for item in items:
+				list.append((i, item, item.get('Name'), None, "0", True))
+				i += 1
+			self["list"].loadData(list)
+		self.list_data = list
+		self["charbar"].setList(list)
+		self.onSelectedIndexChanged()
+
+	def loadArtistAlbums(self):
+		items = EmbyApiClient.getAlbumsForArtist(self.library_id, self.selected_artist_id)
+		list = []
+		if items:
+			i = 0
+			for item in items:
+				list.append((i, item, item.get('Name'), None, "0", True))
 				i += 1
 			self["list"].loadData(list)
 		self.list_data = list

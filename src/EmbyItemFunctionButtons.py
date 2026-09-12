@@ -43,6 +43,16 @@ def playItem(selected_item, session, callback, startPos=0, media_source_id=None)
 		hideLoadingScreen()
 
 
+def playQueue(queue, start_index, session, callback, startPos=0):
+	from .EmbyPlayer import EmbyPlayer
+	infobar = InfoBar.instance
+	if infobar:
+		LastService = session.nav.getCurrentServiceReferenceOriginal()
+		stopThemeMusicThenPlay(session, lambda: session.openWithCallback(callback, EmbyPlayer, item=queue[start_index], startPos=startPos, slist=infobar.servicelist, lastservice=LastService, queue=queue, queue_index=start_index))
+	else:
+		hideLoadingScreen()
+
+
 def playItemTrailer(selected_item, session, callback, startPos=0):
 	trailers = selected_item.get("RemoteTrailers", []) if YDL else []
 	trailer = trailers[0] if trailers else None
@@ -191,6 +201,12 @@ class EmbyItemFunctionButtons(GUIComponent):
 		showLoadingScreen(self.screen.session)
 		playItemTrailer(self.item, self.screen.session, self.playerExitCallback)
 
+	def playAlbum(self):
+		# EmbyItemFunctionButtons doesn't hold the fetched track list itself -
+		# the hosting EmbyAlbumItemView does (it already fetched tracks for its
+		# track-list widget) - so delegate, same pattern as openVersionsPanel().
+		self.screen.playAlbumFromTrack(0)
+
 	def openVersionsPanel(self):
 		self.screen.openVersionPanel()
 
@@ -246,7 +262,10 @@ class EmbyItemFunctionButtons(GUIComponent):
 		isFavorite = item.get("UserData", {}).get("IsFavorite", False)
 		hasMultipleVersions = len(item.get("MediaSources", [])) > 1
 		self.playButtonIndex = 0
-		if type != "Series" and type != "BoxSet":
+		if type == "MusicAlbum":
+			self.playButtonIndex = len(self.buttons)
+			self.buttons.append((len(self.buttons), self.playIcon, _("Play album"), self.playAlbum))
+		elif type != "Series" and type != "BoxSet":
 			if hasMultipleVersions:
 				self.buttons.append((len(self.buttons), self.versionsIcon, _("Versions"), self.openVersionsPanel))
 			self.playButtonIndex = len(self.buttons)

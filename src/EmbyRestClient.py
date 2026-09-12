@@ -616,6 +616,98 @@ class EmbyRestClient():
 			ShowEmbyTimeoutNotification()
 		return items  # sorted_items
 
+	def getAlbumsForLibrary(self, library_id):
+		items = []
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes=MusicAlbum&SortBy=SortName&SortOrder=Ascending&ParentId={library_id}&Fields=SortName,PremiereDate,DateCreated"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response_obj = response.content
+				res_json_obj = loads(response_obj)
+				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return items
+
+	def getArtistsForLibrary(self, library_id):
+		items = []
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Artists/AlbumArtists?UserId={self.user_id}&ParentId={library_id}&SortBy=SortName&SortOrder=Ascending&Fields=SortName"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response_obj = response.content
+				res_json_obj = loads(response_obj)
+				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return items
+
+	def getAlbumsForArtist(self, library_id, artist_id):
+		items = []
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?Recursive=true&IncludeItemTypes=MusicAlbum&ArtistIds={artist_id}&ParentId={library_id}&SortBy=PremiereDate&SortOrder=Descending&Fields=SortName,PremiereDate,DateCreated"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response_obj = response.content
+				res_json_obj = loads(response_obj)
+				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return items
+
+	def getTracksForAlbum(self, album_id):
+		items = []
+		headers = self.constructHeaders()
+		url = f"{self.server_root}/emby/Users/{self.user_id}/Items?ParentId={album_id}&IncludeItemTypes=Audio&SortBy=IndexNumber&SortOrder=Ascending&Fields=Overview,MediaSources"
+		has_timeout_or_error = True
+		for attempt in range(config.plugins.e2embyclient.conretries.value):
+			try:
+				response = get(url, headers=headers, timeout=(config.plugins.e2embyclient.con_timeout.value, config.plugins.e2embyclient.read_con_timeout.value))
+				response_obj = response.content
+				res_json_obj = loads(response_obj)
+				items = res_json_obj.get('Items')
+				has_timeout_or_error = False
+				break
+			except TimeoutError:
+				pass
+			except ReadTimeout:
+				pass
+			except:
+				break
+		if has_timeout_or_error:
+			ShowEmbyTimeoutNotification()
+		return items
+
 	def getRandomItemFromLibrary(self, parent_id, type, limit=2000):
 		includeItems = "Movie"
 		if type == "movies":

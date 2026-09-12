@@ -109,6 +109,11 @@ class EmbyLibraryHeaderButtons(GUIComponent):
 			self.buttons.append(
 				(len(self.buttons), _("Recommendations"), "recommend"))
 			self.buttons.append((len(self.buttons), _("Series"), "list"))
+		elif type == "music":
+			self.buttons.append(
+				(len(self.buttons), _("Recommendations"), "recommend"))
+			self.buttons.append((len(self.buttons), _("Albums"), "albums"))
+			self.buttons.append((len(self.buttons), _("Artists"), "artists"))
 		elif type == "boxsets":
 			self.hide()
 

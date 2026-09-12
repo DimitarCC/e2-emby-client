@@ -5,7 +5,7 @@ from time import sleep
 
 from twisted.internet import threads
 
-from enigma import eTimer, eListbox, eListboxPythonMultiContent, eRect, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP
+from enigma import eTimer, eListbox, eListboxPythonMultiContent, eRect, BT_HALIGN_CENTER, BT_VALIGN_CENTER, gFont, RT_HALIGN_LEFT, RT_HALIGN_CENTER, RT_HALIGN_RIGHT, RT_VALIGN_CENTER, RT_BLEND, RT_WRAP
 from skin import parseColor, parseFont
 
 from Components.config import config
@@ -32,6 +32,7 @@ class EmbyList(GUIComponent):
 		self.itemsForRedrawDelayed = []
 		self.thumbs = {}
 		self.check24 = LoadPixmap("%s/check_24.png" % plugin_dir)
+		self.favorite24 = LoadPixmap("%s/favorite.png" % plugin_dir)
 		self.selectionEnabled = True
 		self.font = gFont("Regular", 18)
 		self.badgeFont = gFont("Regular", 18)
@@ -142,6 +143,19 @@ class EmbyList(GUIComponent):
 		self.skinAttributes = attribs
 		self.l.setFont(0, self.font)
 		self.l.setFont(1, self.badgeFont)
+		if self.type == "tracks":
+			# Plain vertical list, one full-width row per track (no per-item
+			# art), unlike every other type here which is a horizontal
+			# filmstrip of icon-sized items - see buildTrackEntry().
+			self.orientation = eListbox.orVertical
+			self.l.setOrientation(self.orientation)
+			res = GUIComponent.applySkin(self, desktop, parent)
+			self.itemWidth = self.instance.size().width()
+			self.itemHeight = 60
+			self.items_per_page = self.instance.size().height() // self.itemHeight
+			self.l.setItemHeight(self.itemHeight)
+			self.l.setItemWidth(self.itemWidth)
+			return res
 		self.itemWidth = self.iconWidth + self.spacing_sides * 2
 		# self.instance.setOrientation(self.orientation)
 		self.l.setOrientation(self.orientation)
@@ -167,7 +181,7 @@ class EmbyList(GUIComponent):
 				"Id") == self.lastSelectedItemId)
 
 		self.data = items
-		if config.plugins.e2embyclient.thumbcache_loc.value != "off" and config.plugins.e2embyclient.thumbcache_loc.value != "/tmp":
+		if self.type != "tracks" and config.plugins.e2embyclient.thumbcache_loc.value != "off" and config.plugins.e2embyclient.thumbcache_loc.value != "/tmp":
 			for itm in items:
 				item = itm[1]
 				item_id = item.get("Id")
@@ -177,7 +191,16 @@ class EmbyList(GUIComponent):
 					if self.type == "item_fit":
 						fileAddon = ""
 						fileSuffix = ""
-					icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
+					if self.icon_type == "Primary" and item.get("PrimaryImageTag"):
+						# PrimaryImageItemId/PrimaryImageTag is Emby's own
+						# resolved pointer to the item's effective primary
+						# image and is the reliable source for music art
+						# (e.g. MusicAlbum) - ImageTags.Primary alone can be
+						# missing/inherited oddly for those items.
+						item_id = item.get("PrimaryImageItemId") or item_id
+						icon_img = item.get("PrimaryImageTag")
+					else:
+						icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
 					parent_icon_img = item.get("ParentThumbImageTag")
 					if parent_icon_img:
 						icon_img = parent_icon_img
@@ -239,8 +262,13 @@ class EmbyList(GUIComponent):
 			item_index = item_popped[0]
 			item = item_popped[1]
 			if self.type in ["item", "item_fit"]:
-				icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
 				item_id = item.get("Id")
+				if self.icon_type == "Primary" and item.get("PrimaryImageTag"):
+					# See the matching comment in loadData().
+					item_id = item.get("PrimaryImageItemId") or item_id
+					icon_img = item.get("PrimaryImageTag")
+				else:
+					icon_img = item.get("ImageTags").get(self.icon_type, item.get("ImageTags").get("Primary"))
 				parent_id = item.get("ParentThumbItemId")
 				parent_icon_img = item.get("ParentThumbImageTag")
 				if parent_id and parent_icon_img:
@@ -386,7 +414,61 @@ class EmbyList(GUIComponent):
 		else:
 			self.instance.redrawItemByIndex(index)
 
+	def buildTrackEntry(self, item_index, item, item_name):
+		# Tracks are a plain vertical list (no per-row art) - this is a
+		# self-contained row layout, distinct from the icon-based grid/row
+		# styles the rest of buildEntry() draws for other list types.
+		res = [None]
+		selected = self.selectedIndex == item_index
+		sel = selected and self.selectionEnabled
+		row_width = self.itemWidth - self.spacing_sides * 2
+		if sel:
+			res.append(MultiContentEntryRectangle(
+				pos=(0, 0), size=(self.itemWidth, self.itemHeight),
+				cornerRadius=8,
+				backgroundColor=0x32772b, backgroundColorSelected=0x32772b))
+
+		# No "played" badge for tracks: Emby doesn't track a meaningful
+		# played/partial-position state for music the way it does for video
+		# (there's no resumable position server-side for Audio items), so a
+		# played badge here would be misleading rather than informative.
+		duration = convert_ticks_to_time(item.get("RunTimeTicks", 0), is_chapters=True)
+		duration_width = 110
+		icon_size = 28
+		icon_gap = 10
+		badges_width = 0
+
+		is_favorite = item.get("UserData", {}).get("IsFavorite", False)
+		if is_favorite:
+			badges_width += icon_size + icon_gap
+
+		title_width = row_width - duration_width - badges_width
+		res.append(MultiContentEntryText(
+			pos=(self.spacing_sides, 0), size=(title_width, self.itemHeight),
+			font=0, flags=RT_HALIGN_LEFT | RT_BLEND | RT_VALIGN_CENTER,
+			text=item_name,
+			color=0xffffff, color_sel=0xffffff))
+
+		badge_x = self.spacing_sides + title_width
+		icon_y = (self.itemHeight - icon_size) // 2
+		if is_favorite and self.favorite24:
+			res.append(MultiContentEntryPixmapAlphaBlend(
+				pos=(badge_x, icon_y), size=(icon_size, icon_size),
+				png=self.favorite24,
+				backcolor=None, backcolor_sel=None,
+				flags=BT_HALIGN_CENTER | BT_VALIGN_CENTER))
+			badge_x += icon_size + icon_gap
+
+		res.append(MultiContentEntryText(
+			pos=(badge_x, 0), size=(duration_width, self.itemHeight),
+			font=0, flags=RT_HALIGN_RIGHT | RT_BLEND | RT_VALIGN_CENTER,
+			text=duration,
+			color=0x666666, color_sel=0x666666))
+		return res
+
 	def buildEntry(self, item_index, item, item_name, item_icon, played_perc, has_backdrop):
+		if self.type == "tracks":
+			return self.buildTrackEntry(item_index, item, item_name)
 		self.index_currently_redrawing = item_index
 		res = [None]
 		selected = self.selectedIndex == item_index

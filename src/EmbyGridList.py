@@ -185,13 +185,31 @@ class EmbyGridList(GUIComponent):
 		self.instance.setOrientation(self.orientation)
 		self.l.setOrientation(self.orientation)
 		res = GUIComponent.applySkin(self, desktop, parent)
+		self.__recalcItemMetrics()
+		return res
+
+	def __recalcItemMetrics(self):
 		size = self.instance.size()
 		width = size.width()
 		height = size.height()
 		cols = width // self.itemWidth
 		rows = height // self.itemHeight
 		self.items_per_page = cols * rows
-		return res
+
+	def setIconSize(self, iconWidth, iconHeight):
+		# Lets a screen switch this shared grid widget between a portrait
+		# (movies/series) and square (albums/artists) layout at runtime,
+		# since the skin only ever defines one "list" widget per screen.
+		if self.iconWidth == iconWidth and self.iconHeight == iconHeight:
+			return
+		self.iconWidth = iconWidth
+		self.iconHeight = iconHeight
+		self.itemWidth = self.iconWidth + self.spacing * 2
+		self.itemHeight = self.iconHeight + 90 + self.spacing * 2
+		self.l.setItemHeight(self.itemHeight)
+		self.l.setItemWidth(self.itemWidth)
+		if self.instance:
+			self.__recalcItemMetrics()
 
 	def toggleSelection(self, enabled):
 		self.selectionEnabled = enabled
@@ -206,10 +224,11 @@ class EmbyGridList(GUIComponent):
 		if config.plugins.e2embyclient.thumbcache_loc.value != "off":
 			for item in items:
 				itm = item[1]
-				item_id = itm.get("Id")
-				icon_img = itm.get("ImageTags").get("Primary")
+				item_id = itm.get("PrimaryImageItemId") or itm.get("Id")
+				icon_img = itm.get("PrimaryImageTag") or itm.get("ImageTags").get("Primary")
 				parent_icon_img = itm.get("ParentThumbImageTag")
 				if parent_icon_img:
+					item_id = itm.get("Id")
 					icon_img = parent_icon_img
 				f_name = f"{config.plugins.e2embyclient.thumbcache_loc.value}{EMBY_THUMB_CACHE_DIR}/{item_id}_{self.iconWidth}x{self.iconHeight}_{icon_img}__{self.iconWidth}_{self.iconHeight}.jpg"
 				if f_name in DIRECTORY_PARSER.THUMBS:
@@ -234,8 +253,14 @@ class EmbyGridList(GUIComponent):
 			if not self.isIndexInCurrentPage(item_index):
 				continue
 			item = item_popped[1]
-			icon_img = item.get("ImageTags").get("Primary")
-			item_id = item.get("Id")
+			# PrimaryImageItemId/PrimaryImageTag is Emby's own resolved pointer
+			# to the item's effective primary image and is the reliable source
+			# for a MusicAlbum/MusicArtist's cover - ImageTags.Primary alone
+			# can be missing/inherited oddly for music items. Falls back to
+			# ImageTags.Primary + the item's own Id for item types that don't
+			# populate PrimaryImageItemId/PrimaryImageTag.
+			item_id = item.get("PrimaryImageItemId") or item.get("Id")
+			icon_img = item.get("PrimaryImageTag") or item.get("ImageTags").get("Primary")
 			parent_id = item.get("ParentThumbItemId")
 			parent_icon_img = item.get("ParentThumbImageTag")
 			if parent_id and parent_icon_img:
