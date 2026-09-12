@@ -19,7 +19,7 @@ from . import _
 
 try:
     from yt_dlp import YoutubeDL
-    ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True, "youtube_skip_dash_manifest": True, "format": "b", "no_color": True, "usenetrc": True, "js_runtimes": {"node": {}}, "remote_components": ["ejs:github"]}
+    ydl_opts = {"quiet": True, "skip_download": True, "no_warnings": True, "youtube_skip_dash_manifest": True, "format": "b/bv*+ba/bv*", "no_color": True, "usenetrc": True, "js_runtimes": {"deno": {}, "node": {}, "quickjs": {}, "bun": {}}, "remote_components": ["ejs:github"]}
     YDL = YoutubeDL(ydl_opts)
 except ImportError:
     YDL = None
@@ -53,12 +53,19 @@ def playQueue(queue, start_index, session, callback, startPos=0):
 		hideLoadingScreen()
 
 
+def trailerFailed(failure):
+	print(f"[EmbyPlayer] trailer failed: {failure.getTraceback()}")
+	hideLoadingScreen()
+
+
 def playItemTrailer(selected_item, session, callback, startPos=0):
 	trailers = selected_item.get("RemoteTrailers", []) if YDL else []
 	trailer = trailers[0] if trailers else None
 	url_trailer = trailer.get("Url", "").strip() if trailer else ""
 	if url_trailer and "youtube" in url_trailer:
-		threads.deferToThread(getYoutubePlaybleUrl, url_trailer).addCallback(boundFunction(openTrailerPlayer, selected_item, session, callback))
+		deferred = threads.deferToThread(getYoutubePlaybleUrl, url_trailer)
+		deferred.addCallback(boundFunction(openTrailerPlayer, selected_item, session, callback))
+		deferred.addErrback(trailerFailed)
 	else:
 		hideLoadingScreen()
 
@@ -69,8 +76,16 @@ def getYoutubePlaybleUrl(source_url):
 		try:
 			result = YDL.extract_info(source_url, download=False)
 			result = YDL.sanitize_info(result)
-			if result and result.get("url"):
-				url = quote(result["url"])
+			stream = result.get("url") if result else None
+			if not stream and result:
+				# Video and audio come as separate streams, which the player cannot
+				# merge. Hand it the master playlist holding both instead.
+				for fmt in (result.get("requested_formats") or []) + (result.get("formats") or []):
+					stream = fmt.get("manifest_url")
+					if stream:
+						break
+			if stream:
+				url = quote(stream)
 		except Exception as e:
 			print(f" failed {e}")
 	return url

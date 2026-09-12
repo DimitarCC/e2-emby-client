@@ -17,7 +17,10 @@ from Components.Sources.Progress import Progress
 from Components.Sources.StaticText import StaticText
 from Screens.AudioSelection import AudioSelection
 from Screens.InfoBar import MoviePlayer
-from Screens.InfoBarGenerics import Seekbar
+try:
+	from Screens.InfoBarGenerics import SeekBar
+except ImportError:
+	from Screens.InfoBarGenerics import Seekbar as SeekBar
 from Screens.MinuteInput import MinuteInput
 from Tools.LoadPixmap import LoadPixmap
 from Tools.SubtitleRenderer import SubtitleRenderer
@@ -316,7 +319,9 @@ class EmbyPlayer(MoviePlayer):
 		# earlier from setPlayingItem() during __init__) - re-run it once the
 		# skin is actually applied so the alpha-blend widget flag from below
 		# gets set for a track that started playing before layout finished.
-		self.instance.setWidgetAlphaBlend(self.is_audio)
+		# hide() before that point leaves the widgets on screen, and audio_bg
+		# covers the whole video plane.
+		self.updateMusicDisplay()
 
 	def __onHide(self):
 		self["list_chapters"].hide()
@@ -466,7 +471,7 @@ class EmbyPlayer(MoviePlayer):
 		# into this same choice) with our own callback so a Seekbar-driven
 		# seek can still be caught once it actually lands.
 		if use_seekbar:
-			self.session.openWithCallback(self.__onSeekbarClosed, Seekbar, fwd)
+			self.session.openWithCallback(self.__onSeekbarClosed, SeekBar, fwd)
 		elif fwd:
 			self.session.openWithCallback(self.fwdSeekTo, MinuteInput)
 		else:
@@ -1179,18 +1184,11 @@ class EmbyPlayer(MoviePlayer):
 		init_play_pos = -1
 		did_seek = False
 		seek_to = self.init_seek_to if self.init_seek_to and self.init_seek_to > -1 else None
-		self.init_seek_is_nudge = seek_to is None
+		# The nudge below used to run for every fresh stream. It is a flushing
+		# seek, and when it fails the pipeline is left empty and playback never
+		# starts, so only seek when there is a real resume position.
+		self.init_seek_is_nudge = False
 		is_audio_pts_bug_case = self.is_audio and config.plugins.e2embyclient.play_system.value == "4097"
-		if seek_to is None and not self.is_audio and config.plugins.e2embyclient.play_system.value == "4097":
-			# servicemp3/HiPlayer reports a wrongly-offset play position for
-			# the first few seconds of a fresh video stream, but reports
-			# correctly again as soon as any seek actually happens (same as a
-			# resume seek does). Nudge forward by 1s to force that same
-			# recalibration even when there is no real resume position. This
-			# is purely internal PTS recalibration - the settle step below
-			# seeks back to the true start once it lands, so it must never
-			# be visible as "playback starts a second or more in".
-			seek_to = 1
 		if seek_to is not None:
 			pts = int(seek_to) * 90000
 			res = seekable.seekTo(pts)
