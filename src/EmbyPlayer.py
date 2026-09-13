@@ -9,6 +9,7 @@ from twisted.internet import threads
 
 from enigma import eTimer, iPlayableService, eServiceReference
 from Components.ActionMap import ActionMap, HelpableActionMap, NumberActionMap
+from Components.SystemInfo import BoxInfo
 from Components.config import config
 from Components.Label import Label
 from Components.Pixmap import Pixmap
@@ -17,6 +18,7 @@ from Components.Sources.Progress import Progress
 from Components.Sources.StaticText import StaticText
 from Screens.AudioSelection import AudioSelection
 from Screens.InfoBar import MoviePlayer
+
 try:
 	from Screens.InfoBarGenerics import SeekBar
 except ImportError:
@@ -35,6 +37,8 @@ from .EmbySkipIntroScreen import showSkipIntroScreen, hideSkipIntroScreen
 from .EmbyUpNextScreen import showUpNextScreen, hideUpNextScreen, updateUpNextCountdown, moveUpNextSelectionLeft, moveUpNextSelectionRight, activateUpNextSelectedButton, UP_NEXT_COUNTDOWN_SECONDS
 from .HelperFunctions import convert_ticks_to_time
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
+
+DISTRO = BoxInfo.getItem("distro")
 
 
 class EmbyPlayer(MoviePlayer):
@@ -1184,11 +1188,25 @@ class EmbyPlayer(MoviePlayer):
 		init_play_pos = -1
 		did_seek = False
 		seek_to = self.init_seek_to if self.init_seek_to and self.init_seek_to > -1 else None
-		# The nudge below used to run for every fresh stream. It is a flushing
-		# seek, and when it fails the pipeline is left empty and playback never
-		# starts, so only seek when there is a real resume position.
-		self.init_seek_is_nudge = False
 		is_audio_pts_bug_case = self.is_audio and config.plugins.e2embyclient.play_system.value == "4097"
+		if DISTRO in ["openvix", "openbh"]:
+			self.init_seek_is_nudge = seek_to is None
+			if seek_to is None and not self.is_audio and config.plugins.e2embyclient.play_system.value == "4097":
+				# servicemp3/HiPlayer reports a wrongly-offset play position for
+				# the first few seconds of a fresh video stream, but reports
+				# correctly again as soon as any seek actually happens (same as a
+				# resume seek does). Nudge forward by 1s to force that same
+				# recalibration even when there is no real resume position. This
+				# is purely internal PTS recalibration - the settle step below
+				# seeks back to the true start once it lands, so it must never
+				# be visible as "playback starts a second or more in".
+				seek_to = 1
+		else:
+			# The nudge below used to run for every fresh stream. It is a flushing
+			# seek, and when it fails the pipeline is left empty and playback never
+			# starts, so only seek when there is a real resume position.
+			self.init_seek_is_nudge = False
+		
 		if seek_to is not None:
 			pts = int(seek_to) * 90000
 			res = seekable.seekTo(pts)
