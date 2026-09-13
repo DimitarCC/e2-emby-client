@@ -1206,7 +1206,7 @@ class EmbyPlayer(MoviePlayer):
 			# seek, and when it fails the pipeline is left empty and playback never
 			# starts, so only seek when there is a real resume position.
 			self.init_seek_is_nudge = False
-		
+
 		if seek_to is not None:
 			pts = int(seek_to) * 90000
 			res = seekable.seekTo(pts)
