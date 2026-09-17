@@ -219,7 +219,6 @@ class EmbyPlayer(MoviePlayer):
 		self.curAudioIndex = -1
 		self.CurIndexEmbeddedSubs = -1
 		self.curSubsIndex = -1
-		self.selected_emby_subtitle = (0, 0, 0, 0, "")
 		self.firstSubIndex = -1
 		self.supressChapterSelect = False
 		self.item = item or {}
@@ -882,7 +881,7 @@ class EmbyPlayer(MoviePlayer):
 
 		if not subtitle:
 			self.subtitle_renderer.stopSubtitles()
-			self.selected_emby_subtitle = (0, 0, 0, 0, "")
+			self.selected_subtitle = (0, 0, 0, 0, "")
 			self.curSubsIndex = -1
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
 			if self.is_trailer:
@@ -892,16 +891,16 @@ class EmbyPlayer(MoviePlayer):
 			return
 
 		self.enableSubtitle(None)
-		# enableSubtitle(None) disables the internal/embedded subtitle track,
-		# but it also clears the base InfoBarSubtitleSupport's own
-		# self.selected_subtitle guard (name collision aside, that's the real
-		# attribute its private evUpdatedInfo handler checks). While that
-		# guard is falsy, evUpdatedInfo re-fires (on some boxes/drivers it
-		# keeps firing well after playback start) and auto re-enables the
-		# container's cached/default embedded subtitle - which then overlaps
-		# with the external subtitle once it finishes loading below. Mark it
-		# busy for the duration of the async download so that can't happen.
-		self.selected_subtitle = True
+		# self.selected_subtitle also doubles as InfoBarSubtitleSupport's own
+		# guard: its private evUpdatedInfo handler auto re-enables the
+		# container's cached/default embedded subtitle whenever this is
+		# falsy. enableSubtitle(None) just cleared it, and the external
+		# subtitle below is only fetched/parsed on the deferred thread, so
+		# mark this one as selected right away instead of waiting for that
+		# to finish - otherwise evUpdatedInfo can slip in during the
+		# download (more likely on slower boxes) and re-enable the embedded
+		# track, which then overlaps once the external one starts drawing.
+		self.selected_subtitle = subtitle
 		subs_uri = subtitle[SUBTITLE_TUPLE_SIZE + 1]
 		threads.deferToThread(self.downloadAndRunSubs, subs_uri, subtitle)
 
@@ -909,7 +908,6 @@ class EmbyPlayer(MoviePlayer):
 		result = self.loadAndParseSubs(subs_uri)
 		if result:
 			self.subtitle_renderer.startSubtitle()
-			self.selected_emby_subtitle = subtitle
 			self.curSubsIndex = subtitle[3]
 			self.updateEmbyProgressInternal("SubtitleTrackChange")
 			if self.is_trailer:
@@ -1004,11 +1002,11 @@ class EmbyPlayer(MoviePlayer):
 				self.audio_track_settle_checked = True
 				self.audio_track_settle_timer.start(config.plugins.e2embyclient.audio_track_change_settle_delay.value, True)
 		old_subs_index = self.curSubsIndex
-		if self.selected_emby_subtitle:
-			if len(self.selected_emby_subtitle) > SUBTITLE_TUPLE_SIZE:
-				self.curSubsIndex = self.selected_emby_subtitle[3]
+		if self.selected_subtitle:
+			if len(self.selected_subtitle) > SUBTITLE_TUPLE_SIZE:
+				self.curSubsIndex = self.selected_subtitle[3]
 			else:
-				sel_sub_index = self.selected_emby_subtitle[1] - 1
+				sel_sub_index = self.selected_subtitle[1] - 1
 				self.curSubsIndex = subtitleTracks[sel_sub_index].get("Index") if sel_sub_index > -1 else -1
 		else:
 			self.curSubsIndex = -1
@@ -1269,7 +1267,7 @@ class EmbyPlayer(MoviePlayer):
 			self.emby_progress_timer.start(10000)
 
 	def __evServiceEnd(self):
-		self.selected_emby_subtitle = (0, 0, 0, 0, "")
+		self.selected_subtitle = (0, 0, 0, 0, "")
 		if self.progress_timer:
 			self.progress_timer.stop()
 		self.subtitle_renderer.stopSubtitles()
@@ -1326,7 +1324,7 @@ class EmbyPlayer(MoviePlayer):
 		hideLoadingScreen()
 		self.hideSkipIntroButton()
 		self.hideUpNextOverlay(dismiss=True)
-		self.selected_emby_subtitle = None
+		self.selected_subtitle = None
 		self.is_closing = True
 		if config.plugins.e2embyclient.stop_playing_service_on_load.value:
 			# MoviePlayer.__onClose (base class, always runs via self.close()
