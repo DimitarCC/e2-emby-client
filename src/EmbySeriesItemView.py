@@ -44,6 +44,7 @@ class EmbySeriesItemView(EmbyItemView):
 		self.series_id = self.item_id
 		self.seasons = []
 		self.episodes = []
+		self.episodes_loaded_once = False
 		self["subtitle"] = Label()
 		self["seasons_list"] = EmbySeasonsBar()
 		self["episodes_list"] = EmbyList(type="episodes")
@@ -79,7 +80,9 @@ class EmbySeriesItemView(EmbyItemView):
 				i += 1
 			self["seasons_list"].setList(list)
 		self.episodes = EmbyApiClient.getEpisodesForSeries(self.series_id)
-		resume_episode = EmbyApiClient.getResumeEpisodeForSeries(self.series_id)
+		resume_episode = None
+		if not self.episodes_loaded_once:
+			resume_episode = EmbyApiClient.getResumeEpisodeForSeries(self.series_id)
 		list = []
 		if self.episodes:
 			i = 0
@@ -99,6 +102,7 @@ class EmbySeriesItemView(EmbyItemView):
 			self.selected_widget = "episodes_list"
 			self["episodes_list"].loadData(list)
 			self.lists["episodes_list"].visible(True).enableSelection(True)
+		self.episodes_loaded_once = True
 
 	def infoRetrieveInject(self, item):
 		threads.deferToThread(self.getEpisodes).addCallback(self.onLayoutFinishedLast)

@@ -1224,14 +1224,24 @@ class EmbyPlayer(MoviePlayer):
 		did_seek = False
 		seek_to = self.init_seek_to if self.init_seek_to and self.init_seek_to > -1 else None
 		is_audio_pts_bug_case = self.is_audio and config.plugins.e2embyclient.play_system.value == "4097"
+		# With no real resume position, video still benefits from the same
+		# PTS-recalibration a real seek triggers on landing (see the
+		# audio-only equivalent below) - issue a single no-op seekTo(0) to
+		# force it, reusing the exact same one-shot/retry path as a real
+		# resume seek so it can't double-fire or add a second flush. This is
+		# purely cosmetic (not a real seek from Emby's point of view), so it
+		# must never set init_play_pos/did_seek - see the servicemp3 nudge
+		# history for why an extra seekTo() here is treated carefully.
+		fake_zero_seek = seek_to is None and not self.is_audio
 
-		if seek_to is not None:
-			pts = int(seek_to) * 90000
+		if seek_to is not None or fake_zero_seek:
+			pts = int(seek_to) * 90000 if seek_to is not None else 0
 			res = seekable.seekTo(pts)
 			len = seekable.getLength() if config.plugins.e2embyclient.play_system.value == "5002" else [0, 1]
 			if res != -1 and len[1] > 0:
-				init_play_pos = int(seek_to) * 10_000_000
-				did_seek = True
+				if seek_to is not None:
+					init_play_pos = int(seek_to) * 10_000_000
+					did_seek = True
 			elif self.init_seek_retry_elapsed < self.SEEKABLE_POLL_TIMEOUT:
 				# isCurrentlySeekable() can report true before the pipeline has
 				# actually finished opening (still NULL/READY, not yet PLAYING),
