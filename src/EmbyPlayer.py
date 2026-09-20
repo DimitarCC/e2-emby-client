@@ -137,6 +137,9 @@ class EmbyPlayer(MoviePlayer):
 		self.init_audio_track_settle_timer.callback.append(self.__onInitAudioTrackSettle)
 		self.init_audio_track_retries = 0
 		self.init_audio_track_index = -1
+		self.init_seek_retry_timer = eTimer()
+		self.init_seek_retry_timer.callback.append(self.__retryInitSeekProcess)
+		self.init_seek_retry_elapsed = 0
 		self.seekable_wait_timer = eTimer()
 		self.seekable_wait_timer.callback.append(self.__onSeekableWaitTick)
 		self.seekable_wait_callback = None
@@ -209,11 +212,13 @@ class EmbyPlayer(MoviePlayer):
 		self.init_audio_track_settle_timer.stop()
 		self.init_audio_track_retries = 0
 		self.init_audio_track_index = -1
+		self.init_seek_retry_timer.stop()
+		self.init_seek_retry_elapsed = 0
 		self.__cancelSeekableWait()
 		self.__cancelAudioOffsetRecheck()
 		self.is_trailer = is_trailer
+		self.service_start_done = False
 		self.init_seek_to = startPos
-		self.init_seek_is_nudge = False
 		self.post_track_switch_seek_target = None
 		self.audio_pos_offset = 0
 		self.curAudioIndex = -1
@@ -1023,6 +1028,13 @@ class EmbyPlayer(MoviePlayer):
 			service = self.session.nav.getCurrentService()
 			audioTracks = service and service.audioTracks()
 			if audioTracks and audioTracks.getNumberOfTracks() > track:
+				if audioTracks.getCurrentTrack() == track:
+					# selectTrack() unconditionally re-negotiates the demux on
+					# servicemp3 ("Clear Buffers!") even when the requested
+					# track is already the current one, which is a visible
+					# flush/flicker for no actual change - skip the call
+					# entirely in that case.
+					return True
 				audioTracks.selectTrack(track)
 				return audioTracks.getCurrentTrack() == track
 		return True
@@ -1037,7 +1049,13 @@ class EmbyPlayer(MoviePlayer):
 				self.enableSubtitle(subtitleTrack)
 			else:
 				self.CurIndexEmbeddedSubs = -1
-		elif self.curSubsIndex == -1:
+		elif self.curSubsIndex == -1 and not (self.selected_subtitle and len(self.selected_subtitle) > SUBTITLE_TUPLE_SIZE):
+			# An external subtitle selection is in-flight - runSubtitles() sets
+			# self.selected_subtitle synchronously but curSubsIndex only once
+			# downloadAndRunSubs() finishes on its deferred thread, so a
+			# evUpdatedInfo firing in between must not clear it here (same
+			# race the comment in runSubtitles() guards against for
+			# InfoBarSubtitleSupport's own handler).
 			self.enableSubtitle(None)
 
 	def setPlaySessionParameters(self, aIndex, sIndex, playPos=-1, stopped=False):
@@ -1173,12 +1191,8 @@ class EmbyPlayer(MoviePlayer):
 			# servicehisilicon/exteplayer3 (same as the initial resume seek),
 			# which silently resets playback back to position 0. Re-seek to
 			# the resume position once more so that reopen doesn't discard it,
-			# once the backend reports seekable again after the reopen. When
-			# the initial seek was only the synthetic PTS-recalibration nudge
-			# (no real resume position), land back on true 0 instead of the
-			# nudge target - otherwise playback is left wherever the nudge
-			# happened to settle, which can drift well past the intended ~1s.
-			target = 0 if self.init_seek_is_nudge else self.init_seek_to
+			# once the backend reports seekable again after the reopen.
+			target = self.init_seek_to
 			if target is not None and target > -1:
 				self.post_track_switch_seek_target = target
 				self.__waitForSeekable(self.__onPostTrackSwitchSeekable)
@@ -1193,28 +1207,23 @@ class EmbyPlayer(MoviePlayer):
 		# without this the infobar keeps showing the pre-seek track.
 		self.onAudioSubTrackChanged()
 
+	def __retryInitSeekProcess(self):
+		self.init_seek_retry_timer.stop()
+		self.__waitForSeekable(self.__initSeekProcess)
+
 	def __initSeekProcess(self, seekable):
+		if self.service_start_done:
+			# __initTrackProcess (track/subtitle selection) legitimately re-runs
+			# on every evStart - the base InfoBarSubtitleSupport class hooks
+			# evStart itself and unconditionally clears selected_subtitle there,
+			# so we must re-apply our own selection each time too - but the
+			# init resume seek must still only ever be issued once per item,
+			# or it re-introduces a double-flush flicker.
+			return
 		init_play_pos = -1
 		did_seek = False
 		seek_to = self.init_seek_to if self.init_seek_to and self.init_seek_to > -1 else None
 		is_audio_pts_bug_case = self.is_audio and config.plugins.e2embyclient.play_system.value == "4097"
-		if DISTRO in ["openvix", "openbh"]:
-			self.init_seek_is_nudge = seek_to is None
-			if seek_to is None and not self.is_audio and config.plugins.e2embyclient.play_system.value == "4097":
-				# servicemp3/HiPlayer reports a wrongly-offset play position for
-				# the first few seconds of a fresh video stream, but reports
-				# correctly again as soon as any seek actually happens (same as a
-				# resume seek does). Nudge forward by 1s to force that same
-				# recalibration even when there is no real resume position. This
-				# is purely internal PTS recalibration - the settle step below
-				# seeks back to the true start once it lands, so it must never
-				# be visible as "playback starts a second or more in".
-				seek_to = 1
-		else:
-			# The nudge below used to run for every fresh stream. It is a flushing
-			# seek, and when it fails the pipeline is left empty and playback never
-			# starts, so only seek when there is a real resume position.
-			self.init_seek_is_nudge = False
 
 		if seek_to is not None:
 			pts = int(seek_to) * 90000
@@ -1223,15 +1232,30 @@ class EmbyPlayer(MoviePlayer):
 			if res != -1 and len[1] > 0:
 				init_play_pos = int(seek_to) * 10_000_000
 				did_seek = True
+			elif self.init_seek_retry_elapsed < self.SEEKABLE_POLL_TIMEOUT:
+				# isCurrentlySeekable() can report true before the pipeline has
+				# actually finished opening (still NULL/READY, not yet PLAYING),
+				# and on exteplayer3 getLength() in particular can keep
+				# reporting a not-yet-known length for a while after that even
+				# though seekTo() itself already returned success - in which
+				# case the seek is silently dropped. Retry on the same
+				# interval/timeout used for the rest of the seekable-wait
+				# polling instead of giving up after a handful of tries, which
+				# would otherwise drop the resume position on slower opens
+				# (network streams in particular) and silently land on 0.
+				self.init_seek_retry_elapsed += self.SEEKABLE_POLL_INTERVAL
+				self.init_seek_retry_timer.start(self.SEEKABLE_POLL_INTERVAL, True)
+				return
+		self.service_start_done = True
 		if is_audio_pts_bug_case:
 			# servicemp3/HiPlayer can misreport the play position by a fixed
 			# amount for the entire stream after landing on any position - an
-			# actual corrective seek is audible as a glitch on audio (unlike
-			# the video case above), so instead measure the bogus reading once
-			# the real seek (if any) above has landed, and subtract it from
-			# every getPosition() read (see self.audio_pos_offset /
-			# __armAudioOffsetRecheck). With no real resume position, nothing
-			# was seeked above, so measure straight from true 0.
+			# actual corrective seek is audible as a glitch on audio, so
+			# instead measure the bogus reading once the real seek (if any)
+			# above has landed, and subtract it from every getPosition() read
+			# (see self.audio_pos_offset / __armAudioOffsetRecheck). With no
+			# real resume position, nothing was seeked above, so measure
+			# straight from true 0.
 			self.__armAudioOffsetRecheck(seek_to if did_seek else 0)
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
 		if did_seek and not self.is_audio and config.plugins.e2embyclient.play_system.value in ("4097", "5002"):
@@ -1259,6 +1283,15 @@ class EmbyPlayer(MoviePlayer):
 		self.init_timer.start(50)
 
 	def __evServiceStart(self):
+		# __onPlayerInit's own polling and the evStart event (__evServiceStartInit)
+		# can each independently land on a ready position and both call this -
+		# and on some boxes the underlying service genuinely restarts/
+		# renegotiates a second time (new async-done/track negotiation), which
+		# also resets base-class subtitle-selection state (InfoBarSubtitleSupport
+		# clears self.selected_subtitle on every evStart). So track/subtitle
+		# selection must re-apply on every call here, but the init resume seek
+		# itself is only ever issued once per item - see service_start_done in
+		# __initSeekProcess.
 		if not self.is_trailer:
 			self.__waitForSeekable(self.__initTrackProcess)
 		if self.progress_timer:
@@ -1315,6 +1348,7 @@ class EmbyPlayer(MoviePlayer):
 	def clearHooks(self):
 		self.audio_track_settle_timer.stop()
 		self.init_audio_track_settle_timer.stop()
+		self.init_seek_retry_timer.stop()
 		self.__cancelSeekableWait()
 		AudioSelection.fillSubtitleExt = None
 		if self.onAudioSubTrackChanged in AudioSelection.hooks:
