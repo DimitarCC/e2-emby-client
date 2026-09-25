@@ -39,6 +39,7 @@ from .HelperFunctions import convert_ticks_to_time
 from .Variables import SUBTITLE_TUPLE_SIZE, EMBY_THUMB_CACHE_DIR, DISTRO
 
 DISTRO = BoxInfo.getItem("distro")
+MEDIASERVICE = BoxInfo.getItem("mediaservice")
 
 
 class EmbyPlayer(MoviePlayer):
@@ -69,7 +70,7 @@ class EmbyPlayer(MoviePlayer):
 	def __init__(self, session, item=None, startPos=None, slist=None, lastservice=None, is_trailer=False, trailer_url=None, queue=None, queue_index=0):
 		Globals.IsPlayingFile = True
 		item = item or {}
-		ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex = self.buildServiceRef(item, is_trailer, trailer_url)
+		ref, play_session_id, defaultAudioIndex, defaultSubtitleIndex = self.buildServiceRef(item, is_trailer, trailer_url, startPos)
 		MoviePlayer.__init__(self, session, service=ref, slist=slist, lastservice=lastservice)
 		self.session = session
 		# Queue state is session-scoped (persists/increments across tracks as the
@@ -172,11 +173,27 @@ class EmbyPlayer(MoviePlayer):
 			"ok": self.processItem,
 		}, -15)
 		self.subtitle_renderer = SubtitleRenderer(self)
-		self.__event_tracker = ServiceEventTracker(screen=self, eventmap={
+		eventmap = {
 			iPlayableService.evStart: self.__evServiceStartInit,
-			iPlayableService.evUpdatedInfo: self.__updatedInfoEmby})
+			iPlayableService.evUpdatedInfo: self.__updatedInfoEmby}
+		if DISTRO == "openvix":
+			# evResumed is only fired by OpenViX's eServiceMP3 (see its doc
+			# comment in iservice.h) - other distros' iPlayableService never
+			# emits it, so registering it there would just be dead weight.
+			eventmap[iPlayableService.evResumed] = self.__evServiceResumed
+		self.__event_tracker = ServiceEventTracker(screen=self, eventmap=eventmap)
 
-	def buildServiceRef(self, item, is_trailer, trailer_url):
+	def __usesUrlPlaybackParams(self):
+		# e2startoffset/e2audiotrack/e2subtitletrack are only parsed by
+		# OpenViX's eServiceMP3 (play_system "4097") - HiPlayer (the
+		# servicehisilicon build of the same service ID) and Exteplayer3
+		# ("5002") have no equivalent, so they must keep landing on position
+		# 0/track 0 and correcting afterward via the explicit seek/track-
+		# switch path below (see setPlayingItem/__initTrackProcess/
+		# __initSeekProcess).
+		return DISTRO == "openvix" and MEDIASERVICE != "servicehisilicon" and config.plugins.e2embyclient.play_system.value == "4097"
+
+	def buildServiceRef(self, item, is_trailer, trailer_url, startPos=None):
 		item_id = int(item.get("Id", "0"))
 		item_name = item.get("Name", "Stream")
 		media_sources = item.get("MediaSources")
@@ -195,6 +212,18 @@ class EmbyPlayer(MoviePlayer):
 				directStreamUrl = f"/audio/{item_id}/stream.{container}?static=true&DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
 			else:
 				directStreamUrl = f"/videos/{item_id}/original.{container}?DeviceId={EmbyApiClient.device_id}&MediaSourceId={media_source_id}&PlaySessionId={play_session_id}&api_key={EmbyApiClient.access_token}"
+			if self.__usesUrlPlaybackParams():
+				# Bake the resume position and default audio/subtitle track
+				# straight into the stream URL instead of starting at
+				# position 0/track 0 and seeking/switching once playback has
+				# already begun.
+				audioIndex, _curAudioIndex, subtitle, sindex, _curSubIndex = self.getSelectedAudioSubStreamFromEmby(item)
+				params = []
+				if startPos and startPos > -1:
+					params.append(f"e2startoffset={int(startPos) * 90000}")
+				params.append(f"e2audiotrack={audioIndex}")
+				params.append(f"e2subtitletrack={sindex}")
+				directStreamUrl += ("&" if "?" in directStreamUrl else "?") + "&".join(params)
 			url = f"{EmbyApiClient.server_root}{directStreamUrl}"
 			ref = eServiceReference("%s:0:1:%x:1009:1:CCCC0000:0:0:0:%s:%s" % (config.plugins.e2embyclient.play_system.value, item_id, url.replace(":", "%3a"), item_name))
 		if is_trailer and trailer_url:
@@ -217,6 +246,7 @@ class EmbyPlayer(MoviePlayer):
 		self.__cancelSeekableWait()
 		self.__cancelAudioOffsetRecheck()
 		self.is_trailer = is_trailer
+		self.uses_url_playback_params = self.__usesUrlPlaybackParams()
 		self.service_start_done = False
 		self.init_seek_to = startPos
 		self.post_track_switch_seek_target = None
@@ -866,7 +896,7 @@ class EmbyPlayer(MoviePlayer):
 
 	def loadAndParseSubs(self, stream_url):
 		try:
-			response = get(stream_url, timeout=5)
+			response = get(stream_url, timeout=15)
 			if response.status_code != 404:
 				intermediate_text = response.content.decode("utf-8", errors='replace')
 				try:
@@ -876,8 +906,8 @@ class EmbyPlayer(MoviePlayer):
 					subs_file = intermediate_text
 				self.subtitle_renderer.loadSubtitles(subs_file, "SRT")
 				return True
-		except:
-			pass
+		except Exception as e:
+			print("Failed to load subtitles from URL:", stream_url, "Error:", e)
 		return False
 
 	def runSubtitles(self, subtitle, sindex=-1):
@@ -899,17 +929,24 @@ class EmbyPlayer(MoviePlayer):
 		# self.selected_subtitle also doubles as InfoBarSubtitleSupport's own
 		# guard: its private evUpdatedInfo handler auto re-enables the
 		# container's cached/default embedded subtitle whenever this is
-		# falsy. enableSubtitle(None) just cleared it, and the external
-		# subtitle below is only fetched/parsed on the deferred thread, so
+		# falsy. enableSubtitle(None) just cleared it, and the Emby-fetched
+		# subtitle below is only downloaded/parsed on the deferred thread, so
 		# mark this one as selected right away instead of waiting for that
 		# to finish - otherwise evUpdatedInfo can slip in during the
-		# download (more likely on slower boxes) and re-enable the embedded
-		# track, which then overlaps once the external one starts drawing.
+		# download (more likely on slower boxes) and re-enable the native
+		# embedded track, which then overlaps once ours starts drawing.
 		self.selected_subtitle = subtitle
 		subs_uri = subtitle[SUBTITLE_TUPLE_SIZE + 1]
 		threads.deferToThread(self.downloadAndRunSubs, subs_uri, subtitle)
 
 	def downloadAndRunSubs(self, subs_uri, subtitle):
+		# Stop whatever the renderer is currently showing before loading the
+		# newly selected subtitle - loadSubtitles() below only replaces the
+		# renderer's parsed cue list, not its running/drawing state, so
+		# without this a still-running previous track keeps drawing its own
+		# cues over the fetch/parse delay and can briefly overlap the new
+		# one once it starts.
+		self.subtitle_renderer.stopSubtitles()
 		result = self.loadAndParseSubs(subs_uri)
 		if result:
 			self.subtitle_renderer.startSubtitle()
@@ -929,11 +966,22 @@ class EmbyPlayer(MoviePlayer):
 			return
 		media_source = media_sources[0]
 		media_streams = media_source.get("MediaStreams")
+		# subtitlesList (built by AudioSelection itself before this hook runs)
+		# has exactly one native entry per embedded subtitle stream, in the
+		# same order the container demux reports them - which matches the
+		# order embedded streams appear in MediaStreams. Drop the native
+		# entry for every text-based one since the Emby-fetched entry
+		# appended below replaces it (for every player, embedded or not) -
+		# only image-based embedded subtitles (e.g. PGS/VobSub, which Emby
+		# can't convert to a text stream) still need the container's own
+		# decoder, so their native entries are left alone.
+		embedded_streams = [sub for sub in media_streams if sub.get("Type") == "Subtitle" and not sub.get("IsExternal")]
+		subtitlesList[:] = [entry for i, entry in enumerate(subtitlesList) if i >= len(embedded_streams) or not embedded_streams[i].get("IsTextSubtitleStream")]
 		if len(subtitlesList) > 0:
 			i = subtitlesList[-1][1] + 1
 		else:
 			i = 1
-		subtitletracks = [sub for sub in media_streams if sub.get("Type") == "Subtitle" and sub.get("IsExternal")]
+		subtitletracks = [sub for sub in media_streams if sub.get("Type") == "Subtitle" and sub.get("IsTextSubtitleStream")]
 		for stream in subtitletracks:
 			index = int(stream.get("Index"))
 			subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{index}/stream.srt?api_key={EmbyApiClient.access_token}"
@@ -943,8 +991,9 @@ class EmbyPlayer(MoviePlayer):
 				subtitlesList.append((2, i, 4, index, stream.get("Language"), "", self.runSubtitles, subs_uri))
 			i += 1
 
-	def getEmbyTrackLists(self):
-		media_sources = self.item.get("MediaSources")
+	def getEmbyTrackLists(self, item=None):
+		item = self.item if item is None else item
+		media_sources = item.get("MediaSources")
 		if not media_sources:
 			return [], []
 		media_source = media_sources[0]
@@ -953,17 +1002,19 @@ class EmbyPlayer(MoviePlayer):
 		subtitletracks = [sub for sub in media_streams if sub.get("Type") == "Subtitle"]
 		return audiotracks, subtitletracks
 
-	def getSelectedAudioSubStreamFromEmby(self):
+	def getSelectedAudioSubStreamFromEmby(self, item=None):
+		item = self.item if item is None else item
 		aIndex = 0
 		curAudioIndex = 0
 		sindex = -1
+		curSubIndex = -1
 		subtitle = None
-		item_id = int(self.item.get("Id", "0"))
-		media_sources = self.item.get("MediaSources")
+		item_id = int(item.get("Id", "0"))
+		media_sources = item.get("MediaSources")
 		if not media_sources:
 			return 0, None
 		media_source = media_sources[0]
-		audiotracks, subtitletracks = self.getEmbyTrackLists()
+		audiotracks, subtitletracks = self.getEmbyTrackLists(item)
 		defaultAudioIndex = media_source.get("DefaultAudioStreamIndex", -1)
 		defaultSubtitleIndex = media_source.get("DefaultSubtitleStreamIndex", -1)
 		aIndex = next((i for i, track in enumerate(audiotracks) if track.get("Index") == defaultAudioIndex), 0)
@@ -974,9 +1025,17 @@ class EmbyPlayer(MoviePlayer):
 			sindex = next((i for i, track in enumerate(subtitletracks) if track.get("Index") == defaultSubtitleIndex), -1)
 			if sindex > -1:
 				subtitle_obj = subtitletracks[sindex]
-				isExternal = subtitle_obj.get("IsExternal")
+				isTextSubtitle = subtitle_obj.get("IsTextSubtitleStream")
 				sub_index_emby = subtitle_obj.get("Index")
-				if isExternal:
+				# sindex is only a position within subtitletracks (needed for
+				# CurIndexEmbeddedSubs/e2subtitletrack, both position-based) -
+				# curSubIndex is the real Emby stream Index (like
+				# curAudioIndex above), which is what must be reported back
+				# to Emby/shown in the OSD, or a resume picks the wrong
+				# track next time (off by however many non-subtitle streams
+				# precede it).
+				curSubIndex = sub_index_emby
+				if isTextSubtitle:
 					subs_uri = f"{EmbyApiClient.server_root}/emby/Items/{item_id}/{media_source.get("Id")}/Subtitles/{sub_index_emby}/stream.srt?api_key={EmbyApiClient.access_token}"
 					if SUBTITLE_TUPLE_SIZE == 5:
 						subtitle = (2, sindex + 1, 4, sub_index_emby, subtitle_obj.get("Language"), self.runSubtitles, subs_uri)
@@ -984,7 +1043,7 @@ class EmbyPlayer(MoviePlayer):
 						subtitle = (2, sindex + 1, 4, sub_index_emby, subtitle_obj.get("Language"), "", self.runSubtitles, subs_uri)
 					sindex = -1
 
-		return aIndex, curAudioIndex, subtitle, sindex
+		return aIndex, curAudioIndex, subtitle, sindex, curSubIndex
 
 	def onAudioSubTrackChanged(self):
 		self.audio_track_settle_timer.stop()
@@ -1159,19 +1218,34 @@ class EmbyPlayer(MoviePlayer):
 		init_play_pos = -1
 		if self.init_seek_to and self.init_seek_to > -1:
 			init_play_pos = int(self.init_seek_to) * 10_000_000
-		audioIndex, curAudioIndex, subtitle, sindex = self.getSelectedAudioSubStreamFromEmby()
+		audioIndex, curAudioIndex, subtitle, sindex, curSubIndex = self.getSelectedAudioSubStreamFromEmby()
 		self.curAudioIndex = curAudioIndex
 		self.init_audio_track_index = audioIndex
 		if not self.is_audio:
-			# Audio-only items have exactly one audio track and no
-			# subtitles, so there's nothing to select - and selectTrack()
-			# itself can re-open/re-negotiate the demux on servicemp3,
-			# which is enough on its own to drop playback away from true 0.
-			self.__setAudioTrack(aIndex=audioIndex)
-			self.runSubtitles(subtitle=subtitle, sindex=sindex)
-			if not subtitle and sindex > -1:
-				self.CurIndexEmbeddedSubs = sindex
-			self.curSubsIndex = subtitle and subtitle[3] or sindex
+			if self.uses_url_playback_params:
+				# The default audio track and any default *image-based
+				# embedded* subtitle track are already selected by the
+				# backend from the e2audiotrack/e2subtitletrack URL params
+				# baked into the stream URL (see buildServiceRef) - no
+				# explicit selectTrack()/enableSubtitle() needed here. A
+				# default *text* subtitle (embedded or external) is never
+				# covered by those params though - it's fetched from Emby
+				# and rendered client-side instead (see
+				# getSelectedAudioSubStreamFromEmby/subtitleListIject), so
+				# it still needs to go through runSubtitles().
+				if subtitle:
+					self.runSubtitles(subtitle=subtitle, sindex=sindex)
+				self.curSubsIndex = subtitle[3] if subtitle else curSubIndex
+			else:
+				# Audio-only items have exactly one audio track and no
+				# subtitles, so there's nothing to select - and selectTrack()
+				# itself can re-open/re-negotiate the demux on servicemp3,
+				# which is enough on its own to drop playback away from true 0.
+				self.__setAudioTrack(aIndex=audioIndex)
+				self.runSubtitles(subtitle=subtitle, sindex=sindex)
+				if not subtitle and sindex > -1:
+					self.CurIndexEmbeddedSubs = sindex
+				self.curSubsIndex = subtitle[3] if subtitle else curSubIndex
 		self["info_line"].updateInfo(self.item, self.curAudioIndex, self.curSubsIndex)
 		threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
 		if seekable is not None:
@@ -1220,10 +1294,22 @@ class EmbyPlayer(MoviePlayer):
 			# init resume seek must still only ever be issued once per item,
 			# or it re-introduces a double-flush flicker.
 			return
-		init_play_pos = -1
-		did_seek = False
 		seek_to = self.init_seek_to if self.init_seek_to and self.init_seek_to > -1 else None
 		is_audio_pts_bug_case = self.is_audio and config.plugins.e2embyclient.play_system.value == "4097"
+		if self.uses_url_playback_params:
+			# The resume position was already applied by the backend from
+			# the e2startoffset URL param baked into the stream URL (see
+			# buildServiceRef) - no explicit seekTo()/retry-on-not-yet-
+			# seekable dance needed, and so no reopen/reset of the audio
+			# track to correct for either (see __onInitAudioTrackSettle).
+			init_play_pos = int(seek_to) * 10_000_000 if seek_to is not None else -1
+			self.service_start_done = True
+			if is_audio_pts_bug_case:
+				self.__armAudioOffsetRecheck(seek_to if seek_to is not None else 0)
+			threads.deferToThread(self.setPlaySessionParameters, self.curAudioIndex, self.curSubsIndex, init_play_pos)
+			return
+		init_play_pos = -1
+		did_seek = False
 		# With no real resume position, video still benefits from the same
 		# PTS-recalibration a real seek triggers on landing (see the
 		# audio-only equivalent below) - issue a single no-op seekTo(0) to
@@ -1279,12 +1365,29 @@ class EmbyPlayer(MoviePlayer):
 			self.init_audio_track_retries = 0
 			self.init_audio_track_settle_timer.start(config.plugins.e2embyclient.audio_track_change_settle_delay.value, True)
 
+	def __waitsForResumeEvent(self):
+		# Only eServiceMP3 on OpenViX (non-hisilicon) fires evResumed at all
+		# (see its doc comment in iservice.h) - it marks the point where a
+		# pending "&e2startoffset=" resume seek has actually landed and
+		# playback is running from it, which on that backend can happen a
+		# moment after the service already reports a seekable position 0 (it
+		# can briefly go PLAYING at 0 before re-seeking to the real resume
+		# point). Keep the loading screen up until then so it never exposes
+		# that wrong initial frame - with no resume point there's nothing to
+		# wait for (evResumed never fires), so fall back to hiding as soon
+		# as a position is available, same as every other backend.
+		return self.uses_url_playback_params and bool(self.init_seek_to) and self.init_seek_to > -1
+
+	def __evServiceResumed(self):
+		hideLoadingScreen()
+
 	def __onPlayerInit(self):
 		pos = self.getPosition()
 		if pos is not None:
 			self.init_timer.stop()
 			self.__evServiceStart()
-			hideLoadingScreen()
+			if not self.__waitsForResumeEvent():
+				hideLoadingScreen()
 
 	def __updatedInfoEmby(self):
 		self.__setSubtitleTrack()
