@@ -60,18 +60,17 @@ class EmbyGridList(GUIComponent):
 	GUI_WIDGET = eListbox
 
 	def getListCount(self):
-		max_columns = self.instance.size().width() // self.itemWidth
-		return (len(self.data) + max_columns - 1) // max_columns
+		return len(self.data)
 
-	# for use with the pager addon. Returns total rows count
+	# for use with the pager addon. Returns total items count (the pager
+	# divides by columns * rows itself)
 	listCount = property(getListCount)
 
-	def getCurrentRow(self):
-		max_columns = self.instance.size().width() // self.itemWidth
-		return self.selectedIndex // max_columns
+	def getCurrentItemIndex(self):
+		return max(self.selectedIndex, 0)
 
-	# for use with the pager addon. Returns index of current row
-	currentIndex = property(getCurrentRow)
+	# for use with the pager addon. Returns index of current item
+	currentIndex = property(getCurrentItemIndex)
 
 	def getMoveLeftAction(self):
 		if hasattr(self.instance, "prevItem"):
@@ -221,6 +220,9 @@ class EmbyGridList(GUIComponent):
 
 	def loadData(self, items):
 		self.data = items
+		# setList resets the native selection to the first item
+		self.selectedIndex = 0
+		self.currentPage = 0
 		if config.plugins.e2embyclient.thumbcache_loc.value != "off":
 			for item in items:
 				itm = item[1]
